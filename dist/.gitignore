@@ -1,0 +1,4 @@
+# Ignore all compiled output but keep the folder structure
+*
+!.gitignore
+!**/.gitkeep
