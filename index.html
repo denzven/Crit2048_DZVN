@@ -6,13 +6,11 @@
   <title>Crit 2048: Roguelike D&D</title>
 
   <!-- Styling -->
-  <!-- Vendor: run scripts/setup.ps1 to download. CDN fallback for browser play: https://cdn.tailwindcss.com -->
-  <script src="vendor/tailwind.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="css/main.css">
 
   <!-- Three.js for 3D Dice Simulation -->
-  <!-- Vendor: run scripts/setup.ps1 to download. CDN fallback: https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js -->
-  <script src="vendor/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 flex flex-col h-screen w-screen overflow-hidden">
 
@@ -38,346 +36,37 @@
 
     <div id="modal-backdrop" class="hide absolute inset-0 bg-slate-950/80 z-[90] backdrop-blur-sm transition-opacity duration-300"></div>
 
-    <!-- START SCREEN -->
-    <div id="screen-start" class="text-center space-y-6 max-w-2xl mx-auto w-full relative z-10 flex flex-col justify-center h-full overflow-y-auto">
-      <div>
-        <h2 class="text-5xl md:text-7xl font-black text-white mb-2 tracking-tighter font-serif">CRIT <span class="text-rose-500">2048</span></h2>
-        <p class="text-slate-400 text-xl font-light">Seeded Roguelike Deckbuilder</p>
-      </div>
+    <!-- Native Vanilla JS Templates -->
+    <script src="js/templates/screen-start.js"></script>
+    <script src="js/templates/screen-class.js"></script>
+    <script src="js/templates/screen-playing.js"></script>
+    <script src="js/templates/modal-attack.js"></script>
+    <script src="js/templates/modal-dice.js"></script>
+    <script src="js/templates/screen-tavern.js"></script>
+    <script src="js/templates/screen-end.js"></script>
+    <script src="js/templates/modal-settings.js"></script>
+    <script src="js/templates/modal-help.js"></script>
+    <script src="js/templates/modal-confirm.js"></script>
 
-      <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl text-left text-sm md:text-base space-y-4 shadow-xl">
-        <h3 class="font-black text-slate-300 uppercase tracking-widest border-b border-slate-700 pb-2">How to Play</h3>
-        <ul class="space-y-3 text-slate-400">
-          <li><strong class="text-white">1. Merge:</strong> Swipe to combine weapons and deal damage to the Boss.</li>
-          <li><strong class="text-white">2. Spellcraft:</strong> Cast physical dice spells (like Fireball) that unleash grid-wide effects.</li>
-          <li><strong class="text-white">3. Hazards:</strong> Beware Goblins (steal gold) and Skeletons (block merging).</li>
-          <li><strong class="text-white">4. The D20:</strong> Every <span id="instruction-turns" class="font-bold text-amber-400">5</span> moves, roll a D20 to determine your fate.</li>
-        </ul>
-      </div>
-
-      <div class="flex flex-col gap-3">
-        <input type="text" id="input-seed" placeholder="Enter Seed (Leave blank for random)" class="w-full bg-slate-800 border border-slate-700 text-white text-center font-mono rounded-xl p-4 focus:border-rose-500 outline-none uppercase shadow-inner">
-        <button id="btn-start" onclick="startGameFlow()" class="w-full px-8 py-4 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg transition-all text-xl uppercase tracking-widest border border-rose-500/50">
-          Enter the Dungeon
-        </button>
-      </div>
-    </div>
-
-    <!-- CLASS SELECT SCREEN -->
-    <div id="screen-class" class="hide w-full max-w-5xl relative z-10 flex flex-col h-full">
-      <h2 class="text-2xl font-black tracking-widest text-center mb-6 text-white uppercase shrink-0">Choose Your Hero</h2>
-      <div id="class-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 overflow-y-auto pr-2 pb-4"></div>
-    </div>
-
-    <!-- PLAYING SCREEN -->
-    <div id="screen-playing" class="hide flex flex-col items-center w-full max-w-4xl relative z-10 h-full">
-
-      <!-- Boss HUD -->
-      <div class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-3 md:p-4 mb-4 relative overflow-hidden flex flex-col gap-2 shrink-0 shadow-lg">
-        <div class="absolute inset-0 bg-slate-800/50 w-full z-0">
-          <div id="hud-hp-bar" class="h-full bg-rose-600/80 transition-all duration-300 ease-out" style="width: 100%"></div>
-        </div>
-        <div class="relative z-10 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <span id="hud-icon" class="text-3xl bg-slate-950 p-2 rounded-xl border border-slate-800">👺</span>
-            <div>
-              <h3 id="hud-name" class="font-black text-lg md:text-xl text-white tracking-wider">Monster</h3>
-              <p class="text-xs font-mono text-rose-200">HP: <span id="hud-hp">0 / 0</span></p>
-            </div>
-          </div>
-          <div class="text-right">
-            <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Slides Left</p>
-            <p id="hud-slides" class="text-3xl md:text-4xl font-black font-mono text-white">0</p>
-          </div>
-        </div>
-        <div id="hud-power" class="relative z-10 text-xs font-mono text-amber-300 bg-slate-950/60 p-1.5 rounded-lg border border-amber-900/50 text-center uppercase tracking-wider">
-          Passive Power Here
-        </div>
-      </div>
-
-      <div class="flex flex-row gap-4 items-stretch w-full justify-center min-h-0 flex-1">
-
-        <!-- Desktop Inventory Sidebar -->
-        <div class="hidden md:flex flex-col gap-2 w-48 shrink-0 min-h-0">
-          <h4 class="text-xs uppercase tracking-widest text-slate-500 font-bold shrink-0">Inventory</h4>
-          <div id="sidebar-artifacts" class="space-y-2 overflow-y-auto pr-1 flex-1"></div>
-        </div>
-
-        <!-- Game Grid -->
-        <div id="grid-container" class="relative bg-slate-800 p-2 md:p-3 rounded-2xl border border-slate-700 w-full max-w-[340px] md:max-w-[400px] aspect-square shrink-0 self-center shadow-xl">
-          <div class="grid grid-cols-4 grid-rows-4 gap-[2%] w-full h-full absolute inset-2 md:inset-3" style="width: 96%; height: 96%;">
-            <div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div>
-            <div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div>
-            <div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div>
-            <div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div>
-          </div>
-          <div id="tiles-layer" class="absolute inset-2 md:inset-3" style="width: 96%; height: 96%;"></div>
-        </div>
-
-        <!-- Desktop Class & Combat Log Sidebar -->
-        <div class="hidden md:flex flex-col gap-4 w-48 shrink-0 min-h-0">
-          <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700 text-center shadow-lg relative overflow-hidden shrink-0">
-            <span id="sidebar-class-icon" class="text-4xl block mb-2 relative z-10">😡</span>
-            <p id="sidebar-class-name" class="font-black text-sm text-white uppercase tracking-wider relative z-10">Hero</p>
-            <p id="sidebar-spell-info" class="text-xs text-indigo-400 font-mono mt-1 relative z-10">Spell: None</p>
-            <p id="sidebar-class-uses" class="text-xs text-amber-400 font-mono mb-4 relative z-10">Uses: 0</p>
-            <button id="btn-ability" onclick="useClassAbility()" class="relative z-10 w-full py-3 rounded-xl text-sm font-black transition-all bg-blue-600 hover:bg-blue-500 text-white shadow-lg uppercase tracking-widest border border-blue-400/30">
-              Cast
-            </button>
-          </div>
-
-          <div class="bg-slate-900 border border-slate-700 rounded-2xl p-2 text-xs text-slate-400 font-mono flex-1 overflow-y-auto" id="combat-log-desktop"></div>
-        </div>
-      </div>
-
-      <!-- Mobile Controls -->
-      <div class="md:hidden flex w-full gap-2 mt-4 shrink-0 h-[100px]">
-        <div class="bg-slate-900 p-2 rounded-xl border border-slate-700 text-center flex flex-col justify-center w-[100px] shrink-0">
-          <button id="btn-ability-mobile" onclick="useClassAbility()" class="w-full h-full rounded-lg text-[10px] font-black transition-all bg-blue-600 active:bg-blue-500 text-white uppercase tracking-widest flex flex-col items-center justify-center border border-blue-400/30">
-            <span id="mobile-class-icon" class="text-2xl mb-1">😡</span>
-            <span id="mobile-spell-uses">0/0</span>
-          </button>
-        </div>
-        <div id="combat-log-mobile" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-2 text-[10px] font-mono overflow-y-auto h-24"></div>
-      </div>
-    </div>
-
-    <!-- ATTACK DICE MODAL (Spells) -->
-    <div id="modal-attack" class="hide absolute inset-0 z-[100] flex flex-col items-center justify-center p-4 pointer-events-none">
-      <div id="attack-panel" class="pointer-events-auto bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-2xl w-full text-center flex flex-col items-center shadow-2xl relative">
-        <h2 id="attack-title" class="text-2xl font-black text-blue-400 uppercase tracking-widest mb-6 font-serif">Casting...</h2>
-
-        <div id="attack-dice-container" class="relative w-full min-h-[250px] bg-slate-950 rounded-2xl border border-slate-800 my-2 overflow-hidden flex flex-col items-center justify-center p-4"></div>
-
-        <div id="attack-result" class="hide flex flex-col items-center w-full z-20 mt-4">
-          <p class="text-slate-400 uppercase tracking-widest text-xs mb-1 font-bold">Total Result</p>
-          <p id="attack-total" class="text-6xl font-black font-mono text-white mb-6 drop-shadow-md">0</p>
-          <button onclick="resolveAttack()" class="px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black text-lg uppercase tracking-widest transition-all rounded-xl shadow-lg w-full border border-blue-400/30">
-            Strike!
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- D20 MODAL -->
-    <div id="modal-dice" class="hide absolute inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
-      <div id="d20-panel" class="pointer-events-auto bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full text-center flex flex-col items-center shadow-2xl relative">
-        <h2 class="text-2xl font-black mb-1 text-rose-500 uppercase tracking-widest mt-2 font-serif">D20 Check</h2>
-        <p class="text-slate-400 text-xs uppercase tracking-widest mb-6 font-bold">Mod: <span id="dice-mod-val" class="text-white bg-slate-800 px-2 py-0.5 rounded ml-1">+0</span></p>
-
-        <div class="relative w-full h-64 bg-slate-950 rounded-2xl border border-slate-800 my-2 flex flex-col items-center justify-center overflow-hidden">
-          <div id="d20-render-target" class="w-full h-full absolute inset-0 mx-auto z-10 flex items-center justify-center"></div>
-
-          <div id="dice-action-btn" class="absolute inset-0 flex items-center justify-center z-20">
-            <button onclick="rollD20()" class="px-8 py-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl cursor-pointer hover:scale-105 transition-all shadow-lg font-black uppercase tracking-widest border border-rose-400/30">
-              Roll Fate
-            </button>
-          </div>
-        </div>
-
-        <div id="dice-post-roll" class="hide flex flex-col items-center w-full z-20 mt-6 min-h-[80px]">
-          <div id="dice-result-msg" class="flex flex-col items-center justify-center w-full text-center"></div>
-          <button onclick="closeD20Modal()" class="px-8 py-4 mt-6 bg-slate-700 hover:bg-slate-600 text-white font-black uppercase tracking-widest transition-all w-full rounded-xl border border-slate-600">
-            Continue
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAVERN (SHOP) -->
-    <div id="screen-tavern" class="hide w-full max-w-5xl flex flex-col h-full py-2 relative z-10">
-      <div class="text-center mb-4 shrink-0">
-        <h2 class="text-3xl font-black text-amber-500 mb-1 font-serif">Tavern</h2>
-        <p class="text-slate-400 text-xs">Spend gold to buy or level up artifacts.</p>
-      </div>
-
-      <div class="flex-grow overflow-y-auto pr-2 pb-4 space-y-4 flex flex-col min-h-0">
-
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 shrink-0 shadow-lg">
-          <h3 class="text-slate-400 font-black uppercase tracking-widest text-[10px] mb-3">Spellcraft</h3>
-          <div class="flex flex-row gap-3 justify-between">
-            <button id="btn-rest" onclick="restoreSpells()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold rounded-xl transition-colors flex flex-col items-center justify-center gap-1 border border-slate-700">
-              <span class="text-sm uppercase tracking-widest font-black">Rest</span>
-              <span class="text-[10px] text-slate-400">Restore Uses (💰30)</span>
-            </button>
-            <button id="btn-upgrade" onclick="upgradeSpell()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-blue-400 font-bold rounded-xl transition-colors flex flex-col items-center justify-center gap-1 border border-slate-700">
-              <span class="text-sm uppercase tracking-widest font-black">Enhance</span>
-              <span class="text-[10px] text-slate-400">+1 Dice (💰<span id="upgrade-cost">100</span>)</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 shrink-0 shadow-lg">
-          <h3 class="text-slate-400 font-black uppercase tracking-widest text-[10px] mb-3">AI Oracle</h3>
-          <div class="flex items-center justify-between gap-4">
-            <p class="text-[10px] text-indigo-300">Generate a Level 1 Legendary Artifact for your class (+1.0 Mult).</p>
-            <button id="btn-ai-oracle" onclick="callGeminiOracle()" class="shrink-0 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl transition-all uppercase tracking-widest text-xs border border-indigo-400/30">
-              Forge (💰50)
-            </button>
-          </div>
-          <div id="ai-loading" class="hide mt-2 text-center text-indigo-400 text-xs loading-pulse font-mono">Communing...</div>
-        </div>
-
-        <h3 class="text-slate-500 font-black uppercase tracking-widest text-[10px] shrink-0 pt-2">Wares</h3>
-        <div id="tavern-artifacts" class="grid md:grid-cols-2 gap-3 shrink-0"></div>
-      </div>
-
-      <div class="pt-3 text-center shrink-0">
-        <button id="btn-descend" onclick="nextEncounter()" class="w-full px-8 py-4 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-xl shadow-lg transition-all text-lg uppercase tracking-widest border border-rose-500/50">
-          Next Ante
-        </button>
-      </div>
-    </div>
-
-    <!-- GAME OVER / VICTORY STATS SCREEN -->
-    <div id="screen-end" class="hide fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm">
-      <div class="bg-slate-900 border border-slate-700 p-8 rounded-3xl max-w-md w-full text-center shadow-2xl relative overflow-hidden">
-        <!-- Decoration Line -->
-        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-rose-600 to-transparent opacity-50"></div>
-
-        <h2 id="end-title" class="text-4xl md:text-5xl font-black mb-2 font-serif text-white">RUN OVER</h2>
-        <p id="end-desc" class="text-slate-400 mb-6 text-sm italic">The dungeon claims another soul.</p>
-
-        <div class="bg-slate-950 rounded-2xl border border-slate-800 p-4 mb-6 text-left space-y-3 shadow-inner">
-          <h3 class="text-slate-500 font-black uppercase tracking-widest text-[10px] border-b border-slate-800 pb-2 mb-2 text-center">Run Summary</h3>
-
-          <div class="flex justify-between items-center">
-            <span class="text-xs text-slate-400 uppercase tracking-widest">Class</span>
-            <span id="end-stat-class" class="text-sm font-bold text-white">😡 Hero</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-xs text-slate-400 uppercase tracking-widest">Ante Reached</span>
-            <span id="end-stat-ante" class="text-sm font-bold text-rose-400">1</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-xs text-slate-400 uppercase tracking-widest">Max Damage</span>
-            <span id="end-stat-dmg" class="text-sm font-bold text-amber-400">0</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-xs text-slate-400 uppercase tracking-widests">Weapons Merged</span>
-            <span id="end-stat-merges" class="text-sm font-bold text-blue-400">0</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-xs text-slate-400 uppercase tracking-widest">Run Seed</span>
-            <span id="end-stat-seed" class="text-[10px] font-mono text-slate-500 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">123456</span>
-          </div>
-        </div>
-
-        <button onclick="resetGame()" class="px-8 py-4 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-xl transition-colors uppercase tracking-widest w-full shadow-lg border border-rose-500/50 hover:scale-[1.02] active:scale-95">
-          Play Again
-        </button>
-      </div>
-    </div>
-
-    <!-- SETTINGS MODAL -->
-    <div id="modal-settings" class="hide absolute inset-0 bg-slate-950/95 z-[110] flex items-center justify-center p-4">
-      <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-        <h2 class="text-xl font-black tracking-widest mb-6 text-white text-center uppercase">Settings</h2>
-        <div class="space-y-6 mb-8">
-          <div>
-            <label class="block text-slate-400 text-xs mb-2 font-bold uppercase tracking-wider">Slides Before D20 Roll</label>
-            <input type="number" id="input-setting-turns" class="w-full bg-slate-950 border border-slate-800 text-white font-bold rounded-xl p-3 focus:border-rose-500 outline-none" min="1" max="20">
-          </div>
-          <div>
-            <label class="block text-slate-400 text-xs mb-2 font-bold uppercase tracking-wider">Starting Gold</label>
-            <input type="number" id="input-setting-gold" class="w-full bg-slate-950 border border-slate-800 text-white font-bold rounded-xl p-3 focus:border-rose-500 outline-none" min="0" max="1000">
-          </div>
-
-          <div class="pt-4 border-t border-slate-800">
-            <label class="block text-slate-400 text-xs mb-3 font-bold uppercase tracking-wider">Dice Theme</label>
-            <select id="input-setting-theme" class="w-full bg-slate-950 border border-slate-800 text-white font-bold rounded-xl p-3 focus:border-rose-500 outline-none">
-              <option value="default">Default Colors</option>
-              <option value="blood">Blood Magic</option>
-              <option value="bone">Ancient Bone</option>
-              <option value="neon">Cyber Neon</option>
-            </select>
-          </div>
-
-          <div class="pt-4 border-t border-slate-800">
-            <label class="block text-slate-400 text-xs mb-3 font-bold uppercase tracking-wider">SFX Volume</label>
-            <input type="range" id="input-setting-sfx" min="0" max="1" step="0.1" value="1" class="w-full accent-rose-500">
-          </div>
-          <div>
-            <label class="block text-slate-400 text-xs mb-3 font-bold uppercase tracking-wider">Screen Shake Level</label>
-            <input type="range" id="input-setting-shake" min="0" max="2" step="0.5" value="1" class="w-full accent-rose-500">
-          </div>
-        </div>
-        <div class="flex gap-3">
-          <button onclick="closeSettings()" class="flex-1 py-4 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-colors uppercase tracking-widest text-xs border border-slate-700">Cancel</button>
-          <button onclick="saveSettings()" class="flex-1 py-4 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-500 transition-colors uppercase tracking-widest text-xs border border-rose-500/50 shadow-lg">Save</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- HELP / COMPENDIUM MODAL -->
-    <div id="modal-help" class="hide absolute inset-0 bg-slate-950/95 z-[110] flex flex-col items-center justify-start p-4 md:p-8 overflow-y-auto">
-      <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative mt-4 mb-4">
-        <button onclick="closeHelp()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-3xl font-light">&times;</button>
-        <h2 class="text-3xl font-black tracking-widest mb-6 text-rose-500 text-center uppercase font-serif">Compendium</h2>
-
-        <div class="space-y-6 text-slate-300 text-sm">
-          <section>
-            <h3 class="text-lg font-bold text-white mb-3 uppercase tracking-widest border-b border-slate-700 pb-2">Rules of the Dungeon</h3>
-            <ul class="list-disc pl-5 space-y-3 text-slate-400">
-              <li><strong class="text-white">Merge to Strike:</strong> Swipe to combine identical weapons to upgrade them. Every merge deals damage to the boss based on the weapon's resulting power.</li>
-              <li><strong class="text-white">Cast Physical Spells:</strong> Use your class ability to roll real 3D dice. The outcome determines the power of devastating grid-wide effects.</li>
-              <li><strong class="text-white">Beware Hazards:</strong> Goblins (👺) steal your hard-earned gold. Skeletons (💀) block your merges. Slimes (🟢) multiply and crowd the board. Clear them out by dealing massive burst damage to the boss!</li>
-              <li><strong class="text-white">Roll For Fate (D20):</strong> Every few moves, you must roll a D20. High rolls bestow critical buffs and spawn powerful weapons, while low rolls spawn hazards or shatter your highest tier weapon.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h3 class="text-lg font-bold text-white mb-3 uppercase tracking-widest border-b border-slate-700 pb-2">Classes &amp; Abilities</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
-                <div class="flex items-center gap-2 mb-1"><span class="text-2xl">😡</span> <strong class="text-white text-base uppercase tracking-wider">Barbarian</strong></div>
-                <p class="text-xs text-slate-400">Deals +10 base damage to early weapon combos. Has a <strong class="text-rose-400">-1</strong> penalty to D20 rolls.</p>
-              </div>
-              <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
-                <div class="flex items-center gap-2 mb-1"><span class="text-2xl">🥷</span> <strong class="text-white text-base uppercase tracking-wider">Rogue</strong></div>
-                <p class="text-xs text-slate-400">Gains +1 bonus gold for every successful merge. Has a <strong class="text-emerald-400">+2</strong> bonus to D20 rolls.</p>
-              </div>
-              <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
-                <div class="flex items-center gap-2 mb-1"><span class="text-2xl">🧙‍♂️</span> <strong class="text-white text-base uppercase tracking-wider">Wizard</strong></div>
-                <p class="text-xs text-slate-400">Casts <strong class="text-blue-400">Fireball</strong> to obliterate a 2x2 section of the grid. Has a <strong class="text-emerald-400">+1</strong> bonus to D20 rolls.</p>
-              </div>
-              <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
-                <div class="flex items-center gap-2 mb-1"><span class="text-2xl">👁️</span> <strong class="text-white text-base uppercase tracking-wider">Warlock</strong></div>
-                <p class="text-xs text-slate-400">Casts <strong class="text-purple-400">Eldritch Blast</strong> to clear an entire row of hazards. Has a <strong class="text-emerald-400">+1</strong> bonus to D20 rolls.</p>
-              </div>
-              <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
-                <div class="flex items-center gap-2 mb-1"><span class="text-2xl">✨</span> <strong class="text-white text-base uppercase tracking-wider">Cleric</strong></div>
-                <p class="text-xs text-slate-400">Casts <strong class="text-amber-300">Divine Aid</strong> to restore slides and instantly purify a hazard into a weapon. Mod: 0.</p>
-              </div>
-              <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
-                <div class="flex items-center gap-2 mb-1"><span class="text-2xl">🛡️</span> <strong class="text-white text-base uppercase tracking-wider">Paladin</strong></div>
-                <p class="text-xs text-slate-400">Casts <strong class="text-yellow-400">Divine Smite</strong>, multiplying the spell damage by the value of your highest weapon. Mod: 0.</p>
-              </div>
-            </div>
-          </section>
-
-          <p class="text-center text-xs text-slate-500 pt-6 mt-6 border-t border-slate-800">
-            made with love by DZVN 💜 Vibecoded with Google Gemini AI ✨
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- CONFIRM HOME MODAL -->
-    <div id="modal-confirm" class="hide absolute inset-0 bg-slate-950/95 z-[120] flex items-center justify-center p-4">
-      <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center">
-        <h2 class="text-xl font-black tracking-widest mb-4 text-white uppercase">Leave this run?</h2>
-        <p class="text-slate-400 text-sm mb-8">Go back to game start. All current progress will be lost.</p>
-        <div class="flex gap-3">
-          <button onclick="closeConfirm()" class="flex-1 py-4 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-colors uppercase tracking-widest text-xs border border-slate-700">Cancel</button>
-          <button onclick="executeHome()" class="flex-1 py-4 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-500 transition-colors uppercase tracking-widest text-xs border border-rose-500/50 shadow-lg">Leave</button>
-        </div>
-      </div>
-    </div>
-
+    <!-- Inject UI Native Components -->
+    <script>
+      (function() {
+        const container = document.getElementById('main-container');
+        let fullHtmlStr = '';
+        if (window.ViewTemplates) {
+          const keys = [
+            'screen-start', 'screen-class', 'screen-playing', 'modal-attack',
+            'modal-dice', 'screen-tavern', 'screen-end', 'modal-settings',
+            'modal-help', 'modal-confirm'
+          ];
+          keys.forEach(k => { if (window.ViewTemplates[k]) fullHtmlStr += window.ViewTemplates[k]; });
+        }
+        container.insertAdjacentHTML('beforeend', fullHtmlStr);
+      })();
+    </script>
   </main>
 
-  <!-- JavaScript: loaded in dependency order, all after body -->
+  <!-- JavaScript: loaded in dependency order natively -->
   <script src="js/config.js"></script>
   <script src="js/state.js"></script>
   <script src="js/data.js"></script>
@@ -393,6 +82,5 @@
   <script src="js/api.js"></script>
   <script src="js/modals.js"></script>
   <script src="js/main.js"></script>
-
 </body>
 </html>
