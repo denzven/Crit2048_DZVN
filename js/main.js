@@ -41,7 +41,7 @@ function changeState(newState) {
       el.classContainer.innerHTML = Object.entries(CLASSES)
         .map(
           ([key, cls]) => `
-        <div onclick="selectClass('${key}')" class="bg-slate-900 border border-slate-700 hover:border-rose-500 p-4 rounded-2xl cursor-pointer transition-all flex flex-col items-center text-center shadow-lg">
+        <div tabindex="0" onclick="selectClass('${key}')" onkeydown="if(event.key==='Enter') selectClass('${key}')" class="bg-slate-900 border border-slate-700 hover:border-rose-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500 p-4 rounded-2xl cursor-pointer transition-all flex flex-col items-center text-center shadow-lg">
           <span class="text-4xl mb-2">${cls.icon}</span><h3 class="text-lg font-black text-white uppercase tracking-wider">${cls.id}</h3><p class="text-slate-400 text-xs mt-1 leading-tight">${cls.desc}</p>
         </div>`,
         )
@@ -173,13 +173,42 @@ function resetGame() {
 
 // --- CONTROLS ---
 window.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    if (!el.modalDice.classList.contains("hide")) {
+      if (!state.isRolling) {
+        if (!el.diceActionBtn.classList.contains("hide")) rollD20();
+        else if (!el.dicePostRoll.classList.contains("hide")) closeD20Modal();
+      }
+      return;
+    }
+    if (!el.modalAttack.classList.contains("hide")) {
+      if (!state.isRolling) {
+        const rollBtn = el.attackDiceContainer.querySelector("button");
+        if (rollBtn) rollBtn.click();
+        else if (!el.attackResult.classList.contains("hide")) resolveAttack();
+      }
+      return;
+    }
+    if (state.gameState === "GAME_OVER" || state.gameState === "VICTORY") {
+      resetGame();
+      return;
+    }
+  }
+
   if (state.gameState !== "PLAYING") return;
-  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key))
+  
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "w", "a", "s", "d", "W", "A", "S", "D"].includes(e.key)) {
     e.preventDefault();
-  if (e.key === "ArrowLeft") processMove("LEFT");
-  if (e.key === "ArrowRight") processMove("RIGHT");
-  if (e.key === "ArrowUp") processMove("UP");
-  if (e.key === "ArrowDown") processMove("DOWN");
+  }
+
+  if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") processMove("LEFT");
+  if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") processMove("RIGHT");
+  if (e.key === "ArrowUp" || e.key.toLowerCase() === "w") processMove("UP");
+  if (e.key === "ArrowDown" || e.key.toLowerCase() === "s") processMove("DOWN");
+
+  if (e.key === " ") {
+    useClassAbility();
+  }
 });
 
 let startX = 0,
