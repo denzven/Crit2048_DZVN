@@ -1,0 +1,26 @@
+{
+  "name": "crit2048_scale",
+  "version": "1.0.0",
+  "description": "<div align=\"center\">",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prebuild": "node scripts/build-web.js",
+    "tauri": "tauri"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/denzven/Crit2048_DZVN.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/denzven/Crit2048_DZVN/issues"
+  },
+  "homepage": "https://github.com/denzven/Crit2048_DZVN#readme",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.10.1"
+  }
+}

@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Crit 2048: Roguelike D&D</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Added Three.js for 3D Dice Simulation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap');
+    
+    :root { --gap: 2%; --cell-size: 23.5%; --shake-px: 4px; }
+    
+    html, body {
+      margin: 0; padding: 0; width: 100vw; height: 100vh;
+      overflow: hidden; overscroll-behavior: none;
+    }
+    
+    .hide { display: none !important; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+    #grid-container { touch-action: none; position: relative; }
+    
+    .tile {
+      position: absolute; width: var(--cell-size); height: var(--cell-size);
+      transition: top 0.1s ease-in-out, left 0.1s ease-in-out, transform 0.1s ease-in-out, opacity 0.1s ease-out;
+      border-radius: 0.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; user-select: none;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.8); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .pop-in { animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(calc(-1 * var(--shake-px))) translateY(calc(0.5 * var(--shake-px))); }
+      20%, 40%, 60%, 80% { transform: translateX(var(--shake-px)) translateY(calc(-0.5 * var(--shake-px))); }
+    }
+    .shake { animation: shake 0.35s cubic-bezier(.36,.07,.19,.97) both; }
+
+    /* Visual Grid Effects for Spells */
+    .fx-fireball {
+      position: absolute; border-radius: 50%; z-index: 30; pointer-events: none;
+      background: radial-gradient(circle, rgba(250,204,21,0.9) 0%, rgba(239,68,68,0.8) 50%, transparent 100%);
+      animation: fxFireball 0.6s ease-out forwards;
+    }
+    @keyframes fxFireball {
+      0% { transform: scale(0.2); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    
+    .fx-beam {
+      position: absolute; z-index: 30; pointer-events: none;
+      background: linear-gradient(90deg, transparent, #a855f7, #d946ef, transparent);
+      animation: fxBeam 0.5s ease-out forwards;
+    }
+    @keyframes fxBeam {
+      0% { opacity: 0; transform: scaleY(0.2); }
+      50% { opacity: 1; transform: scaleY(1); box-shadow: 0 0 20px #a855f7; }
+      100% { opacity: 0; transform: scaleY(0.1); }
+    }
+
+    .fx-smite {
+      position: absolute; z-index: 30; pointer-events: none;
+      background: linear-gradient(180deg, transparent, #facc15, #fef08a, transparent);
+      animation: fxSmite 0.6s ease-out forwards;
+    }
+    @keyframes fxSmite {
+      0% { opacity: 0; transform: scaleX(0.2); }
+      20% { opacity: 1; transform: scaleX(1); box-shadow: 0 0 30px #facc15; }
+      100% { opacity: 0; transform: scaleX(0); }
+    }
+    
+    .fx-divine {
+      position: absolute; z-index: 30; pointer-events: none; inset: 0;
+      background: radial-gradient(circle, rgba(167,243,208,0.6) 0%, transparent 70%);
+      animation: fxDivine 0.8s ease-out forwards;
+    }
+    @keyframes fxDivine {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1.3); opacity: 0; }
+    }
+
+    /* Snappy Modern CSS Dice Roll (Kept for fallback/legacy) */
+    @keyframes pseudoRoll {
+      0% { transform: translate(0, -300px) scale(0.5) rotate(-1080deg); opacity: 0; filter: blur(4px); }
+      20% { transform: translate(0, 40px) scale(1.2) rotate(-720deg); opacity: 1; filter: blur(1px); }
+      40% { transform: translate(0, -60px) scale(1.1) rotate(-360deg); filter: blur(0px); }
+      60% { transform: translate(0, 15px) scale(1.05) rotate(-180deg); }
+      80% { transform: translate(0, -10px) scale(1.02) rotate(-90deg); }
+      100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+    }
+    .pseudo-roll { animation: pseudoRoll 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+    
+    @keyframes diceSlam {
+      0% { transform: scale(1.2); }
+      50% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+    .dice-slam { animation: diceSlam 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+    .loading-pulse { animation: pulse 1.5s infinite ease-in-out; }
+    @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+    .font-serif { font-family: 'Cinzel', serif; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 flex flex-col h-screen w-screen overflow-hidden">
+
+  <header class="p-3 md:p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 relative z-40">
+    <div class="flex items-center gap-2">
+      <h1 class="text-lg md:text-2xl font-black tracking-wider text-rose-500 flex items-center gap-2 font-serif">
+        🐉 CRIT 2048
+      </h1>
+      <span id="header-ante" class="hide bg-slate-800 text-slate-300 text-xs font-bold px-2 py-1 rounded-md ml-2 uppercase tracking-widest">Ante 1</span>
+    </div>
+    <div class="flex items-center gap-3 md:gap-4">
+      <div id="header-stats" class="hide flex gap-3 md:gap-6 text-sm md:text-base font-bold text-amber-400">
+        <span class="flex items-center gap-1 bg-slate-800 px-2 py-1 rounded-md">💰 <span id="stat-gold">0</span></span>
+        <span class="flex items-center gap-1 bg-slate-800 px-2 py-1 rounded-md text-rose-400">⚔️ x<span id="stat-mult">1.0</span></span>
+      </div>
+      <button id="btn-home" onclick="confirmHome()" class="hide text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Home">🏠</button>
+      <button onclick="openHelp()" class="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Help">❓</button>
+      <button onclick="openSettings()" class="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Settings">⚙️</button>
+    </div>
+  </header>
+
+  <main id="main-container" class="flex-grow flex flex-col items-center p-3 md:p-4 relative min-h-0 w-full overflow-hidden">
+
+    <div id="modal-backdrop" class="hide absolute inset-0 bg-slate-950/80 z-[90] backdrop-blur-sm transition-opacity duration-300"></div>
+
+    <div id="screen-start" class="text-center space-y-6 max-w-2xl mx-auto w-full relative z-10 flex flex-col justify-center h-full overflow-y-auto">
+      <div>
+        <h2 class="text-5xl md:text-7xl font-black text-white mb-2 tracking-tighter font-serif">CRIT <span class="text-rose-500">2048</span></h2>
+        <p class="text-slate-400 text-xl font-light">Seeded Roguelike Deckbuilder</p>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl text-left text-sm md:text-base space-y-4 shadow-xl">
+        <h3 class="font-black text-slate-300 uppercase tracking-widest border-b border-slate-700 pb-2">How to Play</h3>
+        <ul class="space-y-3 text-slate-400">
+          <li><strong class="text-white">1. Merge:</strong> Swipe to combine weapons and deal damage to the Boss.</li>
+          <li><strong class="text-white">2. Spellcraft:</strong> Cast physical dice spells (like Fireball) that unleash grid-wide effects.</li>
+          <li><strong class="text-white">3. Hazards:</strong> Beware Goblins (steal gold) and Skeletons (block merging).</li>
+          <li><strong class="text-white">4. The D20:</strong> Every <span id="instruction-turns" class="font-bold text-amber-400">5</span> moves, roll a D20 to determine your fate.</li>
+        </ul>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <input type="text" id="input-seed" placeholder="Enter Seed (Leave blank for random)" class="w-full bg-slate-800 border border-slate-700 text-white text-center font-mono rounded-xl p-4 focus:border-rose-500 outline-none uppercase shadow-inner">
+        <button onclick="startGameFlow()" class="w-full px-8 py-4 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg transition-all text-xl uppercase tracking-widest border border-rose-500/50">
+          Enter the Dungeon
+        </button>
+      </div>
+    </div>
+
+    <div id="screen-class" class="hide w-full max-w-5xl relative z-10 flex flex-col h-full">
+      <h2 class="text-2xl font-black tracking-widest text-center mb-6 text-white uppercase shrink-0">Choose Your Hero</h2>
+      <div id="class-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 overflow-y-auto pr-2 pb-4"></div>
+    </div>
+
+    <div id="screen-playing" class="hide flex flex-col items-center w-full max-w-4xl relative z-10 h-full">
+      
+      <div class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-3 md:p-4 mb-4 relative overflow-hidden flex flex-col gap-2 shrink-0 shadow-lg">
+        <div class="absolute inset-0 bg-slate-800/50 w-full z-0">
+          <div id="hud-hp-bar" class="h-full bg-rose-600/80 transition-all duration-300 ease-out" style="width: 100%"></div>
+        </div>
+        <div class="relative z-10 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span id="hud-icon" class="text-3xl bg-slate-950 p-2 rounded-xl border border-slate-800">👺</span>
+            <div>
+              <h3 id="hud-name" class="font-black text-lg md:text-xl text-white tracking-wider">Monster</h3>
+              <p class="text-xs font-mono text-rose-200">HP: <span id="hud-hp">0 / 0</span></p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Slides Left</p>
+            <p id="hud-slides" class="text-3xl md:text-4xl font-black font-mono text-white">0</p>
+          </div>
+        </div>
+        <div id="hud-power" class="relative z-10 text-xs font-mono text-amber-300 bg-slate-950/60 p-1.5 rounded-lg border border-amber-900/50 text-center uppercase tracking-wider">
+          Passive Power Here
+        </div>
+      </div>
+
+      <div class="flex flex-row gap-4 items-stretch w-full justify-center min-h-0 flex-1">
+        
+        <div class="hidden md:flex flex-col gap-2 w-48 shrink-0 min-h-0">
+          <h4 class="text-xs uppercase tracking-widest text-slate-500 font-bold shrink-0">Inventory</h4>
+          <div id="sidebar-artifacts" class="space-y-2 overflow-y-auto pr-1 flex-1"></div>
+        </div>
+
+        <div id="grid-container" class="relative bg-slate-800 p-2 md:p-3 rounded-2xl border border-slate-700 w-full max-w-[340px] md:max-w-[400px] aspect-square shrink-0 self-center shadow-xl">
+          <div class="grid grid-cols-4 grid-rows-4 gap-[2%] w-full h-full absolute inset-2 md:inset-3" style="width: 96%; height: 96%;">
+            <div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div>
+            <div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div>
+            <div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div>
+            <div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div>
+          </div>
+          <div id="tiles-layer" class="absolute inset-2 md:inset-3" style="width: 96%; height: 96%;"></div>
+        </div>
+
+        <div class="hidden md:flex flex-col gap-4 w-48 shrink-0 min-h-0">
+          <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700 text-center shadow-lg relative overflow-hidden shrink-0">
+            <span id="sidebar-class-icon" class="text-4xl block mb-2 relative z-10">😡</span>
+            <p id="sidebar-class-name" class="font-black text-sm text-white uppercase tracking-wider relative z-10">Hero</p>
+            <p id="sidebar-spell-info" class="text-xs text-indigo-400 font-mono mt-1 relative z-10">Spell: None</p>
+            <p id="sidebar-class-uses" class="text-xs text-amber-400 font-mono mb-4 relative z-10">Uses: 0</p>
+            <button id="btn-ability" onclick="useClassAbility()" class="relative z-10 w-full py-3 rounded-xl text-sm font-black transition-all bg-blue-600 hover:bg-blue-500 text-white shadow-lg uppercase tracking-widest border border-blue-400/30">
+              Cast
+            </button>
+          </div>
+          
+          <div class="bg-slate-900 border border-slate-700 rounded-2xl p-2 text-xs text-slate-400 font-mono flex-1 overflow-y-auto" id="combat-log-desktop"></div>
+        </div>
+      </div>
+
+      <div class="md:hidden flex w-full gap-2 mt-4 shrink-0 h-[100px]">
+        <div class="bg-slate-900 p-2 rounded-xl border border-slate-700 text-center flex flex-col justify-center w-[100px] shrink-0">
+           <button id="btn-ability-mobile" onclick="useClassAbility()" class="w-full h-full rounded-lg text-[10px] font-black transition-all bg-blue-600 active:bg-blue-500 text-white uppercase tracking-widest flex flex-col items-center justify-center border border-blue-400/30">
+             <span id="mobile-class-icon" class="text-2xl mb-1">😡</span>
+             <span id="mobile-spell-uses">0/0</span>
+           </button>
+        </div>
+        <div id="combat-log-mobile" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-2 text-[10px] font-mono overflow-y-auto h-24"></div>
+      </div>
+    </div>
+
+    <!-- ATTACK DICE MODAL (Spells) -->
+    <div id="modal-attack" class="hide absolute inset-0 z-[100] flex flex-col items-center justify-center p-4 pointer-events-none">
+      <div id="attack-panel" class="pointer-events-auto bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-2xl w-full text-center flex flex-col items-center shadow-2xl relative">
+        <h2 id="attack-title" class="text-2xl font-black text-blue-400 uppercase tracking-widest mb-6 font-serif">Casting...</h2>
+        
+        <div id="attack-dice-container" class="relative w-full min-h-[250px] bg-slate-950 rounded-2xl border border-slate-800 my-2 overflow-hidden flex flex-col items-center justify-center p-4"></div>
+        
+        <div id="attack-result" class="hide flex flex-col items-center w-full z-20 mt-4">
+          <p class="text-slate-400 uppercase tracking-widest text-xs mb-1 font-bold">Total Result</p>
+          <p id="attack-total" class="text-6xl font-black font-mono text-white mb-6 drop-shadow-md">0</p>
+          <button onclick="resolveAttack()" class="px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black text-lg uppercase tracking-widest transition-all rounded-xl shadow-lg w-full border border-blue-400/30">
+            Strike!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- D20 MODAL -->
+    <div id="modal-dice" class="hide absolute inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
+      <div id="d20-panel" class="pointer-events-auto bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full text-center flex flex-col items-center shadow-2xl relative">
+        <h2 class="text-2xl font-black mb-1 text-rose-500 uppercase tracking-widest mt-2 font-serif">D20 Check</h2>
+        <p class="text-slate-400 text-xs uppercase tracking-widest mb-6 font-bold">Mod: <span id="dice-mod-val" class="text-white bg-slate-800 px-2 py-0.5 rounded ml-1">+0</span></p>
+
+        <div class="relative w-full h-64 bg-slate-950 rounded-2xl border border-slate-800 my-2 flex flex-col items-center justify-center overflow-hidden">
+            <div id="d20-render-target" class="w-full h-full absolute inset-0 mx-auto z-10 flex items-center justify-center"></div>
+
+            <div id="dice-action-btn" class="absolute inset-0 flex items-center justify-center z-20">
+                <button onclick="rollD20()" class="px-8 py-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl cursor-pointer hover:scale-105 transition-all shadow-lg font-black uppercase tracking-widest border border-rose-400/30">
+                    Roll Fate
+                </button>
+            </div>
+        </div>
+
+        <div id="dice-post-roll" class="hide flex flex-col items-center w-full z-20 mt-6 min-h-[80px]">
+          <div id="dice-result-msg" class="flex flex-col items-center justify-center w-full text-center"></div>
+          <button onclick="closeD20Modal()" class="px-8 py-4 mt-6 bg-slate-700 hover:bg-slate-600 text-white font-black uppercase tracking-widest transition-all w-full rounded-xl border border-slate-600">
+            Continue
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAVERN (SHOP) -->
+    <div id="screen-tavern" class="hide w-full max-w-5xl flex flex-col h-full py-2 relative z-10">
+      <div class="text-center mb-4 shrink-0">
+        <h2 class="text-3xl font-black text-amber-500 mb-1 font-serif">Tavern</h2>
+        <p class="text-slate-400 text-xs">Spend gold to buy or level up artifacts.</p>
+      </div>
+
+      <div class="flex-grow overflow-y-auto pr-2 pb-4 space-y-4 flex flex-col min-h-0">
+          
+          <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 shrink-0 shadow-lg">
+            <h3 class="text-slate-400 font-black uppercase tracking-widest text-[10px] mb-3">Spellcraft</h3>
+            <div class="flex flex-row gap-3 justify-between">
+              <button id="btn-rest" onclick="restoreSpells()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold rounded-xl transition-colors flex flex-col items-center justify-center gap-1 border border-slate-700">
+                <span class="text-sm uppercase tracking-widest font-black">Rest</span>
+                <span class="text-[10px] text-slate-400">Restore Uses (💰30)</span>
+              </button>
+              <button id="btn-upgrade" onclick="upgradeSpell()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-blue-400 font-bold rounded-xl transition-colors flex flex-col items-center justify-center gap-1 border border-slate-700">
+                <span class="text-sm uppercase tracking-widest font-black">Enhance</span>
+                <span class="text-[10px] text-slate-400">+1 Dice (💰<span id="upgrade-cost">100</span>)</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 shrink-0 shadow-lg">
+             <h3 class="text-slate-400 font-black uppercase tracking-widest text-[10px] mb-3">AI Oracle</h3>
+             <div class="flex items-center justify-between gap-4">
+                <p class="text-[10px] text-indigo-300">Generate a Level 1 Legendary Artifact for your class (+1.0 Mult).</p>
+                <button id="btn-ai-oracle" onclick="callGeminiOracle()" class="shrink-0 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl transition-all uppercase tracking-widest text-xs border border-indigo-400/30">
+                  Forge (💰50)
+                </button>
+             </div>
+             <div id="ai-loading" class="hide mt-2 text-center text-indigo-400 text-xs loading-pulse font-mono">Communing...</div>
+          </div>
+
+          <h3 class="text-slate-500 font-black uppercase tracking-widest text-[10px] shrink-0 pt-2">Wares</h3>
+          <div id="tavern-artifacts" class="grid md:grid-cols-2 gap-3 shrink-0"></div>
+      </div>
+      
+      <div class="pt-3 text-center shrink-0">
+        <button id="btn-descend" onclick="nextEncounter()" class="w-full px-8 py-4 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-xl shadow-lg transition-all text-lg uppercase tracking-widest border border-rose-500/50">
+          Next Ante
+        </button>
+      </div>
+    </div>
+
+    <!-- GAME OVER / VICTORY STATS SCREEN -->
+    <div id="screen-end" class="hide fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm">
+      <div class="bg-slate-900 border border-slate-700 p-8 rounded-3xl max-w-md w-full text-center shadow-2xl relative overflow-hidden">
+        <!-- Decoration Line -->
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-rose-600 to-transparent opacity-50"></div>
+        
+        <h2 id="end-title" class="text-4xl md:text-5xl font-black mb-2 font-serif text-white">RUN OVER</h2>
+        <p id="end-desc" class="text-slate-400 mb-6 text-sm italic">The dungeon claims another soul.</p>
+        
+        <div class="bg-slate-950 rounded-2xl border border-slate-800 p-4 mb-6 text-left space-y-3 shadow-inner">
+            <h3 class="text-slate-500 font-black uppercase tracking-widest text-[10px] border-b border-slate-800 pb-2 mb-2 text-center">Run Summary</h3>
+            
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400 uppercase tracking-widest">Class</span>
+              <span id="end-stat-class" class="text-sm font-bold text-white">😡 Hero</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400 uppercase tracking-widest">Ante Reached</span>
+              <span id="end-stat-ante" class="text-sm font-bold text-rose-400">1</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400 uppercase tracking-widest">Max Damage</span>
+              <span id="end-stat-dmg" class="text-sm font-bold text-amber-400">0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400 uppercase tracking-widest">Weapons Merged</span>
+              <span id="end-stat-merges" class="text-sm font-bold text-blue-400">0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400 uppercase tracking-widest">Run Seed</span>
+              <span id="end-stat-seed" class="text-[10px] font-mono text-slate-500 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">123456</span>
+            </div>
+        </div>
+
+        <button onclick="resetGame()" class="px-8 py-4 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-xl transition-colors uppercase tracking-widest w-full shadow-lg border border-rose-500/50 hover:scale-[1.02] active:scale-95">
+          Play Again
+        </button>
+      </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="modal-settings" class="hide absolute inset-0 bg-slate-950/95 z-[110] flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+        <h2 class="text-xl font-black tracking-widest mb-6 text-white text-center uppercase">Settings</h2>
+        <div class="space-y-6 mb-8">
+          <div>
+            <label class="block text-slate-400 text-xs mb-2 font-bold uppercase tracking-wider">Slides Before D20 Roll</label>
+            <input type="number" id="input-setting-turns" class="w-full bg-slate-950 border border-slate-800 text-white font-bold rounded-xl p-3 focus:border-rose-500 outline-none" min="1" max="20">
+          </div>
+          <div>
+            <label class="block text-slate-400 text-xs mb-2 font-bold uppercase tracking-wider">Starting Gold</label>
+            <input type="number" id="input-setting-gold" class="w-full bg-slate-950 border border-slate-800 text-white font-bold rounded-xl p-3 focus:border-rose-500 outline-none" min="0" max="1000">
+          </div>
+          
+          <div class="pt-4 border-t border-slate-800">
+            <label class="block text-slate-400 text-xs mb-3 font-bold uppercase tracking-wider">Dice Theme</label>
+            <select id="input-setting-theme" class="w-full bg-slate-950 border border-slate-800 text-white font-bold rounded-xl p-3 focus:border-rose-500 outline-none">
+                <option value="default">Default Colors</option>
+                <option value="blood">Blood Magic</option>
+                <option value="bone">Ancient Bone</option>
+                <option value="neon">Cyber Neon</option>
+            </select>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800">
+            <label class="block text-slate-400 text-xs mb-3 font-bold uppercase tracking-wider">SFX Volume</label>
+            <input type="range" id="input-setting-sfx" min="0" max="1" step="0.1" value="1" class="w-full accent-rose-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 text-xs mb-3 font-bold uppercase tracking-wider">Screen Shake Level</label>
+            <input type="range" id="input-setting-shake" min="0" max="2" step="0.5" value="1" class="w-full accent-rose-500">
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <button onclick="closeSettings()" class="flex-1 py-4 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-colors uppercase tracking-widest text-xs border border-slate-700">Cancel</button>
+          <button onclick="saveSettings()" class="flex-1 py-4 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-500 transition-colors uppercase tracking-widest text-xs border border-rose-500/50 shadow-lg">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HELP / COMPENDIUM MODAL -->
+    <div id="modal-help" class="hide absolute inset-0 bg-slate-950/95 z-[110] flex flex-col items-center justify-start p-4 md:p-8 overflow-y-auto">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative mt-4 mb-4">
+         <button onclick="closeHelp()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-3xl font-light">&times;</button>
+         <h2 class="text-3xl font-black tracking-widest mb-6 text-rose-500 text-center uppercase font-serif">Compendium</h2>
+
+         <div class="space-y-6 text-slate-300 text-sm">
+            <section>
+               <h3 class="text-lg font-bold text-white mb-3 uppercase tracking-widest border-b border-slate-700 pb-2">Rules of the Dungeon</h3>
+               <ul class="list-disc pl-5 space-y-3 text-slate-400">
+                  <li><strong class="text-white">Merge to Strike:</strong> Swipe to combine identical weapons to upgrade them. Every merge deals damage to the boss based on the weapon's resulting power.</li>
+                  <li><strong class="text-white">Cast Physical Spells:</strong> Use your class ability to roll real 3D dice. The outcome determines the power of devastating grid-wide effects.</li>
+                  <li><strong class="text-white">Beware Hazards:</strong> Goblins (👺) steal your hard-earned gold. Skeletons (💀) block your merges. Slimes (🟢) multiply and crowd the board. Clear them out by dealing massive burst damage to the boss!</li>
+                  <li><strong class="text-white">Roll For Fate (D20):</strong> Every few moves, you must roll a D20. High rolls bestow critical buffs and spawn powerful weapons, while low rolls spawn hazards or shatter your highest tier weapon.</li>
+               </ul>
+            </section>
+
+            <section>
+               <h3 class="text-lg font-bold text-white mb-3 uppercase tracking-widest border-b border-slate-700 pb-2">Classes & Abilities</h3>
+               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
+                    <div class="flex items-center gap-2 mb-1"><span class="text-2xl">😡</span> <strong class="text-white text-base uppercase tracking-wider">Barbarian</strong></div>
+                    <p class="text-xs text-slate-400">Deals +10 base damage to early weapon combos. Has a <strong class="text-rose-400">-1</strong> penalty to D20 rolls.</p>
+                  </div>
+                  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
+                    <div class="flex items-center gap-2 mb-1"><span class="text-2xl">🥷</span> <strong class="text-white text-base uppercase tracking-wider">Rogue</strong></div>
+                    <p class="text-xs text-slate-400">Gains +1 bonus gold for every successful merge. Has a <strong class="text-emerald-400">+2</strong> bonus to D20 rolls.</p>
+                  </div>
+                  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
+                    <div class="flex items-center gap-2 mb-1"><span class="text-2xl">🧙‍♂️</span> <strong class="text-white text-base uppercase tracking-wider">Wizard</strong></div>
+                    <p class="text-xs text-slate-400">Casts <strong class="text-blue-400">Fireball</strong> to obliterate a 2x2 section of the grid. Has a <strong class="text-emerald-400">+1</strong> bonus to D20 rolls.</p>
+                  </div>
+                  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
+                    <div class="flex items-center gap-2 mb-1"><span class="text-2xl">👁️</span> <strong class="text-white text-base uppercase tracking-wider">Warlock</strong></div>
+                    <p class="text-xs text-slate-400">Casts <strong class="text-purple-400">Eldritch Blast</strong> to clear an entire row of hazards. Has a <strong class="text-emerald-400">+1</strong> bonus to D20 rolls.</p>
+                  </div>
+                  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
+                    <div class="flex items-center gap-2 mb-1"><span class="text-2xl">✨</span> <strong class="text-white text-base uppercase tracking-wider">Cleric</strong></div>
+                    <p class="text-xs text-slate-400">Casts <strong class="text-amber-300">Divine Aid</strong> to restore slides and instantly purify a hazard into a weapon. Mod: 0.</p>
+                  </div>
+                  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
+                    <div class="flex items-center gap-2 mb-1"><span class="text-2xl">🛡️</span> <strong class="text-white text-base uppercase tracking-wider">Paladin</strong></div>
+                    <p class="text-xs text-slate-400">Casts <strong class="text-yellow-400">Divine Smite</strong>, multiplying the spell damage by the value of your highest weapon. Mod: 0.</p>
+                  </div>
+               </div>
+            </section>
+
+            <p class="text-center text-xs text-slate-500 pt-6 mt-6 border-t border-slate-800">
+               made with love by DZVN 💜 Vibecoded with Google Gemini AI ✨
+            </p>
+         </div>
+      </div>
+    </div>
+
+    <!-- CONFIRM HOME MODAL -->
+    <div id="modal-confirm" class="hide absolute inset-0 bg-slate-950/95 z-[120] flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center">
+        <h2 class="text-xl font-black tracking-widest mb-4 text-white uppercase">Leave this run?</h2>
+        <p class="text-slate-400 text-sm mb-8">Go back to game start. All current progress will be lost.</p>
+        <div class="flex gap-3">
+          <button onclick="closeConfirm()" class="flex-1 py-4 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-colors uppercase tracking-widest text-xs border border-slate-700">Cancel</button>
+          <button onclick="executeHome()" class="flex-1 py-4 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-500 transition-colors uppercase tracking-widest text-xs border border-rose-500/50 shadow-lg">Leave</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+<script>
+const apiKey = ""; 
+const config = { turnsBeforeDice: 5, startingGold: 0, sfxVolume: 1.0, screenShake: 1.0, diceTheme: 'default' };
+
+const DICE_THEMES = {
+  default: { bg: '#0f172a', tray: '#050505', 6: '#3b82f6', 8: '#eab308', 10: '#a855f7', 20: '#f43f5e' },
+  blood: { bg: '#450a0a', tray: '#170505', 6: '#fca5a5', 8: '#f87171', 10: '#ef4444', 20: '#dc2626' },
+  bone: { bg: '#fdf6e3', tray: '#44403c', 6: '#475569', 8: '#334155', 10: '#1e293b', 20: '#0f172a' },
+  neon: { bg: '#020617', tray: '#0f172a', 6: '#0ea5e9', 8: '#10b981', 10: '#d946ef', 20: '#f43f5e' }
+};
+
+let tileIdCounter = 1;
+
+const state = {
+  gameState: 'START', grid: Array(16).fill(null),
+  encounterIdx: 0, monsterHp: 0, monsterMaxHp: 0, slidesLeft: 0,
+  gold: config.startingGold, multiplier: 1.0, playerClass: null, 
+  artifacts: [], slidesSinceRoll: 0, slidesTotalInEncounter: 0, usesLeft: 0,
+  logs: [], isRolling: false, shopPool: [], currentAttackInfo: null,
+  runStats: { maxDamage: 0, totalMerges: 0 }
+};
+
+// --- CUSTOM WEB AUDIO SFX ENGINE ---
+const SFX = (function() {
+  let ctx = null;
+  function init() { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); }
+  function play(type, freq, time, vol=0.1, slideFreq=null) {
+    if(!ctx) return; vol *= config.sfxVolume; if(vol <= 0) return;
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    if(slideFreq) osc.frequency.exponentialRampToValueAtTime(slideFreq, ctx.currentTime + time);
+    gain.gain.setValueAtTime(vol, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + time);
+    osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + time);
+  }
+  function noise(time, vol=0.1, filterFreq=1000) {
+    if(!ctx) return; vol *= config.sfxVolume; if(vol <= 0) return;
+    const bufferSize = ctx.sampleRate * time; const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noiseSrc = ctx.createBufferSource(); noiseSrc.buffer = buffer;
+    const filter = ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = filterFreq;
+    const gain = ctx.createGain(); gain.gain.setValueAtTime(vol, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + time);
+    noiseSrc.connect(filter); filter.connect(gain); gain.connect(ctx.destination); noiseSrc.start();
+  }
+  return {
+    init,
+    slide: () => play('sine', 200, 0.1, 0.05, 100),
+    merge: () => { play('square', 400, 0.1, 0.03, 800); setTimeout(()=>play('sine', 800, 0.15, 0.03), 40); },
+    hit: () => { noise(0.4, 0.4, 200); play('triangle', 80, 0.4, 0.4, 30); },
+    diceClatter: () => { noise(0.08, 0.15, 1500); play('square', 400, 0.03, 0.05, 200); },
+    crit: () => { play('triangle', 440, 0.2, 0.2); setTimeout(()=>play('triangle', 554, 0.2, 0.2), 100); setTimeout(()=>play('triangle', 659, 0.6, 0.2), 200); },
+    fail: () => { play('sawtooth', 150, 0.4, 0.15, 80); setTimeout(()=>play('sawtooth', 100, 0.5, 0.15, 50), 200); },
+    coin: () => { play('sine', 1200, 0.1, 0.03, 2000); setTimeout(()=>play('sine', 1600, 0.2, 0.03, 2400), 80); },
+    powerUp: () => { play('sine', 400, 0.5, 0.1, 800); setTimeout(()=>play('square', 600, 0.5, 0.1, 1200), 100); },
+    explosion: () => { noise(0.6, 0.6, 150); play('square', 100, 0.6, 0.4, 20); },
+    beam: () => { play('sawtooth', 800, 0.4, 0.2, 100); },
+    smite: () => { play('sine', 1200, 0.5, 0.3, 400); play('triangle', 800, 0.5, 0.3, 200); }
+  };
+})();
+
+// --- FULLY 3D THREE.JS DICE ENGINE (Inspired by dice-box) ---
+const FixedDiceEngine = (function() {
+    let activeRenderers = {};
+
+    function clear(containerId) {
+        const el = document.getElementById(containerId);
+        if (el) el.innerHTML = '';
+        if (activeRenderers[containerId]) {
+            activeRenderers[containerId].dispose();
+            delete activeRenderers[containerId];
+        }
+    }
+
+    // High friction, highly grounded physics step
+    function applyPhysics(mesh, widthBounds, heightBounds) {
+        let p = mesh.position, r = mesh.rotation, v = mesh.userData.vel, av = mesh.userData.avel;
+        
+        if (v.lengthSq() === 0 && av.lengthSq() === 0) return false;
+
+        p.add(v);
+        r.x += av.x; r.y += av.y; r.z += av.z;
+        v.y -= 0.025; // Stronger Gravity
+
+        let bounced = false;
+        
+        // Floor collision
+        if (p.y <= 1.0) {
+            p.y = 1.0;
+            if (v.y < 0) {
+                if (Math.abs(v.y) > 0.1) bounced = true;
+                v.y *= -0.3; // Very low bounciness
+                if (Math.abs(v.y) < 0.05) v.y = 0; 
+            }
+            v.x *= 0.6; v.z *= 0.6; // High floor sliding friction
+            av.multiplyScalar(0.7); // High floor spinning friction
+        }
+
+        // Wall collisions
+        if (p.x > widthBounds) { p.x = widthBounds; v.x *= -0.8; bounced = true; }
+        if (p.x < -widthBounds) { p.x = -widthBounds; v.x *= -0.8; bounced = true; }
+        if (p.z > heightBounds) { p.z = heightBounds; v.z *= -0.8; bounced = true; }
+        if (p.z < -heightBounds) { p.z = -heightBounds; v.z *= -0.8; bounced = true; }
+
+        // Hard sleep threshold to completely kill micro-movements
+        if (p.y <= 1.05 && v.lengthSq() < 0.001 && av.lengthSq() < 0.001) {
+            v.set(0, 0, 0);
+            av.set(0, 0, 0);
+        }
+
+        return bounced;
+    }
+
+    // Deterministically figures out which face lands up
+    function simulateRoll(mesh, widthBounds, heightBounds) {
+        // Fast-forward physics simulation (up to 1000 steps just in case)
+        for (let i = 0; i < 1000; i++) {
+            applyPhysics(mesh, widthBounds, heightBounds);
+            if (mesh.userData.vel.lengthSq() === 0 && mesh.userData.avel.lengthSq() === 0) break;
+        }
+
+        mesh.updateMatrixWorld();
+
+        let topFace = 0; let maxDot = -1;
+        mesh.geometry.computeVertexNormals();
+        const normals = mesh.geometry.attributes.normal;
+        const normalMatrix = new THREE.Matrix3().getNormalMatrix(mesh.matrixWorld);
+        const localNormal = new THREE.Vector3();
+        const worldNormal = new THREE.Vector3();
+        
+        for (let i = 0; i < normals.count; i += 3) {
+            localNormal.fromBufferAttribute(normals, i);
+            worldNormal.copy(localNormal).applyMatrix3(normalMatrix).normalize();
+            const dot = worldNormal.dot(new THREE.Vector3(0, 1, 0));
+            if (dot > maxDot) { maxDot = dot; topFace = i / 3; }
+        }
+        return topFace;
+    }
+
+    function createDice(sides, targetResult, idx, count, spreadX, spreadZ) {
+        let geometry;
+        const theme = DICE_THEMES[config.diceTheme] || DICE_THEMES.default;
+        const color = theme[sides] || theme[20];
+        const bgColor = theme.bg;
+
+        // Base scale sizes
+        if (sides === 6) {
+            geometry = new THREE.BoxGeometry(2.0, 2.0, 2.0).toNonIndexed();
+            geometry.clearGroups();
+            for (let i = 0; i < 6; i++) geometry.addGroup(i * 6, 6, i);
+        } else if (sides === 8) {
+            geometry = new THREE.OctahedronGeometry(1.5).toNonIndexed();
+        } else if (sides === 10) {
+            geometry = new THREE.IcosahedronGeometry(1.5).toNonIndexed();
+        } else {
+            geometry = new THREE.IcosahedronGeometry(1.5).toNonIndexed();
+        }
+
+        if (sides !== 6) {
+            const uvs = geometry.attributes.uv;
+            for (let i = 0; i < uvs.count; i += 3) {
+                geometry.addGroup(i, 3, i / 3);
+                uvs.setXY(i + 0, 0, 0); uvs.setXY(i + 1, 1, 0); uvs.setXY(i + 2, 0.5, 1);
+            }
+        }
+
+        // Switch to Toon Material for that NPR cartoonish style
+        const mesh = new THREE.Mesh(geometry, new THREE.MeshToonMaterial());
+        mesh.castShadow = true; mesh.receiveShadow = true;
+        
+        mesh.position.set((Math.random() - 0.5) * spreadX, 12 + Math.random() * 5 + (idx*2), (Math.random() - 0.5) * spreadZ);
+        mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+        
+        const force = 0.5;
+        mesh.userData.vel = new THREE.Vector3((Math.random() - 0.5) * force, 0.2 + Math.random() * 0.2, (Math.random() - 0.5) * force);
+        mesh.userData.avel = new THREE.Vector3((Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 1.5);
+
+        const initPos = mesh.position.clone();
+        const initRot = mesh.rotation.clone();
+        const initVel = mesh.userData.vel.clone();
+        const initAvel = mesh.userData.avel.clone();
+
+        const topTriIndex = simulateRoll(mesh, spreadX, spreadZ);
+        const topMatIndex = sides === 6 ? Math.floor(topTriIndex / 2) : topTriIndex;
+
+        // --- PRE-CALCULATE PERFECT UPRIGHT ROTATION FOR THE END ANIMATION ---
+        let localNormal, localUp;
+        if (sides === 6) {
+            const boxNormals = [
+                new THREE.Vector3(1,0,0), new THREE.Vector3(-1,0,0),
+                new THREE.Vector3(0,1,0), new THREE.Vector3(0,-1,0),
+                new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,-1)
+            ];
+            const boxUps = [
+                new THREE.Vector3(0,1,0), new THREE.Vector3(0,1,0),
+                new THREE.Vector3(0,0,-1), new THREE.Vector3(0,0,1),
+                new THREE.Vector3(0,1,0), new THREE.Vector3(0,1,0)
+            ];
+            localNormal = boxNormals[topMatIndex];
+            localUp = boxUps[topMatIndex];
+        } else {
+            const posAttr = mesh.geometry.attributes.position;
+            const i0 = topTriIndex * 3;
+            const i1 = topTriIndex * 3 + 1;
+            const i2 = topTriIndex * 3 + 2;
+            let v0 = new THREE.Vector3().fromBufferAttribute(posAttr, i0);
+            let v1 = new THREE.Vector3().fromBufferAttribute(posAttr, i1);
+            let v2 = new THREE.Vector3().fromBufferAttribute(posAttr, i2);
+
+            let edge1 = new THREE.Vector3().subVectors(v1, v0);
+            let edge2 = new THREE.Vector3().subVectors(v2, v0);
+            localNormal = new THREE.Vector3().crossVectors(edge1, edge2).normalize();
+            
+            let midBottom = new THREE.Vector3().addVectors(v0, v1).multiplyScalar(0.5);
+            localUp = new THREE.Vector3().subVectors(v2, midBottom).normalize();
+        }
+
+        // We want localNormal mapped to +Y, and localUp mapped to -Z (Up on screen)
+        let localRight = new THREE.Vector3().crossVectors(localUp, localNormal).normalize();
+        let localBack = new THREE.Vector3().copy(localUp).negate();
+        let basisMat = new THREE.Matrix4().makeBasis(localRight, localNormal, localBack);
+        // The inverse matrix aligns the local face to exactly point towards the camera upright
+        mesh.userData.targetQuat = new THREE.Quaternion().setFromRotationMatrix(basisMat).invert();
+
+        // Restore pre-simulation state
+        mesh.position.copy(initPos); mesh.rotation.copy(initRot);
+        mesh.userData.vel.copy(initVel); mesh.userData.avel.copy(initAvel);
+
+        const numMats = sides === 6 ? 6 : (sides === 8 ? 8 : 20);
+        const materials = [];
+        for (let i = 0; i < numMats; i++) {
+            let num = (i === topMatIndex) ? targetResult : (Math.floor(Math.random() * sides) + 1);
+            if (i !== topMatIndex && num === targetResult) num = (num % sides) + 1;
+            
+            const canvas = document.createElement('canvas'); 
+            canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Solid dark background matching UI
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, 256, 256);
+            
+            if (sides === 6) {
+                // Thinner lines
+                ctx.strokeStyle = color; ctx.lineWidth = 6; ctx.strokeRect(6, 6, 244, 244);
+                
+                ctx.fillStyle = color;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                // Extremely bold, large font for maximum readability
+                ctx.font = '900 160px sans-serif'; 
+                ctx.fillText(num, 128, 140);
+            } else {
+                ctx.beginPath(); ctx.moveTo(128, 10); ctx.lineTo(246, 246); ctx.lineTo(10, 246); ctx.closePath();
+                ctx.fillStyle = bgColor; ctx.fill();
+                // Thinner lines
+                ctx.strokeStyle = color; ctx.lineWidth = 6; ctx.stroke();
+                
+                ctx.fillStyle = color;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.font = '900 110px sans-serif';
+                ctx.fillText(num, 128, 165); 
+                if (num === 6 || num === 9) {
+                    ctx.fillRect(100, 220, 56, 8);
+                }
+            }
+            
+            // Use Toon material (color white so the texture map is purely visible)
+            materials.push(new THREE.MeshToonMaterial({ 
+                map: new THREE.CanvasTexture(canvas),
+                color: 0xffffff 
+            }));
+        }
+        mesh.material = materials;
+        return mesh;
+    }
+
+    function roll(containerId, diceArray, results) {
+        return new Promise(resolve => {
+            const container = document.getElementById(containerId);
+            clear(containerId);
+
+            const width = container.clientWidth || 300;
+            const height = container.clientHeight || 200;
+
+            const scene = new THREE.Scene();
+            const aspect = width / height;
+            const d = 3.2; 
+            const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 100);
+            camera.position.set(0, 15, 0);
+            camera.lookAt(0, 0, 0);
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(width, height);
+            renderer.setClearColor(0x000000, 0); // Transparent
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+            activeRenderers[containerId] = renderer;
+
+            // Simple soft lighting required for the Toon material to look cel-shaded
+            const ambient = new THREE.AmbientLight(0xffffff, 0.7); 
+            scene.add(ambient);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 20, 5);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 1024;
+            dirLight.shadow.mapSize.height = 1024;
+            dirLight.shadow.camera.left = -10; dirLight.shadow.camera.right = 10;
+            dirLight.shadow.camera.top = 10; dirLight.shadow.camera.bottom = -10;
+            scene.add(dirLight);
+
+            const spreadX = Math.max(1, (d * aspect) - 1.5);
+            const spreadZ = Math.max(1, d - 1.5);
+
+            // Tray matching theme bg
+            const trayGeo = new THREE.BoxGeometry(spreadX * 2 + 2, 10, spreadZ * 2 + 2);
+            const theme = DICE_THEMES[config.diceTheme] || DICE_THEMES.default;
+            const trayMat = new THREE.MeshToonMaterial({ color: theme.tray, side: THREE.BackSide });
+            const tray = new THREE.Mesh(trayGeo, trayMat);
+            tray.position.y = 4;
+            tray.receiveShadow = true;
+            scene.add(tray);
+
+            const diceObjects = [];
+            diceArray.forEach((sides, idx) => {
+                const die = createDice(sides, results[idx], idx, diceArray.length, spreadX, spreadZ);
+                scene.add(die);
+                diceObjects.push(die);
+            });
+
+            let active = true;
+            let frames = 0;
+            
+            // Animation state
+            let ending = false;
+            let endFrame = 0;
+            
+            function animate() {
+                if (!active) return;
+                requestAnimationFrame(animate);
+
+                if (!ending) {
+                    let moving = false;
+                    diceObjects.forEach(mesh => {
+                        const bounced = applyPhysics(mesh, spreadX, spreadZ);
+                        if (bounced && frames % 5 === 0) SFX.diceClatter();
+                        if (mesh.userData.vel.lengthSq() > 0 || mesh.userData.avel.lengthSq() > 0) moving = true;
+                    });
+
+                    // Trigger the 'Ending' animation phase once physics is done, or cap at 180 frames max
+                    if ((!moving && frames > 20) || frames > 180) {
+                        ending = true;
+                        SFX.slide();
+                        diceObjects.forEach((mesh, i) => {
+                            // Store current values for lerping
+                            mesh.userData.startPos = mesh.position.clone();
+                            mesh.userData.startScale = mesh.scale.clone();
+                            mesh.userData.startQuat = mesh.quaternion.clone();
+                            
+                            // Center them towards the camera and spread them neatly if multiple
+                            let spread = 2.5;
+                            let targetX = (i - (diceObjects.length - 1) / 2) * spread;
+                            mesh.userData.targetPos = new THREE.Vector3(targetX, 3.5, 0); // lifted
+                            mesh.userData.targetScale = new THREE.Vector3(1.6, 1.6, 1.6); // larger
+                        });
+                    }
+                } else {
+                    // Ending animation: lerp dice towards camera, scale up, and snap rotate perfectly upright
+                    endFrame++;
+                    let t = Math.min(endFrame / 25, 1.0);
+                    let ease = 1 - Math.pow(1 - t, 3); // Cubic ease out
+                    
+                    diceObjects.forEach(mesh => {
+                        mesh.position.lerpVectors(mesh.userData.startPos, mesh.userData.targetPos, ease);
+                        mesh.scale.lerpVectors(mesh.userData.startScale, mesh.userData.targetScale, ease);
+                        // Slerp rotation towards mathematically perfect upright face
+                        mesh.quaternion.slerpQuaternions(mesh.userData.startQuat, mesh.userData.targetQuat, ease);
+                    });
+                    
+                    if (endFrame === 1) SFX.powerUp(); // Distinct sound as they float up
+                    
+                    if (endFrame >= 45) { // Give user time to see them centered
+                        active = false;
+                        resolve();
+                    }
+                }
+
+                renderer.render(scene, camera);
+                frames++;
+            }
+            animate();
+        });
+    }
+    
+    return { roll, clear };
+})();
+
+// --- SEEDED PRNG SYSTEM ---
+let currentSeed = 1337;
+function setSeed(str) {
+  if(!str) str = (Math.random() * 4294967296 >>> 0).toString();
+  let h = 1779033703 ^ str.length;
+  for(let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = h << 13 | h >>> 19; }
+  currentSeed = h >>> 0;
+}
+function prng() {
+  let t = currentSeed += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+}
+function prngInt(min, max) { return Math.floor(prng() * (max - min + 1)) + min; }
+
+// --- GAME DATA ---
+const CLASSES = {
+  BARBARIAN: { id: 'Barbarian', icon: '😡', desc: '+10 Dmg to T1&2 combos.', d20Mod: -1, ability: null },
+  ROGUE: { id: 'Rogue', icon: '🥷', desc: '+1 Gold per merge, +2 to D20.', d20Mod: 2, ability: null },
+  WIZARD: { id: 'Wizard', icon: '🧙‍♂️', desc: '+1 to D20. Spell: Fireball.', d20Mod: 1, ability: { name: 'Fireball', count: 1, sides: 6, maxUses: 1 } },
+  WARLOCK: { id: 'Warlock', icon: '👁️', desc: '+1 to D20. Spell: Eldritch Blast.', d20Mod: 1, ability: { name: 'Eldritch Blast', count: 1, sides: 10, maxUses: 3 } },
+  CLERIC: { id: 'Cleric', icon: '✨', desc: 'Spell: Divine Aid (Heals Slides).', d20Mod: 0, ability: { name: 'Divine Aid', count: 1, sides: 8, maxUses: 2, type: 'heal' } },
+  PALADIN: { id: 'Paladin', icon: '🛡️', desc: 'Spell: Smite (Mult by max tile).', d20Mod: 0, ability: { name: 'Divine Smite', count: 1, sides: 8, maxUses: 2 } }
+};
+
+const ENCOUNTERS = [
+  { name: 'Goblin Scout', hp: 150, slides: 25, icon: '👺', power: 'Ambush (Spawns a Goblin every 12 slides)' },
+  { name: 'Orc Brute', hp: 500, slides: 30, icon: '👹', power: 'Tough (-10% Dmg taken)' },
+  { name: 'Slime King', hp: 1200, slides: 35, icon: '🟢', power: 'Ooze (Spawns a Slime every 8 slides)' },
+  { name: 'Troll King', hp: 3500, slides: 40, icon: '🧌', power: 'Regen (Heals 30 HP per slide)' },
+  { name: 'The Lich', hp: 8000, slides: 40, icon: '💀', power: 'Necromancy (Spawns Skeleton per 12 slides, -10 Start Slides)' },
+  { name: 'Ancient Dragon', hp: 20000, slides: 45, icon: '🐉', power: 'Inferno (Burns best weapon every 10 slides)' }
+];
+
+const MASTER_ARTIFACTS = [
+  { id: 'WEIGHTED_DICE', name: 'Weighted Dice', icon: '🎲', rarity: 'Rare', classReq: null, basePrice: 15, desc: (lvl) => `D20 rolls < ${4+lvl} become ${4+lvl}.` },
+  { id: 'ASSASSIN_MARK', name: 'Assassin\'s Mark', icon: '🎯', rarity: 'Epic', classReq: 'Rogue', basePrice: 20, desc: (lvl) => `Merging Daggers gives +${(0.1*lvl).toFixed(1)} Mult.` },
+  { id: 'GRAVITY_BOOTS', name: 'Gravity Boots', icon: '🥾', rarity: 'Common', classReq: null, basePrice: 10, desc: (lvl) => `Slide DOWN deals ${1+(0.5*lvl)}x Dmg, UP deals 0.5x.` },
+  { id: 'NECRONOMICON', name: 'Necronomicon', icon: '📖', rarity: 'Legendary', classReq: null, basePrice: 30, desc: (lvl) => `Slime spawns deal ${50*lvl} Dmg to Boss.` },
+  { id: 'RING_WEALTH', name: 'Ring of Wealth', icon: '💍', rarity: 'Rare', classReq: null, basePrice: 15, desc: (lvl) => `+${30*lvl} Gold entering Tavern.` },
+  { id: 'BOOTS_HASTE', name: 'Boots of Haste', icon: '⚡', rarity: 'Epic', classReq: null, basePrice: 20, desc: (lvl) => `+${3*lvl} Slides per Ante.` },
+  { id: 'GIANT_POTION', name: 'Giant\'s Potion', icon: '🧪', rarity: 'Rare', classReq: null, basePrice: 25, desc: (lvl) => `Base mult permanently +${(0.3*lvl).toFixed(1)}.` },
+  { id: 'VORPAL_BLADE', name: 'Vorpal Edge', icon: '🔪', rarity: 'Legendary', classReq: null, basePrice: 35, desc: (lvl) => `2% chance for ${200*lvl} True Dmg on slide.` }
+];
+
+const getRarityColor = (rarity) => {
+    if(rarity === 'Common') return 'text-slate-300 border-slate-600';
+    if(rarity === 'Rare') return 'text-blue-400 border-blue-600';
+    if(rarity === 'Epic') return 'text-purple-400 border-purple-600';
+    return 'text-orange-400 border-orange-600'; 
+};
+
+const getWeaponStats = (val) => {
+  if (val === -1) return { name: 'Slime', icon: '🟢', bg: 'bg-lime-600', text: 'text-white', dmg: 0 };
+  if (val === -2) return { name: 'Goblin', icon: '👺', bg: 'bg-emerald-700', text: 'text-white', dmg: 0 };
+  if (val === -3) return { name: 'Skeleton', icon: '💀', bg: 'bg-gray-700', text: 'text-white', dmg: 0 };
+  if (val === 2) return { name: 'Dagger', icon: '🗡️', bg: 'bg-slate-300', text: 'text-slate-900', dmg: 2 };
+  if (val === 4) return { name: 'Longsword', icon: '⚔️', bg: 'bg-slate-400', text: 'text-slate-900', dmg: 8 };
+  if (val === 8) return { name: 'Crossbow', icon: '🏹', bg: 'bg-amber-600', text: 'text-white', dmg: 20 };
+  if (val === 16) return { name: 'Battleaxe', icon: '🪓', bg: 'bg-orange-600', text: 'text-white', dmg: 50 };
+  if (val === 32) return { name: 'Magic Staff', icon: '🪄', bg: 'bg-red-600', text: 'text-white', dmg: 120 };
+  if (val === 64) return { name: 'Holy Sword', icon: '✨', bg: 'bg-purple-600', text: 'text-white', dmg: 300 };
+  if (val >= 128) return { name: 'Relic', icon: '👑', bg: 'bg-indigo-700', text: 'text-white', dmg: val * 10 };
+  return { name: '', icon: '', bg: 'bg-slate-800', text: '', dmg: 0 };
+};
+
+// --- DOM ELEMENTS ---
+const el = {
+  mainContainer: document.getElementById('main-container'), modalBackdrop: document.getElementById('modal-backdrop'),
+  headerAnte: document.getElementById('header-ante'), headerStats: document.getElementById('header-stats'),
+  statGold: document.getElementById('stat-gold'), statMult: document.getElementById('stat-mult'),
+  screenStart: document.getElementById('screen-start'), screenClass: document.getElementById('screen-class'),
+  screenPlaying: document.getElementById('screen-playing'), screenTavern: document.getElementById('screen-tavern'),
+  screenEnd: document.getElementById('screen-end'), modalDice: document.getElementById('modal-dice'),
+  classContainer: document.getElementById('class-container'), inputSeed: document.getElementById('input-seed'),
+  hudHpBar: document.getElementById('hud-hp-bar'), hudIcon: document.getElementById('hud-icon'),
+  hudName: document.getElementById('hud-name'), hudHp: document.getElementById('hud-hp'),
+  hudSlides: document.getElementById('hud-slides'), hudPower: document.getElementById('hud-power'),
+  tilesLayer: document.getElementById('tiles-layer'), gridContainer: document.getElementById('grid-container'),
+  sidebarArtifacts: document.getElementById('sidebar-artifacts'), sidebarClassIcon: document.getElementById('sidebar-class-icon'),
+  sidebarClassName: document.getElementById('sidebar-class-name'), sidebarClassUses: document.getElementById('sidebar-class-uses'),
+  sidebarSpellInfo: document.getElementById('sidebar-spell-info'), btnAbility: document.getElementById('btn-ability'), 
+  btnAbilityMobile: document.getElementById('btn-ability-mobile'), mobileClassIcon: document.getElementById('mobile-class-icon'),
+  mobileSpellUses: document.getElementById('mobile-spell-uses'), combatLogDesktop: document.getElementById('combat-log-desktop'), 
+  combatLogMobile: document.getElementById('combat-log-mobile'), diceAnteLevel: document.getElementById('dice-mod-val'), 
+  diceActionBtn: document.getElementById('dice-action-btn'), dicePostRoll: document.getElementById('dice-post-roll'), 
+  diceResultMsg: document.getElementById('dice-result-msg'), d20Panel: document.getElementById('d20-panel'), 
+  tavernArtifacts: document.getElementById('tavern-artifacts'), btnDescend: document.getElementById('btn-descend'), 
+  endTitle: document.getElementById('end-title'), endDesc: document.getElementById('end-desc'), 
+  
+  endStatClass: document.getElementById('end-stat-class'), endStatAnte: document.getElementById('end-stat-ante'),
+  endStatDmg: document.getElementById('end-stat-dmg'), endStatMerges: document.getElementById('end-stat-merges'),
+  endStatSeed: document.getElementById('end-stat-seed'),
+  
+  modalSettings: document.getElementById('modal-settings'), inputSettingTurns: document.getElementById('input-setting-turns'),
+  inputSettingGold: document.getElementById('input-setting-gold'), inputSettingTheme: document.getElementById('input-setting-theme'), 
+  inputSettingSFX: document.getElementById('input-setting-sfx'), inputSettingShake: document.getElementById('input-setting-shake'), 
+  modalAttack: document.getElementById('modal-attack'), attackTitle: document.getElementById('attack-title'), 
+  attackDiceContainer: document.getElementById('attack-dice-container'), attackResult: document.getElementById('attack-result'), 
+  attackTotal: document.getElementById('attack-total'), btnAiOracle: document.getElementById('btn-ai-oracle'), 
+  aiLoading: document.getElementById('ai-loading'), upgradeCost: document.getElementById('upgrade-cost'),
+  modalHelp: document.getElementById('modal-help'), btnHome: document.getElementById('btn-home'),
+  modalConfirm: document.getElementById('modal-confirm')
+};
+
+// --- ENGINE HELPERS ---
+function openHelp() { el.modalHelp.classList.remove('hide'); }
+function closeHelp() { el.modalHelp.classList.add('hide'); }
+
+function confirmHome() {
+  if (['PLAYING', 'TAVERN', 'DICE'].includes(state.gameState)) { el.modalConfirm.classList.remove('hide'); }
+  else { resetGame(); }
+}
+function closeConfirm() { el.modalConfirm.classList.add('hide'); }
+function executeHome() { closeConfirm(); resetGame(); }
+
+function openSettings() { 
+  el.inputSettingTurns.value = config.turnsBeforeDice; 
+  el.inputSettingGold.value = config.startingGold; 
+  el.inputSettingTheme.value = config.diceTheme; 
+  el.inputSettingSFX.value = config.sfxVolume; 
+  el.inputSettingShake.value = config.screenShake; 
+  el.modalSettings.classList.remove('hide'); 
+}
+function closeSettings() { el.modalSettings.classList.add('hide'); }
+function saveSettings() {
+  const t = parseInt(el.inputSettingTurns.value), g = parseInt(el.inputSettingGold.value), vol = parseFloat(el.inputSettingSFX.value), shake = parseFloat(el.inputSettingShake.value);
+  if (!isNaN(t) && t > 0) config.turnsBeforeDice = t; if (!isNaN(g) && g >= 0) config.startingGold = g;
+  if (!isNaN(vol) && vol >= 0) config.sfxVolume = vol;
+  if (!isNaN(shake) && shake >= 0) { config.screenShake = shake; document.documentElement.style.setProperty('--shake-px', `${4 * shake}px`); }
+  config.diceTheme = el.inputSettingTheme.value;
+  if (state.gameState === 'START' || state.gameState === 'CLASS_SELECT') state.gold = config.startingGold;
+  document.getElementById('instruction-turns').innerText = config.turnsBeforeDice; closeSettings();
+}
+
+function addLog(msg) {
+  state.logs.push(msg); if (state.logs.length > 6) state.logs.shift();
+  const html = state.logs.map(log => `<div class="mb-1">> <span class="text-slate-200">${log}</span></div>`).join('');
+  el.combatLogDesktop.innerHTML = html; el.combatLogDesktop.scrollTop = el.combatLogDesktop.scrollHeight;
+  el.combatLogMobile.innerHTML = html; el.combatLogMobile.scrollTop = el.combatLogMobile.scrollHeight;
+}
+function getArtifactLevel(id) { const f = state.artifacts.find(a => a.id === id); return f ? f.level : 0; }
+function hasArtifact(id) { return state.artifacts.some(a => a.id === id); }
+
+function spawnRandomTile(valOverride = null) {
+  const emptyIndices = state.grid.map((v, i) => v === null ? i : null).filter(v => v !== null);
+  if (emptyIndices.length > 0) {
+    const rIdx = emptyIndices[prngInt(0, emptyIndices.length - 1)];
+    const val = valOverride !== null ? valOverride : (prng() > 0.9 ? 4 : 2);
+    state.grid[rIdx] = { id: tileIdCounter++, val: val, pop: true };
+  }
+}
+
+function renderGrid() {
+  const activeIds = new Set();
+  state.grid.forEach((tile, idx) => {
+    if (!tile) return;
+    activeIds.add(tile.id);
+    let r = Math.floor(idx / 4), c = idx % 4;
+    let tileEl = document.getElementById(`tile-${tile.id}`);
+    if (!tileEl) {
+      tileEl = document.createElement('div');
+      tileEl.id = `tile-${tile.id}`;
+      el.tilesLayer.appendChild(tileEl);
+    }
+    const stats = getWeaponStats(tile.val);
+    tileEl.className = `tile shadow-inner ${stats.bg} ${stats.text}`;
+    tileEl.style.left = `calc(var(--cell-size) * ${c} + var(--gap) * ${c})`;
+    tileEl.style.top = `calc(var(--cell-size) * ${r} + var(--gap) * ${r})`;
+    tileEl.style.zIndex = '10'; tileEl.style.opacity = '1'; tileEl.style.transform = 'scale(1)';
+    tileEl.innerHTML = `<span class="text-2xl md:text-3xl">${stats.icon}</span>` + (stats.val !== -1 && stats.val !== -2 && stats.val !== -3 ? `<span class="font-bold text-sm mt-1">${tile.val}</span>` : '');
+    if (tile.pop) { tileEl.classList.remove('pop-in'); void tileEl.offsetWidth; tileEl.classList.add('pop-in'); tile.pop = false; }
+  });
+  
+  Array.from(el.tilesLayer.children).forEach(child => {
+    const id = parseInt(child.id.replace('tile-', ''));
+    if (!activeIds.has(id) && child.dataset.dying !== 'true' && !child.classList.contains('fx-fireball') && !child.classList.contains('fx-beam') && !child.classList.contains('fx-smite') && !child.classList.contains('fx-divine')) {
+      child.dataset.dying = 'true';
+      setTimeout(() => { child.style.opacity = '0'; setTimeout(() => { if(child.parentNode) child.remove(); }, 100); }, 80); 
+    }
+  });
+}
+
+function triggerScreenShake() {
+  if (config.screenShake <= 0) return;
+  el.mainContainer.classList.remove('shake'); void el.mainContainer.offsetWidth; el.mainContainer.classList.add('shake');
+  setTimeout(() => el.mainContainer.classList.remove('shake'), 400);
+}
+
+function playGridFx(type, r, c) {
+    const fx = document.createElement('div');
+    const size = `var(--cell-size)`; const gap = `var(--gap)`;
+    if (type === 'fireball') {
+        fx.className = 'fx-fireball';
+        fx.style.width = `calc((${size} * 2) + ${gap})`; fx.style.height = `calc((${size} * 2) + ${gap})`;
+        fx.style.left = `calc((${size} * ${c}) + (${gap} * ${c}))`; fx.style.top = `calc((${size} * ${r}) + (${gap} * ${r}))`;
+        el.gridContainer.appendChild(fx); setTimeout(() => { if(fx.parentNode) fx.remove(); }, 600);
+    } else if (type === 'beam') {
+        fx.className = 'fx-beam';
+        fx.style.height = size; fx.style.top = `calc((${size} * ${r}) + (${gap} * ${r}))`;
+        fx.style.left = '2%'; fx.style.width = '96%';
+        el.gridContainer.appendChild(fx); setTimeout(() => { if(fx.parentNode) fx.remove(); }, 500);
+    } else if (type === 'smite') {
+        fx.className = 'fx-smite';
+        fx.style.width = size; fx.style.height = `calc((${size} * 4) + (${gap} * 3))`;
+        fx.style.left = `calc((${size} * ${c}) + (${gap} * ${c}))`; fx.style.top = '2%';
+        el.gridContainer.appendChild(fx); setTimeout(() => { if(fx.parentNode) fx.remove(); }, 600);
+    } else if (type === 'divine') {
+        fx.className = 'fx-divine';
+        el.gridContainer.appendChild(fx); setTimeout(() => { if(fx.parentNode) fx.remove(); }, 800);
+    }
+}
+
+function checkGridlock() {
+  if (state.grid.some(t => t === null)) return false;
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 3; c++) {
+      let i1 = r * 4 + c, i2 = r * 4 + c + 1;
+      if (state.grid[i1].val > 0 && state.grid[i1].val === state.grid[i2].val) return false;
+    }
+  }
+  for (let c = 0; c < 4; c++) {
+    for (let r = 0; r < 3; r++) {
+      let i1 = r * 4 + c, i2 = (r + 1) * 4 + c;
+      if (state.grid[i1].val > 0 && state.grid[i1].val === state.grid[i2].val) return false;
+    }
+  }
+  return true;
+}
+
+// --- CORE GAME LOGIC ---
+function processMove(direction) {
+  if (state.gameState !== 'PLAYING' || state.isRolling) return;
+  let newGrid = [...state.grid];
+  let changed = false, damageThisTurn = 0, goldEarnedThisTurn = 0, multIncrease = 0;
+
+  const processLine = (lineIndices) => {
+    let line = lineIndices.map(i => newGrid[i]).filter(v => v !== null);
+    let combined = [];
+    for (let i = 0; i < line.length; i++) {
+      if (i < line.length - 1 && line[i].val > 0 && line[i].val === line[i+1].val) {
+        let tA = line[i], tB = line[i+1], newVal = tA.val * 2;
+        combined.push({ id: tA.id, val: newVal, pop: true }); 
+        state.runStats.totalMerges++;
+        
+        let tB_el = document.getElementById(`tile-${tB.id}`);
+        if(tB_el) {
+            let tIdx = lineIndices[combined.length - 1];
+            tB_el.style.left = `calc(var(--cell-size) * ${tIdx%4} + var(--gap) * ${tIdx%4})`;
+            tB_el.style.top = `calc(var(--cell-size) * ${Math.floor(tIdx/4)} + var(--gap) * ${Math.floor(tIdx/4)})`;
+            tB_el.style.zIndex = '5'; 
+        }
+
+        let baseDmg = getWeaponStats(newVal).dmg;
+        if (state.playerClass.id === 'Barbarian' && (newVal === 4 || newVal === 8)) baseDmg += 10;
+        
+        let dirMult = 1;
+        const bootsLvl = getArtifactLevel('GRAVITY_BOOTS');
+        if (bootsLvl > 0) { if (direction === 'DOWN') dirMult = 1 + (0.5 * bootsLvl); else if (direction === 'UP') dirMult = 0.5; }
+
+        damageThisTurn += (baseDmg * state.multiplier * dirMult);
+        if (state.playerClass.id === 'Rogue') goldEarnedThisTurn += 1;
+        const assLvl = getArtifactLevel('ASSASSIN_MARK');
+        if (assLvl > 0 && newVal === 4) multIncrease += (0.1 * assLvl);
+        i++; 
+      } else { combined.push(line[i]); }
+    }
+    while (combined.length < 4) combined.push(null);
+    for (let i = 0; i < 4; i++) {
+      if ((newGrid[lineIndices[i]]?.id !== combined[i]?.id) || (newGrid[lineIndices[i]]?.val !== combined[i]?.val)) changed = true;
+      newGrid[lineIndices[i]] = combined[i];
+    }
+  };
+
+  if (direction === 'LEFT') { for (let r = 0; r < 4; r++) processLine([r*4, r*4+1, r*4+2, r*4+3]); }
+  else if (direction === 'RIGHT') { for (let r = 0; r < 4; r++) processLine([r*4+3, r*4+2, r*4+1, r*4]); }
+  else if (direction === 'UP') { for (let c = 0; c < 4; c++) processLine([c, c+4, c+8, c+12]); }
+  else if (direction === 'DOWN') { for (let c = 0; c < 4; c++) processLine([c+12, c+8, c+4, c]); }
+
+  if (!changed) return; 
+  SFX.slide();
+
+  let goblinCount = newGrid.filter(t => t && t.val === -2).length;
+  if (goblinCount > 0) {
+      let stolen = Math.min(state.gold, goblinCount);
+      if (stolen > 0) { state.gold -= stolen; addLog(`👺 Goblins stole ${stolen} gold!`); }
+  }
+
+  const vorpalLvl = getArtifactLevel('VORPAL_BLADE');
+  if (vorpalLvl > 0 && state.encounterIdx < ENCOUNTERS.length - 1 && prng() < 0.02) {
+      damageThisTurn += (200 * vorpalLvl); addLog("⚔️ VORPAL STRIKE!");
+  }
+  if (ENCOUNTERS[state.encounterIdx].name === 'Orc Brute') damageThisTurn *= 0.9;
+
+  if (damageThisTurn > 0) { SFX.merge(); applyDamage(damageThisTurn); }
+  if (goldEarnedThisTurn > 0) state.gold += goldEarnedThisTurn;
+  if (multIncrease > 0) state.multiplier += multIncrease;
+
+  if (damageThisTurn >= 100) {
+    let cleared = false;
+    newGrid = newGrid.map(c => { if (c && c.val === -1) { cleared = true; return null; } return c; });
+    if (cleared) addLog(`🟢 Slimes obliterated!`);
+  }
+  if (damageThisTurn >= 50) {
+    let cleared = false;
+    newGrid = newGrid.map(c => { if (c && c.val === -2) { cleared = true; return null; } return c; });
+    if (cleared) addLog(`👺 Goblins cleared!`);
+  }
+
+  state.grid = newGrid; spawnRandomTile();
+  state.slidesLeft -= 1; state.slidesSinceRoll += 1; state.slidesTotalInEncounter += 1;
+  applyBossPowersPostMove(); checkGameState();
+}
+
+function applyDamage(dmg) {
+  if (dmg > state.runStats.maxDamage) state.runStats.maxDamage = dmg;
+  state.monsterHp = Math.max(0, state.monsterHp - dmg);
+  addLog(`Dealt ${Math.floor(dmg)} dmg!`);
+  SFX.hit(); triggerScreenShake();
+}
+
+function applyBossPowersPostMove() {
+  const enc = ENCOUNTERS[state.encounterIdx];
+  if (enc.name === 'Troll King' && state.monsterHp > 0) state.monsterHp = Math.min(state.monsterMaxHp, state.monsterHp + 30);
+  if (enc.name === 'Slime King' && state.slidesTotalInEncounter % 8 === 0) { addLog("Boss Power: Slime spawned!"); spawnRandomTile(-1); }
+  if (enc.name === 'Goblin Scout' && state.slidesTotalInEncounter % 12 === 0) { addLog("Ambush: Goblin spawned!"); spawnRandomTile(-2); }
+  if (enc.name === 'The Lich' && state.slidesTotalInEncounter % 12 === 0) { addLog("Necromancy: Skeleton raised!"); spawnRandomTile(-3); }
+  if (enc.name === 'Ancient Dragon' && state.slidesTotalInEncounter % 10 === 0) {
+    let maxV = 0, maxI = -1; state.grid.forEach((c, i) => { if (c && c.val > maxV) { maxV = c.val; maxI = i; } });
+    if (maxI !== -1) { state.grid[maxI] = null; addLog("Boss Power: Inferno burned highest weapon!"); }
+  }
+}
+
+// --- SPELLS ---
+function restoreSpells() {
+  if (state.gold < 30) { SFX.fail(); return; }
+  const ab = state.playerClass.ability;
+  if (!ab || state.usesLeft >= ab.maxUses) return;
+  SFX.coin(); state.gold -= 30; state.usesLeft = ab.maxUses; renderHUD(); addLog("Restored spell uses.");
+}
+
+function upgradeSpell() {
+  const cost = 100 * (state.playerClass.ability ? state.playerClass.ability.count : 1);
+  if (state.gold < cost) { SFX.fail(); return; }
+  const ab = state.playerClass.ability; if (!ab) return;
+  SFX.powerUp(); state.gold -= cost; ab.count += 1; renderTavern(); renderHUD(); addLog(`Spell Enhanced: Now rolls ${ab.count}d${ab.sides}!`);
+}
+
+function useClassAbility() {
+  if (state.gameState !== 'PLAYING' || state.isRolling || !state.playerClass.ability || state.usesLeft <= 0) return;
+  const ab = state.playerClass.ability; state.usesLeft--;
+  el.attackTitle.innerText = `Casting ${ab.name}...`; FixedDiceEngine.clear('attack-dice-container'); el.attackResult.classList.add('hide');
+  
+  const rollBtn = document.createElement('button');
+  rollBtn.className = 'px-10 py-5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl shadow-lg transition-transform hover:scale-105 uppercase tracking-widest text-xl z-[100] absolute';
+  rollBtn.innerText = `ROLL ${ab.count}d${ab.sides}`; rollBtn.onclick = () => executeAttackRoll(ab);
+  document.getElementById('attack-dice-container').appendChild(rollBtn);
+  el.modalBackdrop.classList.remove('hide'); el.modalAttack.classList.remove('hide'); renderHUD(); 
+}
+
+async function executeAttackRoll(ab) {
+  state.isRolling = true; el.attackDiceContainer.innerHTML = ''; 
+  let diceArray = []; for(let i=0; i < ab.count; i++) diceArray.push(ab.sides);
+  let results = []; for(let i=0; i < ab.count; i++) results.push(prngInt(1, ab.sides));
+  let sum = results.reduce((a,b) => a+b, 0);
+  await FixedDiceEngine.roll('attack-dice-container', diceArray, results);
+  SFX.hit(); triggerScreenShake();
+  state.currentAttackInfo = { sum, type: ab.type || 'damage' }; el.attackTotal.innerText = sum; el.attackResult.classList.remove('hide');
+}
+
+function resolveAttack() {
+  FixedDiceEngine.clear('attack-dice-container'); el.modalBackdrop.classList.add('hide'); el.modalAttack.classList.add('hide');
+  state.isRolling = false; const info = state.currentAttackInfo; if (!info) return;
+  
+  let totalDmg = info.sum * state.multiplier;
+  const cid = state.playerClass.id;
+
+  if (cid === 'Wizard') {
+      SFX.explosion(); triggerScreenShake();
+      let r = prngInt(0, 2), c = prngInt(0, 2); playGridFx('fireball', r, c);
+      setTimeout(() => {
+          for(let i=0; i<2; i++) { for(let j=0; j<2; j++) { let idx = (r+i)*4 + (c+j); if(state.grid[idx] && state.grid[idx].val < 8) state.grid[idx] = null; } }
+          applyDamage(totalDmg); renderGrid(); renderHUD(); checkGameState();
+      }, 300);
+      state.currentAttackInfo = null; return;
+  }
+  if (cid === 'Warlock') {
+      SFX.beam(); let r = prngInt(0, 3); playGridFx('beam', r, 0);
+      setTimeout(() => {
+          for(let c=0; c<4; c++) { let idx = r*4 + c; if(state.grid[idx] && state.grid[idx].val < 0) state.grid[idx] = null; }
+          applyDamage(totalDmg); renderGrid(); renderHUD(); checkGameState();
+      }, 300);
+      state.currentAttackInfo = null; return;
+  }
+  if (cid === 'Paladin') {
+      SFX.smite(); let maxV = 2, maxI = 0; state.grid.forEach((c, i) => { if (c && c.val > maxV) { maxV = c.val; maxI = i; } });
+      totalDmg = info.sum * maxV * state.multiplier;
+      let r = Math.floor(maxI/4), c = maxI%4; playGridFx('smite', r, c);
+      setTimeout(() => { addLog(`🛡️ Smite amplified by x${maxV}!`); applyDamage(totalDmg); renderGrid(); renderHUD(); checkGameState(); }, 300);
+      state.currentAttackInfo = null; return;
+  }
+  if (cid === 'Cleric') {
+      SFX.powerUp(); playGridFx('divine', 0, 0);
+      setTimeout(() => {
+          state.slidesLeft += info.sum; addLog(`✨ Restored ${info.sum} slides!`);
+          let hIdx = state.grid.findIndex(t => t && t.val < 0);
+          if(hIdx !== -1) { state.grid[hIdx] = { id: tileIdCounter++, val: 2, pop: true }; addLog("✨ Purified a hazard!"); }
+          renderGrid(); renderHUD(); checkGameState();
+      }, 400);
+      state.currentAttackInfo = null; return;
+  }
+  applyDamage(totalDmg); state.currentAttackInfo = null; renderGrid(); renderHUD(); checkGameState();
+}
+
+// --- D20 LOGIC ---
+async function rollD20() {
+  if (state.isRolling) return;
+  state.isRolling = true; el.diceActionBtn.classList.add('hide');
+  let roll = prngInt(1, 20); await FixedDiceEngine.roll('d20-render-target', [20], [roll]); processD20Result(roll);
+}
+
+function processD20Result(roll) {
+    let mod = state.playerClass.d20Mod || 0; roll += mod; 
+    let rawRoll = roll - mod;
+    const weightLvl = getArtifactLevel('WEIGHTED_DICE');
+    if (weightLvl > 0 && roll < (4 + weightLvl)) roll = 4 + weightLvl;
+
+    let msg = ""; let color = "#fff";
+    if (roll >= 20) {
+      msg = "Critical Hit! Mult +1. Upgraded a tile!"; color = "#facc15"; state.multiplier += 1;
+      const valid = state.grid.map((c, i) => c && c.val > 0 ? i : null).filter(c => c !== null);
+      if (valid.length > 0) state.grid[valid[prngInt(0, valid.length-1)]].val *= 2; SFX.crit();
+    } else if (roll >= 10) {
+      msg = "Success! High-tier weapon spawned."; spawnRandomTile(8); SFX.slide();
+    } else if (roll > 1) {
+      msg = "Miss! A Slime blocked your path."; color = "#4ade80"; spawnRandomTile(-1); SFX.fail();
+      const necroLvl = getArtifactLevel('NECRONOMICON');
+      if (necroLvl > 0) { applyDamage(50 * necroLvl); addLog(`Necronomicon burned boss for ${50 * necroLvl}!`); }
+    } else {
+      msg = "Critical Failure! Highest weapon broken."; color = "#e11d48";
+      let maxV = 0, maxI = -1; state.grid.forEach((c, i) => { if (c && c.val > maxV) { maxV = c.val; maxI = i; } });
+      if (maxI !== -1) state.grid[maxI] = null; SFX.fail();
+    }
+    
+    triggerScreenShake();
+    
+    // Prominently display the rolled number in the modal
+    el.diceResultMsg.innerHTML = `<span class="block text-5xl font-black mb-2 font-mono" style="color: ${color}">${rawRoll}</span><span class="text-sm font-bold text-white">${msg}</span>`;
+    
+    setTimeout(() => { el.dicePostRoll.classList.remove('hide'); }, 100);
+    state.isRolling = false;
+}
+
+function closeD20Modal() {
+  FixedDiceEngine.clear('d20-render-target');
+  el.dicePostRoll.classList.add('hide'); el.modalBackdrop.classList.add('hide'); el.modalDice.classList.add('hide');
+  state.slidesSinceRoll = 0; changeState('PLAYING'); checkGameState();
+}
+
+// --- GEMINI API (AI ORACLE) ---
+async function callGeminiOracle() {
+  if (state.gold < 50) { SFX.fail(); return; }
+  SFX.coin(); state.gold -= 50; renderHUD();
+  el.btnAiOracle.classList.add('hide'); el.aiLoading.classList.remove('hide');
+  const prompt = `You are a merchant in a D&D roguelike. The player is a ${state.playerClass.id} and defeated Ante ${state.encounterIdx}. Create a magical artifact. ONLY valid JSON: {"name": "Cool Item Name", "desc": "1-sentence flavor. Grants +1.0 Multiplier."}`;
+  const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { name: { type: "STRING" }, desc: { type: "STRING" } } } } };
+  let resultData = null; let delays = [1000, 2000, 4000];
+  
+  for (let attempt = 0; attempt <= 3; attempt++) {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await response.json(); const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) { resultData = JSON.parse(text); break; }
+    } catch (e) { if (attempt === 3) break; await new Promise(r => setTimeout(r, delays[attempt])); }
+  }
+
+  el.aiLoading.classList.add('hide'); el.btnAiOracle.classList.remove('hide');
+  if (resultData && resultData.name) {
+    state.artifacts.push({ id: 'AI_ART_' + Date.now(), name: resultData.name, icon: '✨', rarity: 'Legendary', level: 1, basePrice: 0, desc: () => resultData.desc });
+    state.multiplier += 1.0; addLog(`Oracle forged ${resultData.name}!`); SFX.crit(); renderTavern();
+  } else { state.gold += 50; alert("Oracle asleep (API Error). Gold refunded."); renderHUD(); }
+}
+
+// --- STATE MANAGEMENT ---
+function startGameFlow() {
+  try { SFX.init(); } catch (e) { console.warn(e); }
+  setSeed(el.inputSeed.value);
+  Object.keys(CLASSES).forEach(k => { if(CLASSES[k].ability) CLASSES[k].ability.count = 1; });
+  changeState('CLASS_SELECT');
+}
+
+function changeState(newState) {
+  state.gameState = newState;
+  [el.screenStart, el.screenClass, el.screenPlaying, el.screenTavern, el.screenEnd].forEach(s => s.classList.add('hide'));
+  if (['START', 'CLASS_SELECT'].includes(newState)) { el.headerStats.classList.add('hide'); el.headerAnte.classList.add('hide'); el.btnHome.classList.add('hide'); }
+  else { el.headerStats.classList.remove('hide'); el.headerAnte.classList.remove('hide'); el.btnHome.classList.remove('hide'); }
+
+  switch (newState) {
+    case 'START': el.screenStart.classList.remove('hide'); break;
+    case 'CLASS_SELECT':
+      el.classContainer.innerHTML = Object.entries(CLASSES).map(([key, cls]) => `
+        <div onclick="selectClass('${key}')" class="bg-slate-900 border border-slate-700 hover:border-rose-500 p-4 rounded-2xl cursor-pointer transition-all flex flex-col items-center text-center shadow-lg">
+          <span class="text-4xl mb-2">${cls.icon}</span><h3 class="text-lg font-black text-white uppercase tracking-wider">${cls.id}</h3><p class="text-slate-400 text-xs mt-1 leading-tight">${cls.desc}</p>
+        </div>`).join('');
+      el.screenClass.classList.remove('hide'); break;
+    case 'PLAYING':
+    case 'DICE':
+      el.screenPlaying.classList.remove('hide');
+      if (newState === 'DICE') {
+        el.modalBackdrop.classList.remove('hide'); el.modalDice.classList.remove('hide');
+        document.getElementById('instruction-turns').innerText = config.turnsBeforeDice;
+        el.diceActionBtn.classList.remove('hide'); el.dicePostRoll.classList.add('hide');
+        let m = state.playerClass.d20Mod || 0; el.diceAnteLevel.innerText = m >= 0 ? `+${m}` : m;
+      } else { el.modalBackdrop.classList.add('hide'); el.modalDice.classList.add('hide'); }
+      renderHUD(); renderGrid(); renderSidebar(); break;
+    case 'TAVERN': renderTavern(); el.screenTavern.classList.remove('hide'); break;
+    case 'GAME_OVER':
+    case 'VICTORY':
+      el.endTitle.innerText = newState === 'VICTORY' ? "VICTORY!" : "RUN OVER";
+      el.endTitle.className = `text-4xl md:text-5xl font-black mb-2 font-serif ${newState === 'VICTORY' ? 'text-amber-400' : 'text-white'}`;
+      el.endDesc.innerText = newState === 'VICTORY' ? "You conquered the dungeon." : "The dungeon claims another soul.";
+      
+      el.endStatClass.innerText = `${state.playerClass.icon} ${state.playerClass.id}`;
+      el.endStatAnte.innerText = state.encounterIdx + 1;
+      el.endStatDmg.innerText = Math.floor(state.runStats.maxDamage);
+      el.endStatMerges.innerText = state.runStats.totalMerges;
+      el.endStatSeed.innerText = el.inputSeed.value || "RANDOM";
+
+      el.modalBackdrop.classList.remove('hide'); el.screenEnd.classList.remove('hide'); 
+      break;
+  }
+}
+
+function selectClass(clsKey) { 
+  state.playerClass = CLASSES[clsKey]; const giantLvl = getArtifactLevel('GIANT_POTION');
+  state.multiplier = 1.0 + (0.3 * giantLvl); initEncounter(0, false); 
+}
+
+function initEncounter(eIdx, maintainStats = false) {
+  const enc = ENCOUNTERS[eIdx]; state.grid = Array(16).fill(null); spawnRandomTile(); spawnRandomTile();
+  state.encounterIdx = eIdx; state.monsterMaxHp = enc.hp; state.monsterHp = enc.hp;
+  state.slidesLeft = enc.slides + (3 * getArtifactLevel('BOOTS_HASTE'));
+  if(enc.name === 'The Lich') state.slidesLeft -= 10;
+  state.slidesSinceRoll = 0; state.slidesTotalInEncounter = 0;
+  state.usesLeft = state.playerClass.ability ? state.playerClass.ability.maxUses : 0;
+  el.headerAnte.innerText = `Ante ${eIdx + 1}`;
+  if (!maintainStats) state.logs = []; addLog(`Encountered ${enc.name}!`); changeState('PLAYING');
+}
+
+function checkGameState() {
+  if (state.gameState !== 'PLAYING') return;
+  renderHUD(); renderGrid(); renderSidebar();
+
+  if (state.monsterHp <= 0) {
+    setTimeout(() => {
+      if (state.encounterIdx >= ENCOUNTERS.length - 1) changeState('VICTORY');
+      else { state.gold += 20 + prngInt(0, 10) + (30 * getArtifactLevel('RING_WEALTH')); generateShop(); changeState('TAVERN'); }
+    }, 300); return;
+  }
+  if (state.slidesLeft <= 0) { setTimeout(() => { changeState('GAME_OVER'); }, 300); return; }
+  if (checkGridlock()) { setTimeout(() => { changeState('GAME_OVER'); }, 500); return; }
+  if (state.slidesSinceRoll >= config.turnsBeforeDice) { setTimeout(() => changeState('DICE'), 300); }
+}
+
+// --- UI HELPERS ---
+function renderHUD() {
+  el.hudHpBar.style.width = `${state.monsterMaxHp > 0 ? Math.max(0, (state.monsterHp / state.monsterMaxHp) * 100) : 0}%`;
+  el.hudHp.innerText = `${Math.floor(state.monsterHp)} / ${state.monsterMaxHp}`;
+  const enc = ENCOUNTERS[state.encounterIdx];
+  el.hudIcon.innerText = enc.icon; el.hudName.innerText = enc.name; el.hudPower.innerText = enc.power;
+  el.hudSlides.innerText = state.slidesLeft;
+  el.hudSlides.className = `text-3xl md:text-4xl font-black font-mono drop-shadow-md ${state.slidesLeft < 5 ? 'text-red-500 animate-pulse' : 'text-white'}`;
+  el.statGold.innerText = state.gold; el.statMult.innerText = state.multiplier.toFixed(1);
+}
+
+function renderSidebar() {
+  el.sidebarClassIcon.innerText = state.playerClass.icon; el.sidebarClassName.innerText = state.playerClass.id; el.mobileClassIcon.innerText = state.playerClass.icon;
+  if (state.playerClass.ability) {
+    el.btnAbility.classList.remove('hide'); el.btnAbilityMobile.classList.remove('hide'); el.sidebarSpellInfo.classList.remove('hide'); el.sidebarClassUses.classList.remove('hide');
+    el.sidebarSpellInfo.innerText = `Spell: ${state.playerClass.ability.count}d${state.playerClass.ability.sides}`;
+    el.sidebarClassUses.innerText = `Uses: ${state.usesLeft} / ${state.playerClass.ability.maxUses}`; el.mobileSpellUses.innerText = `${state.usesLeft}/${state.playerClass.ability.maxUses}`;
+    const dis = "relative z-10 w-full py-3 rounded-xl text-sm font-black bg-slate-700 text-slate-500 cursor-not-allowed uppercase tracking-widest";
+    const act = "relative z-10 w-full py-3 rounded-xl text-sm font-black transition-all bg-blue-600 hover:bg-blue-500 text-white shadow-lg uppercase tracking-widest";
+    if (state.usesLeft <= 0) { el.btnAbility.className = dis; el.btnAbilityMobile.disabled = true; el.btnAbilityMobile.style.opacity = 0.5; } 
+    else { el.btnAbility.className = act; el.btnAbilityMobile.disabled = false; el.btnAbilityMobile.style.opacity = 1; }
+  } else { 
+    el.btnAbility.classList.add('hide'); el.btnAbilityMobile.classList.add('hide'); el.sidebarClassUses.classList.add('hide'); el.sidebarSpellInfo.classList.add('hide');
+  }
+  el.sidebarArtifacts.innerHTML = state.artifacts.length ? '' : '<p class="text-[10px] text-slate-600">None equipped</p>';
+  state.artifacts.forEach(a => el.sidebarArtifacts.innerHTML += `<div class="bg-slate-800 p-2 rounded-lg border border-slate-700 flex items-center gap-2 mb-1" title="${a.desc(a.level)}"><span>${a.icon}</span> <div class="flex flex-col"><span class="text-[10px] font-bold truncate leading-tight">${a.name}</span><span class="text-[9px] text-amber-400 font-mono">Lvl ${a.level}</span></div></div>`);
+}
+
+function generateShop() {
+  const available = MASTER_ARTIFACTS.filter(a => a.classReq === null || a.classReq === state.playerClass.id);
+  state.shopPool = [];
+  while(state.shopPool.length < 4 && available.length > 0) {
+    let idx = prngInt(0, available.length - 1); state.shopPool.push(available[idx]); available.splice(idx, 1);
+  }
+}
+
+function renderTavern() {
+  el.tavernArtifacts.innerHTML = state.shopPool.map(art => {
+    const currentLvl = getArtifactLevel(art.id); const nextLvl = currentLvl + 1; const cost = art.basePrice * nextLvl; const canAfford = state.gold >= cost;
+    let btnCls = `px-4 py-2 rounded-xl font-bold text-xs transition-colors uppercase tracking-widest ` + (canAfford ? "bg-amber-600 hover:bg-amber-500 text-white shadow-lg" : "bg-slate-800 text-slate-500");
+    const rC = getRarityColor(art.rarity);
+    return `<div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 flex gap-3 items-center shadow-lg"><div class="text-3xl bg-slate-950 p-3 rounded-xl shrink-0 border ${rC.split(' ')[1]}">${art.icon}</div>
+      <div class="flex-grow flex flex-col justify-between h-full"><div><div class="flex justify-between items-start"><h3 class="font-black text-sm text-white uppercase tracking-wider">${art.name}</h3>
+      <span class="text-[9px] ${rC.split(' ')[0]} uppercase font-bold border px-1 rounded ${rC.split(' ')[1]}">${art.rarity}</span></div><p class="text-[10px] text-slate-400 mb-2 mt-1 leading-tight h-6 overflow-hidden">${art.desc(nextLvl)}</p></div>
+      <div class="flex justify-between items-center mt-1"><span class="font-mono text-amber-400 text-xs bg-slate-950 px-2 py-1 rounded-md">💰 ${cost}</span>
+      <button id="buy-${art.id}" class="${btnCls}" ${!canAfford ? 'disabled' : `onclick="buyArtifact('${art.id}')"`}>${currentLvl > 0 ? 'Upgrade' : 'Buy'}</button></div></div></div>`;
+  }).join('');
+  if (state.playerClass && state.playerClass.ability) el.upgradeCost.innerText = 100 * state.playerClass.ability.count;
+  el.btnDescend.innerText = ENCOUNTERS[state.encounterIdx + 1] ? `Next Ante` : `Final Boss`; renderHUD();
+}
+
+function buyArtifact(id) {
+  const artDef = MASTER_ARTIFACTS.find(a => a.id === id); const currentLvl = getArtifactLevel(id); const cost = artDef.basePrice * (currentLvl + 1);
+  if (state.gold >= cost) { 
+    SFX.coin(); state.gold -= cost; 
+    let existing = state.artifacts.find(a => a.id === id);
+    if(existing) existing.level++; else state.artifacts.push({ id: artDef.id, name: artDef.name, icon: artDef.icon, rarity: artDef.rarity, level: 1, basePrice: artDef.basePrice, desc: artDef.desc });
+    if(id === 'GIANT_POTION') state.multiplier = 1.0 + (0.3 * (currentLvl + 1));
+    renderTavern(); 
+  }
+}
+function nextEncounter() { initEncounter(state.encounterIdx + 1, true); }
+function resetGame() { 
+  state.gold = config.startingGold; state.multiplier = 1.0; state.artifacts = []; 
+  state.runStats = { maxDamage: 0, totalMerges: 0 };
+  el.inputSeed.value = ''; changeState('START'); 
+  el.modalBackdrop.classList.add('hide'); 
+  el.modalDice.classList.add('hide');
+  el.modalAttack.classList.add('hide');
+}
+
+// --- CONTROLS ---
+window.addEventListener('keydown', (e) => {
+  if (state.gameState !== 'PLAYING') return;
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault(); 
+  if (e.key === 'ArrowLeft') processMove('LEFT');
+  if (e.key === 'ArrowRight') processMove('RIGHT');
+  if (e.key === 'ArrowUp') processMove('UP');
+  if (e.key === 'ArrowDown') processMove('DOWN');
+});
+
+let startX=0, startY=0;
+el.gridContainer.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, {passive:true});
+el.gridContainer.addEventListener('touchmove', (e) => e.preventDefault(), {passive:false});
+el.gridContainer.addEventListener('touchend', (e) => {
+  if (state.gameState !== 'PLAYING') return;
+  let dx = e.changedTouches[0].clientX - startX, dy = e.changedTouches[0].clientY - startY;
+  if (Math.abs(dx) > Math.abs(dy)) { if (Math.abs(dx) > 30) processMove(dx > 0 ? 'RIGHT' : 'LEFT'); } 
+  else { if (Math.abs(dy) > 30) processMove(dy > 0 ? 'DOWN' : 'UP'); }
+}, {passive:false});
+
+// Attach start button via ID explicitly to bypass scoping quirks
+document.getElementById('btn-start').addEventListener('click', startGameFlow);
+
+window.openHelp = openHelp; window.closeHelp = closeHelp;
+window.confirmHome = confirmHome; window.closeConfirm = closeConfirm; window.executeHome = executeHome;
+window.openSettings = openSettings; window.closeSettings = closeSettings; window.saveSettings = saveSettings;
+window.startGameFlow = startGameFlow; window.changeState = changeState; window.selectClass = selectClass;
+window.processMove = processMove; window.useClassAbility = useClassAbility; window.resolveAttack = resolveAttack;
+window.rollD20 = rollD20; window.closeD20Modal = closeD20Modal; window.callGeminiOracle = callGeminiOracle;
+window.nextEncounter = nextEncounter; window.resetGame = resetGame; window.buyArtifact = buyArtifact;
+window.executeAttackRoll = executeAttackRoll; window.upgradeSpell = upgradeSpell; window.restoreSpells = restoreSpells;
+
+changeState('START');
+</script>
+</body>
+</html>
