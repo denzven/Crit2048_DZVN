@@ -36,6 +36,7 @@ function processMove(direction) {
           (newVal === 4 || newVal === 8)
         )
           baseDmg += 10;
+        if (state.playerClass.id === "Fighter" && newVal >= 8) baseDmg += 15;
 
         let dirMult = 1;
         const bootsLvl = getArtifactLevel("GRAVITY_BOOTS");
@@ -44,7 +45,16 @@ function processMove(direction) {
           else if (direction === "UP") dirMult = 0.5;
         }
 
-        damageThisTurn += baseDmg * state.multiplier * dirMult;
+        let dmgForThisMerge = baseDmg * state.multiplier * dirMult;
+        if (state.playerClass.id === "Ranger" && ENCOUNTERS[state.encounterIdx].power.toLowerCase().includes("spawn")) {
+          dmgForThisMerge *= 1.25;
+        }
+        if (state.hunterMarkLeft > 0) {
+          dmgForThisMerge *= 2;
+          state.hunterMarkLeft--;
+        }
+
+        damageThisTurn += dmgForThisMerge;
         if (state.playerClass.id === "Rogue") goldEarnedThisTurn += 1;
         const assLvl = getArtifactLevel("ASSASSIN_MARK");
         if (assLvl > 0 && newVal === 4) multIncrease += 0.1 * assLvl;
@@ -118,6 +128,17 @@ function processMove(direction) {
     });
     if (cleared) addLog(`🟢 Slimes obliterated!`);
   }
+  if (damageThisTurn >= 75) {
+    let cleared = false;
+    newGrid = newGrid.map((c) => {
+      if (c && c.val === -5) {
+        cleared = true;
+        return null;
+      }
+      return c;
+    });
+    if (cleared) addLog(`🕸️ Web cleared!`);
+  }
   if (damageThisTurn >= 50) {
     let cleared = false;
     newGrid = newGrid.map((c) => {
@@ -131,6 +152,26 @@ function processMove(direction) {
   }
 
   state.grid = newGrid;
+
+  if (state.playerClass.id === "Monk") {
+    if (state.lastDirection && state.lastDirection !== direction) {
+      multIncrease += 0.1;
+    }
+    state.lastDirection = direction;
+  }
+  if (state.playerClass.id === "Druid" && prng() < 0.2) {
+    let hzIdx = state.grid.findIndex(t => t && t.val < 0);
+    if (hzIdx !== -1) {
+      state.grid[hzIdx] = null;
+      addLog("🌿 Druid purified a hazard naturally!");
+    }
+  }
+
+  if (state.grid.some(t => t && t.val === -6)) {
+    state.slidesLeft -= 1;
+    addLog("🔮 Curse drained 1 extra slide!");
+  }
+
   spawnRandomTile();
   state.slidesLeft -= 1;
   state.slidesSinceRoll += 1;
@@ -149,35 +190,66 @@ function applyDamage(dmg) {
 
 function applyBossPowersPostMove() {
   const enc = ENCOUNTERS[state.encounterIdx];
-  if (enc.name === "Troll King" && state.monsterHp > 0)
-    state.monsterHp = Math.min(state.monsterMaxHp, state.monsterHp + 30);
-  if (enc.name === "Slime King" && state.slidesTotalInEncounter % 8 === 0) {
-    addLog("Boss Power: Slime spawned!");
-    spawnRandomTile(-1);
-  }
-  if (enc.name === "Goblin Scout" && state.slidesTotalInEncounter % 12 === 0) {
-    addLog("Ambush: Goblin spawned!");
-    spawnRandomTile(-2);
-  }
-  if (enc.name === "The Lich" && state.slidesTotalInEncounter % 12 === 0) {
-    addLog("Necromancy: Skeleton raised!");
-    spawnRandomTile(-3);
-  }
-  if (
-    enc.name === "Ancient Dragon" &&
-    state.slidesTotalInEncounter % 10 === 0
-  ) {
-    let maxV = 0,
-      maxI = -1;
-    state.grid.forEach((c, i) => {
-      if (c && c.val > maxV) {
-        maxV = c.val;
-        maxI = i;
-      }
-    });
-    if (maxI !== -1) {
-      state.grid[maxI] = null;
-      addLog("Boss Power: Inferno burned highest weapon!");
+  const applyPower = (powerName, chanceMult = 1.0) => {
+    if (prng() > chanceMult) return;
+    if (powerName.includes("Troll") && state.monsterHp > 0)
+      state.monsterHp = Math.min(state.monsterMaxHp, state.monsterHp + 30);
+    if (powerName.includes("Slime") && state.slidesTotalInEncounter % 8 === 0) {
+      addLog("Boss Power: Slime spawned!");
+      spawnRandomTile(-1);
     }
+    if (powerName.includes("Goblin") && state.slidesTotalInEncounter % 12 === 0) {
+      addLog("Ambush: Goblin spawned!");
+      spawnRandomTile(-2);
+    }
+    if (powerName.includes("Mimic") && state.slidesTotalInEncounter % 10 === 0) {
+      addLog("Shapechanger: Mimic spawned!");
+      spawnRandomTile(-4);
+    }
+    if (powerName.includes("Mind") && state.slidesTotalInEncounter % 8 === 0) {
+      addLog("Mind Blast: Tiles shuffled!");
+      let filled = state.grid.map((t,i)=>({t,i})).filter(x=>x.t);
+      for(let i=0; i<Math.min(4, filled.length); i++) {
+        let i1 = prngInt(0, filled.length-1);
+        let i2 = prngInt(0, filled.length-1);
+        let temp = state.grid[filled[i1].i];
+        state.grid[filled[i1].i] = state.grid[filled[i2].i];
+        state.grid[filled[i2].i] = temp;
+      }
+    }
+    if (powerName.includes("Lich") && state.slidesTotalInEncounter % 12 === 0) {
+      addLog("Necromancy: Skeleton raised!");
+      spawnRandomTile(-3);
+    }
+    if (powerName.includes("Beholder") && state.slidesTotalInEncounter % 10 === 0) {
+      addLog("Eye Ray: Web spawned!");
+      spawnRandomTile(-5);
+    }
+    if (powerName.includes("Vampire")) {
+      state.monsterHp = Math.min(state.monsterMaxHp, state.monsterHp + 50);
+      if (state.slidesTotalInEncounter % 15 === 0) {
+        let maxV = 0, maxI = -1;
+        state.grid.forEach((c, i) => { if (c && c.val > maxV) { maxV = c.val; maxI = i; } });
+        if (maxI !== -1 && maxV > 2) {
+          state.grid[maxI].val /= 2;
+          addLog("Charm: Best weapon degraded!");
+        }
+      }
+    }
+    if (powerName.includes("Dragon") && state.slidesTotalInEncounter % 10 === 0) {
+      let maxV = 0, maxI = -1;
+      state.grid.forEach((c, i) => { if (c && c.val > maxV) { maxV = c.val; maxI = i; } });
+      if (maxI !== -1) {
+        state.grid[maxI] = null;
+        addLog("Boss Power: Inferno burned highest weapon!");
+      }
+    }
+  };
+
+  if (enc.name === "Tiamat") {
+    // 50% chance to apply ALL other boss powers
+    ["Troll", "Slime", "Goblin", "Mimic", "Mind", "Lich", "Beholder", "Vampire", "Dragon"].forEach(n => applyPower(n, 0.5));
+  } else {
+    applyPower(enc.name, 1.0);
   }
 }

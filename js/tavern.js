@@ -4,7 +4,8 @@ function generateShop() {
     (a) => a.classReq === null || a.classReq === state.playerClass.id,
   );
   state.shopPool = [];
-  while (state.shopPool.length < 4 && available.length > 0) {
+  const poolSize = 4 + getArtifactLevel("BAG_HOLDING");
+  while (state.shopPool.length < poolSize && available.length > 0) {
     let idx = prngInt(0, available.length - 1);
     state.shopPool.push(available[idx]);
     available.splice(idx, 1);

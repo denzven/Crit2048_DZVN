@@ -79,6 +79,73 @@ html, body {
   100% { transform: scale(1.3); opacity: 0; }
 }
 
+.fx-song {
+  position: absolute; z-index: 30; pointer-events: none; inset: 0;
+  background: radial-gradient(circle, rgba(236,72,153,0.5) 0%, transparent 80%);
+  animation: fxSong 0.8s ease-out forwards;
+}
+@keyframes fxSong {
+  0% { transform: scale(0.5); opacity: 0; }
+  30% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.fx-entangle {
+  position: absolute; z-index: 30; pointer-events: none; inset: 0;
+  background: radial-gradient(circle, rgba(34,197,94,0.5) 0%, transparent 70%);
+  animation: fxEntangle 0.8s ease-out forwards;
+}
+@keyframes fxEntangle {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+.fx-blade_storm {
+  position: absolute; z-index: 30; pointer-events: none;
+  background: linear-gradient(180deg, transparent, #e2e8f0, #f8fafc, transparent);
+  animation: fxBladeStorm 0.6s ease-out forwards;
+}
+@keyframes fxBladeStorm {
+  0% { opacity: 0; transform: scaleX(0.1); }
+  50% { opacity: 1; transform: scaleX(1); box-shadow: 0 0 20px #e2e8f0; }
+  100% { opacity: 0; transform: scaleX(0.1); }
+}
+
+.fx-ki_strike {
+  position: absolute; z-index: 30; pointer-events: none; inset: 0;
+  background: radial-gradient(circle, rgba(251,146,60,0.6) 0%, transparent 50%);
+  animation: fxKiStrike 0.5s ease-out forwards;
+}
+@keyframes fxKiStrike {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.fx-hunter_mark {
+  position: absolute; z-index: 30; pointer-events: none; inset: 0;
+  background: radial-gradient(circle, rgba(239,68,68,0.5) 0%, transparent 60%);
+  animation: fxHunterMark 0.8s ease-out forwards;
+}
+@keyframes fxHunterMark {
+  0% { transform: scale(1.5); opacity: 0; }
+  50% { transform: scale(1); opacity: 1; border: 4px solid rgba(239,68,68,0.8); border-radius: 50%; }
+  100% { transform: scale(0.8); opacity: 0; }
+}
+
+.fx-chaos {
+  position: absolute; z-index: 30; pointer-events: none; inset: 0;
+  background: conic-gradient(from 0deg, red, yellow, green, cyan, blue, magenta, red);
+  border-radius: 50%;
+  animation: fxChaos 0.8s ease-out forwards;
+}
+@keyframes fxChaos {
+  0% { transform: scale(0.5) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1) rotate(180deg); opacity: 0.6; }
+  100% { transform: scale(1.2) rotate(360deg); opacity: 0; }
+}
+
 /* Snappy Modern CSS Dice Roll (Kept for fallback/legacy) */
 @keyframes pseudoRoll {
   0% { transform: translate(0, -300px) scale(0.5) rotate(-1080deg); opacity: 0; filter: blur(4px); }

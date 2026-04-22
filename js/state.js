@@ -20,4 +20,6 @@ const state = {
   shopPool: [],
   currentAttackInfo: null,
   runStats: { maxDamage: 0, totalMerges: 0 },
+  lastDirection: null,
+  hunterMarkLeft: 0,
 };

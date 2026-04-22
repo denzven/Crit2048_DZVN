@@ -71,30 +71,42 @@ window.ViewTemplates["modal-help"] = `
             <!-- Page 3: Classes -->
             <div id="help-page-3" class="help-page hidden w-full transition-opacity duration-300">
                <h3 class="text-xl font-bold text-white mb-3 uppercase tracking-widest border-b border-slate-700 pb-2">III. Classes & Abilities</h3>
-               <div class="grid grid-cols-1 gap-4">
-                  <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-inner">
-                    <div class="flex items-center gap-2 mb-1"><span class="text-2xl">😡</span> <strong class="text-white text-base uppercase tracking-wider">Barbarian</strong></div>
-                    <p class="text-xs text-slate-400">+10 dmg to T1/T2 merges. <strong class="text-rose-400">-1</strong> D20 Mod. No Spell.</p>
+               <div class="grid grid-cols-2 gap-2 text-xs">
+                  <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <strong>😡 Barbarian:</strong> +10 dmg to T1/T2. Mod: -1.
                   </div>
-                  <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-inner">
-                    <div class="flex items-center gap-2 mb-1"><span class="text-2xl">🥷</span> <strong class="text-white text-base uppercase tracking-wider">Rogue</strong></div>
-                    <p class="text-xs text-slate-400">+1 Gold per merge. <strong class="text-emerald-400">+2</strong> D20 Mod. No Spell.</p>
+                  <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <strong>🥷 Rogue:</strong> +1 Gold per merge. Mod: +2.
                   </div>
-                  <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-inner">
-                    <div class="flex items-center gap-2 mb-1"><span class="text-2xl">🧙‍♂️</span> <strong class="text-white text-base uppercase tracking-wider">Wizard</strong></div>
-                    <p class="text-xs text-slate-400"><strong>Fireball:</strong> Roll 1d6 &times; Mult. Burns a 2x2 zone. Mod: +1.</p>
+                  <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <strong>🧙‍♂️ Wizard:</strong> Fireball (burns 2x2). Mod: +1.
                   </div>
-                  <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-inner">
-                    <div class="flex items-center gap-2 mb-1"><span class="text-2xl">👁️</span> <strong class="text-white text-base uppercase tracking-wider">Warlock</strong></div>
-                    <p class="text-xs text-slate-400"><strong>Eldritch Blast:</strong> Roll 1d10 &times; Mult. Clears a row. Mod: +1.</p>
+                  <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <strong>👁️ Warlock:</strong> Eldritch Blast (clears row). Mod: +1.
                   </div>
-                  <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-inner">
-                    <div class="flex items-center gap-2 mb-1"><span class="text-2xl">✨</span> <strong class="text-white text-base uppercase tracking-wider">Cleric</strong></div>
-                    <p class="text-xs text-slate-400"><strong>Divine Aid:</strong> Roll 1d8. Restores slides. Purifies 1 hazard. Mod: 0.</p>
+                  <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <strong>✨ Cleric:</strong> Divine Aid (heals + purifies). Mod: 0.
                   </div>
-                  <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-inner">
-                    <div class="flex items-center gap-2 mb-1"><span class="text-2xl">🛡️</span> <strong class="text-white text-base uppercase tracking-wider">Paladin</strong></div>
-                    <p class="text-xs text-slate-400"><strong>Divine Smite:</strong> Roll 1d8 &times; highest weapon tile value. Mod: 0.</p>
+                  <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <strong>🛡️ Paladin:</strong> Smite (mult by max tile). Mod: 0.
+                  </div>
+                  <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <strong>🎵 Bard:</strong> +5 Gold/roll. Vicious Mockery. Mod: +1.
+                  </div>
+                  <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <strong>🌿 Druid:</strong> Auto-purify chance. Entangle. Mod: 0.
+                  </div>
+                  <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <strong>⚔️ Fighter:</strong> +15 Dmg to T3+. Action Surge. Mod: 0.
+                  </div>
+                  <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <strong>👊 Monk:</strong> Alt dirs for Mult. Ki Strike. Mod: +1.
+                  </div>
+                  <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <strong>🏹 Ranger:</strong> +Dmg vs spawners. Hunter's Mark. Mod: -1.
+                  </div>
+                  <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <strong>🔮 Sorcerer:</strong> 19-20 Crit. Chaos Bolt. Mod: +1.
                   </div>
                </div>
             </div>
@@ -103,21 +115,29 @@ window.ViewTemplates["modal-help"] = `
             <div id="help-page-4" class="help-page hidden w-full transition-opacity duration-300">
                <h3 class="text-xl font-bold text-white mb-3 uppercase tracking-widest border-b border-slate-700 pb-2">IV. Bosses & Hazards</h3>
                
-               <h4 class="text-sm font-bold text-white mb-2 uppercase">The Six Bosses</h4>
-               <ul class="text-xs space-y-2 mb-4 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                  <li><span class="text-lg">👺</span> <strong>Ante 1: Goblin Scout (150 HP)</strong> - Spawns a Goblin every 12 slides.</li>
-                  <li><span class="text-lg">👹</span> <strong>Ante 2: Orc Brute (500 HP)</strong> - All your damage is reduced by 10%.</li>
-                  <li><span class="text-lg">🟢</span> <strong>Ante 3: Slime King (1,200 HP)</strong> - Spawns a Slime every 8 slides.</li>
-                  <li><span class="text-lg">🧌</span> <strong>Ante 4: Troll King (3,500 HP)</strong> - Heals 30 HP after every slide.</li>
-                  <li><span class="text-lg">💀</span> <strong>Ante 5: The Lich (8,000 HP)</strong> - Spawns a Skeleton every 12 slides. Starts with 10 fewer slides.</li>
-                  <li><span class="text-lg">🐉</span> <strong>Ante 6: Ancient Dragon (20k HP)</strong> - Burns your highest weapon every 10 slides.</li>
+               <h4 class="text-sm font-bold text-white mb-2 uppercase">The 12 Encounters</h4>
+               <ul class="text-[10px] space-y-1 mb-4 bg-slate-950 p-2 rounded-xl border border-slate-800 grid grid-cols-2 gap-x-2">
+                  <li><span class="text-sm">👺</span> 1. Goblin Scout</li>
+                  <li><span class="text-sm">👹</span> 2. Orc Brute</li>
+                  <li><span class="text-sm">📦</span> 3. Mimic Colony</li>
+                  <li><span class="text-sm">🟢</span> 4. Slime King</li>
+                  <li><span class="text-sm">🦉</span> 5. Owlbear Alpha</li>
+                  <li><span class="text-sm">🧌</span> 6. Troll King</li>
+                  <li><span class="text-sm">🧠</span> 7. Mind Flayer</li>
+                  <li><span class="text-sm">💀</span> 8. The Lich</li>
+                  <li><span class="text-sm">👁️‍🗨️</span> 9. Beholder</li>
+                  <li><span class="text-sm">🐉</span> 10. Ancient Dragon</li>
+                  <li><span class="text-sm">🧛</span> 11. Vampire Lord</li>
+                  <li><span class="text-sm">🐲</span> 12. Tiamat</li>
                </ul>
 
                <h4 class="text-sm font-bold text-white mb-2 uppercase">Hazard Tiles</h4>
-               <ul class="list-disc pl-5 text-xs text-slate-400 space-y-1">
-                  <li><strong>🟢 Slime:</strong> Blocks merges. Cleared by dealing &ge;100 dmg in one move.</li>
-                  <li><strong>👺 Goblin:</strong> Steals 1 gold per tile per slide. Cleared by dealing &ge;50 dmg.</li>
-                  <li><strong>💀 Skeleton:</strong> Blocks merges. Raised by The Lich.</li>
+               <ul class="list-disc pl-5 text-[10px] text-slate-400 space-y-1">
+                  <li><strong>🟢 Slime / 🍄 Spore:</strong> Blocks merges. Multiply over time.</li>
+                  <li><strong>👺 Goblin:</strong> Steals gold.</li>
+                  <li><strong>💀 Skeleton / 📦 Mimic:</strong> Blocks merges entirely.</li>
+                  <li><strong>🕸️ Web:</strong> Web-like block. Cleared by 75+ dmg.</li>
+                  <li><strong>🔮 Curse:</strong> Drains 1 extra slide per move.</li>
                </ul>
             </div>
 
@@ -148,15 +168,31 @@ window.ViewTemplates["modal-help"] = `
                
                <p class="text-xs mb-3">After a boss, visit the Tavern to spend Gold on upgrades.</p>
                
-               <ul class="text-xs space-y-3 mb-4 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                  <li><strong>🎲 Weighted Dice:</strong> Floor protection. Rolls below 4+lvl are raised.</li>
-                  <li><strong>🎯 Assassin's Mark (Rogue):</strong> Dagger merges grant +0.1 Mult.</li>
-                  <li><strong>🥾 Gravity Boots:</strong> Sliding DOWN deals 1.5x+ dmg. Sliding UP deals 0.5x.</li>
-                  <li><strong>📖 Necronomicon:</strong> Slimes deal massive damage to the boss instead!</li>
-                  <li><strong>💍 Ring of Wealth:</strong> Enter Tavern with bonus gold.</li>
-                  <li><strong>⚡ Boots of Haste:</strong> Extra slides at start of Ante.</li>
-                  <li><strong>🧪 Giant's Potion:</strong> Instantly adds +0.3 Mult per level.</li>
-                  <li><strong>🔪 Vorpal Edge:</strong> 2% chance per slide to deal massive True Damage.</li>
+               <ul class="text-[10px] space-y-1 mb-4 bg-slate-950 p-2 rounded-xl border border-slate-800 grid grid-cols-2 gap-x-2 leading-tight">
+                  <li><strong>🎲 Weighted Dice:</strong> Floor protection.</li>
+                  <li><strong>🎯 Assassin's Mark:</strong> Daggers grant Mult.</li>
+                  <li><strong>🥾 Gravity Boots:</strong> DOWN sliding deals 1.5x Dmg.</li>
+                  <li><strong>📖 Necronomicon:</strong> Slimes damage boss.</li>
+                  <li><strong>💍 Ring of Wealth:</strong> Bonus tavern gold.</li>
+                  <li><strong>⚡ Boots of Haste:</strong> Extra start slides.</li>
+                  <li><strong>🧪 Giant's Potion:</strong> +0.3 Mult instantly.</li>
+                  <li><strong>🔪 Vorpal Edge:</strong> True Dmg proc chance.</li>
+                  <li><strong>🧥 Cloak of Invis:</strong> Hazards -20% spawn.</li>
+                  <li><strong>📿 Amulet of Proof:</strong> Low rolls raised.</li>
+                  <li><strong>🔥 Flame Tongue:</strong> T3+ merges AOE.</li>
+                  <li><strong>🌙 Moon Sickle:</strong> Heals give slides.</li>
+                  <li><strong>🎸 Lute of Thunder:</strong> Spell Dmg x1.5.</li>
+                  <li><strong>🏛️ Staff of Power:</strong> Best Chaos Bolt.</li>
+                  <li><strong>🛡️ Bracers of Def:</strong> Slides per roll.</li>
+                  <li><strong>🏹 Quiver Ehlonna:</strong> Hunter's Mark + duration.</li>
+                  <li><strong>💼 Bag of Holding:</strong> +1 Shop slot.</li>
+                  <li><strong>👑 Helm of Brilliance:</strong> Crits deal huge Dmg.</li>
+                  <li><strong>🪨 Stone of Luck:</strong> +1 to ALL rolls.</li>
+                  <li><strong>⬛ Adamantine:</strong> Immune to crit fails.</li>
+                  <li><strong>🔩 Immovable Rod:</strong> Best weapon protected.</li>
+                  <li><strong>🃏 Deck of Many:</strong> D20 outcomes doubled.</li>
+                  <li><strong>⚔️ Holy Avenger:</strong> Massive Smite + AOE.</li>
+                  <li><strong>📜 Spell Scroll:</strong> +1 Max spell uses.</li>
                </ul>
 
                <h4 class="text-sm font-bold text-white mb-1 uppercase">Gemini Oracle</h4>

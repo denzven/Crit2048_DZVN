@@ -9,6 +9,10 @@ async function rollD20() {
 }
 
 function processD20Result(roll) {
+  if (state.playerClass.id === "Bard") {
+    state.gold += 5;
+    addLog("🎵 Bard gained 5 gold from performing!");
+  }
   let mod = state.playerClass.d20Mod || 0;
   roll += mod;
   let rawRoll = roll - mod;
@@ -17,7 +21,10 @@ function processD20Result(roll) {
 
   let msg = "";
   let color = "#fff";
-  if (roll >= 20) {
+  
+  let isCrit = roll >= 20 || (state.playerClass.id === "Sorcerer" && roll >= 19);
+
+  if (isCrit) {
     msg = "Critical Hit! Mult +1. Upgraded a tile!";
     color = "#facc15";
     state.multiplier += 1;

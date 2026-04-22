@@ -105,7 +105,7 @@ function renderHUD() {
 
 function renderSidebar() {
   el.sidebarClassIcon.innerText = state.playerClass.icon;
-  el.sidebarClassName.innerText = state.playerClass.id;
+  el.sidebarClassName.innerText = state.playerClass.id + (state.hunterMarkLeft > 0 ? ` (Mark: ${state.hunterMarkLeft})` : "");
   el.mobileClassIcon.innerText = state.playerClass.icon;
 
   if (state.playerClass.ability) {

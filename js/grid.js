@@ -51,7 +51,13 @@ function renderGrid() {
       !child.classList.contains("fx-fireball") &&
       !child.classList.contains("fx-beam") &&
       !child.classList.contains("fx-smite") &&
-      !child.classList.contains("fx-divine")
+      !child.classList.contains("fx-divine") &&
+      !child.classList.contains("fx-song") &&
+      !child.classList.contains("fx-entangle") &&
+      !child.classList.contains("fx-blade_storm") &&
+      !child.classList.contains("fx-ki_strike") &&
+      !child.classList.contains("fx-hunter_mark") &&
+      !child.classList.contains("fx-chaos")
     ) {
       child.dataset.dying = "true";
       setTimeout(() => {
@@ -113,6 +119,34 @@ function playGridFx(type, r, c) {
     setTimeout(() => {
       if (fx.parentNode) fx.remove();
     }, 800);
+  } else if (type === "song") {
+    fx.className = "fx-song";
+    el.gridContainer.appendChild(fx);
+    setTimeout(() => { if (fx.parentNode) fx.remove(); }, 800);
+  } else if (type === "entangle") {
+    fx.className = "fx-entangle";
+    el.gridContainer.appendChild(fx);
+    setTimeout(() => { if (fx.parentNode) fx.remove(); }, 800);
+  } else if (type === "blade_storm") {
+    fx.className = "fx-blade_storm";
+    fx.style.width = size;
+    fx.style.height = `calc((${size} * 4) + (${gap} * 3))`;
+    fx.style.left = `calc((${size} * ${c}) + (${gap} * ${c}))`;
+    fx.style.top = "2%";
+    el.gridContainer.appendChild(fx);
+    setTimeout(() => { if (fx.parentNode) fx.remove(); }, 600);
+  } else if (type === "ki_strike") {
+    fx.className = "fx-ki_strike";
+    el.gridContainer.appendChild(fx);
+    setTimeout(() => { if (fx.parentNode) fx.remove(); }, 500);
+  } else if (type === "hunter_mark") {
+    fx.className = "fx-hunter_mark";
+    el.gridContainer.appendChild(fx);
+    setTimeout(() => { if (fx.parentNode) fx.remove(); }, 800);
+  } else if (type === "chaos") {
+    fx.className = "fx-chaos";
+    el.gridContainer.appendChild(fx);
+    setTimeout(() => { if (fx.parentNode) fx.remove(); }, 800);
   }
 }
 

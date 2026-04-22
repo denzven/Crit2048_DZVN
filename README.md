@@ -72,6 +72,12 @@ Each class is built around one D&D 5e archetype and plays distinctly differently
 | 👁️ | **Warlock** | +1 | — | **Eldritch Blast** — Roll 1d10 × Mult. Clears an entire row of hazard tiles. |
 | ✨ | **Cleric** | 0 | — | **Divine Aid** — Roll 1d8. Restores that many slides. Purifies one hazard tile. |
 | 🛡️ | **Paladin** | 0 | — | **Divine Smite** — Roll 1d8 × your highest weapon tile. Enormous spike damage. |
+| 🎵 | **Bard** | +1 | +5 Gold generated on every D20 roll | **Vicious Mockery** — Roll 1d6 × Mult. |
+| 🌿 | **Druid** | 0 | 20% chance to purify a hazard automatically on slide | **Entangle** — Roll 1d6. Destroys lowest active tile. |
+| ⚔️ | **Fighter** | 0 | +15 damage to merges of Tier 3+ (Crossbow and above) | **Action Surge** — Grants massive base damage bonus. |
+| 👊 | **Monk** | +1 | Alternating directions on slides builds Mult bonus | **Ki Strike** — Roll 1d8 × Mult. Fast and lethal. |
+| 🏹 | **Ranger** | -1 | Deal +25% damage to bosses that spawn hazards | **Hunter's Mark** — Next merge deals 2x damage. |
+| 🔮 | **Sorcerer** | +1 | D20 rolls of 19 act as Critical Hits | **Chaos Bolt** — Roll 1d12 × Mult. |
 
 ### Class Spell Details
 
@@ -82,16 +88,22 @@ Each class is built around one D&D 5e archetype and plays distinctly differently
 
 ---
 
-## 🐉 The Six Bosses (Antas)
+## 🐉 The Twelve Bosses (Antas)
 
 | Ante | Boss | HP | Slides | Special Power |
 |------|------|----|--------|---------------|
-| 1 | 👺 **Goblin Scout** | 150 | 25 | **Ambush** — Spawns a Goblin tile every 12 slides. Goblins steal gold on contact. |
+| 1 | 👺 **Goblin Scout** | 150 | 25 | **Ambush** — Spawns a Goblin tile every 12 slides. |
 | 2 | 👹 **Orc Brute** | 500 | 30 | **Tough** — All damage you deal is reduced by 10%. |
-| 3 | 🟢 **Slime King** | 1,200 | 35 | **Ooze** — Spawns a Slime tile every 8 slides, clogging your grid. |
-| 4 | 🧌 **Troll King** | 3,500 | 40 | **Regen** — Heals 30 HP after every single slide you make. |
-| 5 | 💀 **The Lich** | 8,000 | 30* | **Necromancy** — Spawns a Skeleton every 12 slides AND starts with 10 fewer slides. |
-| 6 | 🐉 **Ancient Dragon** | 20,000 | 45 | **Inferno** — Burns (deletes) your highest-value weapon tile every 10 slides. |
+| 3 | 📦 **Mimic Colony** | 800 | 30 | **Shapechanger** — Spawns Mimic tiles that block merges. |
+| 4 | 🟢 **Slime King** | 1,200 | 35 | **Ooze** — Spawns a Slime tile every 8 slides. |
+| 5 | 🦉 **Owlbear Alpha** | 2,000 | 35 | **Frenzy** — High HP, forces careful slide economy. |
+| 6 | 🧌 **Troll King** | 3,500 | 40 | **Regen** — Heals 30 HP after every single slide you make. |
+| 7 | 🧠 **Mind Flayer** | 5,000 | 35 | **Mind Blast** — Periodically shuffles your tiles. |
+| 8 | 💀 **The Lich** | 8,000 | 30* | **Necromancy** — Spawns Skeletons. Starts with 10 fewer slides. |
+| 9 | 👁️‍🗨️ **Beholder** | 12,000 | 40 | **Eye Ray** — Shoots Web tiles that block and require damage to clear. |
+| 10 | 🐉 **Ancient Dragon** | 20,000 | 45 | **Inferno** — Burns your highest-value weapon tile every 10 slides. |
+| 11 | 🧛 **Vampire Lord** | 35,000 | 45 | **Charm** — Degrades your best weapons and heals itself rapidly. |
+| 12 | 🐲 **Tiamat** | 100,000 | 50 | **Chromatic Wrath** — Unleashes ALL other boss powers simultaneously. |
 
 > *The Lich reduces your starting slides from 40 → 30, making it one of the most punishing encounters in the dungeon.*
 
@@ -104,6 +116,10 @@ Bosses don't just have high HP — they deploy **tile hazards** onto your grid:
 | 🟢 | Slime | Blocks merges. Cleared if you deal ≥100 damage in one move. |
 | 👺 | Goblin | Steals 1 gold per tile per slide. Cleared if you deal ≥50 damage. |
 | 💀 | Skeleton | Blocks merges. Raised by The Lich. |
+| 📦 | Mimic | Blocks merges. Looks exactly like a weapon tile. |
+| 🕸️ | Web | Roots tiles. Cleared if you deal ≥75 damage in one move. |
+| 🔮 | Curse | Drains an extra slide every move it stays on the board. |
+| 🍄 | Spore | Replicates itself rapidly over time. |
 
 ---
 
@@ -148,6 +164,22 @@ Artifacts are **upgradeable** — buying the same artifact again increases its l
 | ⚡ | **Boots of Haste** | Epic | Gain `3×lvl` extra slides at the start of every Ante. |
 | 🧪 | **Giant's Potion** | Rare | Permanently raises your base multiplier by `+0.3×lvl`. Applied immediately. |
 | 🔪 | **Vorpal Edge** | Legendary | 2% chance per slide to deal `200×lvl` True Damage (ignores all reductions). |
+| 🧥 | **Cloak of Invisibility** | Epic | Hazard spawn rate reduced by `20×lvl`%. |
+| 📿 | **Amulet of Proof** | Rare | D20 results of 1 or 2 become `2+lvl`. |
+| 🔥 | **Flame Tongue** | Epic | *(Fighter only)* Merging Tier 3+ deals `+50×lvl` AOE damage. |
+| 🌙 | **Moon Sickle** | Epic | *(Druid only)* Heal spells restore `+3×lvl` extra slides. |
+| 🎸 | **Lute of Thunder** | Legendary | *(Bard only)* Spell damage multiplied by `1+0.5×lvl`. |
+| 🏛️ | **Staff of Power** | Legendary | *(Sorcerer only)* Chaos Bolt always picks the best outcome. |
+| 🛡️ | **Bracers of Defense** | Rare | *(Monk only)* Gain `+2×lvl` slides per D20 roll. |
+| 🏹 | **Quiver of Ehlonna** | Rare | *(Ranger only)* Hunter's Mark lasts `+2×lvl` extra merges. |
+| 💼 | **Bag of Holding** | Common | Shop offers `+1×lvl` extra artifact slots. |
+| 👑 | **Helm of Brilliance** | Legendary | Critical Hits deal `(2+1×lvl)×` damage. |
+| 🪨 | **Stone of Good Luck** | Rare | Adds `+1×lvl` to ALL D20 rolls. |
+| ⬛ | **Adamantine Armor** | Epic | Immune to D20 Critical Failures (rolls of 1). |
+| 🔩 | **Immovable Rod** | Rare | Hazards cannot spawn adjacent to your highest weapon tile. |
+| 🃏 | **Deck of Many Things** | Artifact | D20 outcomes are doubled. |
+| ⚔️ | **Holy Avenger** | Artifact | *(Paladin only)* Smite damage `×2×lvl`. Hazards take AOE damage on cast. |
+| 📜 | **Spell Scroll** | Common | Gain `+1×lvl` maximum spell uses. |
 
 ### Tavern Services
 
