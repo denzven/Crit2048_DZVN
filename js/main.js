@@ -213,6 +213,8 @@ el.gridContainer.addEventListener(
 // --- GLOBAL FUNCTION EXPORTS (for inline onclick attributes) ---
 window.openHelp = openHelp;
 window.closeHelp = closeHelp;
+window.nextHelpPage = nextHelpPage;
+window.prevHelpPage = prevHelpPage;
 window.confirmHome = confirmHome;
 window.closeConfirm = closeConfirm;
 window.executeHome = executeHome;

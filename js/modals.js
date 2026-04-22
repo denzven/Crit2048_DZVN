@@ -1,9 +1,57 @@
+let currentHelpPage = 1;
+const totalHelpPages = 6;
+
 // --- MODAL & OVERLAY HELPERS ---
 function openHelp() {
+  currentHelpPage = 1;
+  updateHelpPagination();
   el.modalHelp.classList.remove("hide");
 }
+
 function closeHelp() {
   el.modalHelp.classList.add("hide");
+}
+
+function nextHelpPage() {
+  if (currentHelpPage < totalHelpPages) {
+    currentHelpPage++;
+    updateHelpPagination();
+  }
+}
+
+function prevHelpPage() {
+  if (currentHelpPage > 1) {
+    currentHelpPage--;
+    updateHelpPagination();
+  }
+}
+
+function updateHelpPagination() {
+  for (let i = 1; i <= totalHelpPages; i++) {
+    const page = document.getElementById(`help-page-${i}`);
+    const dot = document.getElementById(`dot-${i}`);
+    if (page) {
+      if (i === currentHelpPage) {
+        page.classList.remove("hidden");
+      } else {
+        page.classList.add("hidden");
+      }
+    }
+    if (dot) {
+      if (i === currentHelpPage) {
+        dot.classList.remove("bg-slate-700");
+        dot.classList.add("bg-rose-500");
+      } else {
+        dot.classList.remove("bg-rose-500");
+        dot.classList.add("bg-slate-700");
+      }
+    }
+  }
+  
+  const btnPrev = document.getElementById("btn-help-prev");
+  const btnNext = document.getElementById("btn-help-next");
+  if (btnPrev) btnPrev.disabled = currentHelpPage === 1;
+  if (btnNext) btnNext.disabled = currentHelpPage === totalHelpPages;
 }
 
 function confirmHome() {
