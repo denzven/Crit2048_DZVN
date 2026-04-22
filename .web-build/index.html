@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Crit 2048: Roguelike D&D</title>
 
   <!-- Styling -->
@@ -14,7 +14,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 flex flex-col h-screen w-screen overflow-hidden">
 
-  <header class="p-3 md:p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 relative z-40">
+  <header class="p-3 md:p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 relative z-40" style="padding-top: max(env(safe-area-inset-top), 0.75rem); padding-left: max(env(safe-area-inset-left), 0.75rem); padding-right: max(env(safe-area-inset-right), 0.75rem);">
     <div class="flex items-center gap-2">
       <h1 class="text-lg md:text-2xl font-black tracking-wider text-rose-500 flex items-center gap-2 font-serif">
         🐉 CRIT 2048
@@ -32,7 +32,7 @@
     </div>
   </header>
 
-  <main id="main-container" class="flex-grow flex flex-col items-center p-3 md:p-4 relative min-h-0 w-full overflow-hidden">
+  <main id="main-container" class="flex-grow flex flex-col items-center p-3 md:p-4 relative min-h-0 w-full overflow-hidden" style="padding-bottom: max(env(safe-area-inset-bottom), 0.75rem); padding-left: max(env(safe-area-inset-left), 0.75rem); padding-right: max(env(safe-area-inset-right), 0.75rem);">
 
     <div id="modal-backdrop" class="hide absolute inset-0 bg-slate-950/80 z-[90] backdrop-blur-sm transition-opacity duration-300"></div>
 
