@@ -47,6 +47,10 @@ function changeState(newState) {
         )
         .join("");
       el.screenClass.classList.remove("hide");
+      setTimeout(() => {
+        const first = el.classContainer.querySelector("div");
+        if (first) first.focus();
+      }, 50);
       break;
 
     case "PLAYING":
@@ -173,7 +177,35 @@ function resetGame() {
 
 // --- CONTROLS ---
 window.addEventListener("keydown", (e) => {
+  if (state.gameState === "CLASS_SELECT") {
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d", "W", "A", "S", "D"].includes(e.key)) {
+      e.preventDefault();
+      const items = Array.from(el.classContainer.querySelectorAll("div"));
+      if (!items.length) return;
+      let idx = items.indexOf(document.activeElement);
+      if (idx === -1) idx = 0;
+      
+      if (["ArrowLeft", "a", "A", "ArrowUp", "w", "W"].includes(e.key)) {
+        idx = (idx - 1 + items.length) % items.length;
+      } else {
+        idx = (idx + 1) % items.length;
+      }
+      items[idx].focus();
+    }
+  }
+
   if (e.key === "Enter") {
+    if (state.gameState === "START") {
+      startGameFlow();
+      return;
+    }
+    if (state.gameState === "TAVERN") {
+      if (document.activeElement && document.activeElement.tagName === "BUTTON" && document.activeElement.id !== "btn-descend") {
+        return; // Allow the user to press Enter on Buy/Upgrade buttons without skipping the tavern!
+      }
+      nextEncounter();
+      return;
+    }
     if (!el.modalDice.classList.contains("hide")) {
       if (!state.isRolling) {
         if (!el.diceActionBtn.classList.contains("hide")) rollD20();
@@ -182,10 +214,13 @@ window.addEventListener("keydown", (e) => {
       return;
     }
     if (!el.modalAttack.classList.contains("hide")) {
-      if (!state.isRolling) {
+      if (!el.attackResult.classList.contains("hide")) {
+        // The roll has finished, waiting for Strike
+        resolveAttack();
+      } else if (!state.isRolling) {
+        // Not rolling yet, roll button is visible
         const rollBtn = el.attackDiceContainer.querySelector("button");
         if (rollBtn) rollBtn.click();
-        else if (!el.attackResult.classList.contains("hide")) resolveAttack();
       }
       return;
     }
@@ -196,6 +231,11 @@ window.addEventListener("keydown", (e) => {
   }
 
   if (state.gameState !== "PLAYING") return;
+  
+  // Prevent movement or spell casts if any interaction modal is open
+  if (!el.modalDice.classList.contains("hide") || !el.modalAttack.classList.contains("hide") || !el.modalSettings.classList.contains("hide") || !el.modalHelp.classList.contains("hide") || !el.modalConfirm.classList.contains("hide")) {
+    return;
+  }
   
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "w", "a", "s", "d", "W", "A", "S", "D"].includes(e.key)) {
     e.preventDefault();
