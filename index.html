@@ -11,12 +11,14 @@
 
   <!-- Three.js for 3D Dice Simulation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- html2canvas for Run Summaries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 flex flex-col h-screen w-screen overflow-hidden">
 
   <header class="p-3 md:p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 relative z-40" style="padding-top: max(env(safe-area-inset-top), 0.75rem); padding-left: max(env(safe-area-inset-left), 0.75rem); padding-right: max(env(safe-area-inset-right), 0.75rem);">
     <div class="flex items-center gap-2">
-      <h1 class="text-lg md:text-2xl font-black tracking-wider text-rose-500 flex items-center gap-2 font-serif">
+      <h1 onclick="confirmHome()" class="text-lg md:text-2xl font-black tracking-wider text-rose-500 flex items-center gap-2 font-serif cursor-pointer hover:text-rose-400 transition-colors" title="Home">
         🐉 CRIT 2048
       </h1>
       <span id="header-ante" class="hide bg-slate-800 text-slate-300 text-xs font-bold px-2 py-1 rounded-md ml-2 uppercase tracking-widest">Ante 1</span>

@@ -8,6 +8,7 @@ function restoreSpells() {
   if (!ab || state.usesLeft >= ab.maxUses) return;
   SFX.coin();
   state.gold -= 30;
+  state.runStats.totalCoinsSpent += 30;
   state.usesLeft = ab.maxUses;
   renderHUD();
   addLog("Restored spell uses.");
@@ -24,6 +25,7 @@ function upgradeSpell() {
   if (!ab) return;
   SFX.powerUp();
   state.gold -= cost;
+  state.runStats.totalCoinsSpent += cost;
   ab.count += 1;
   renderTavern();
   renderHUD();

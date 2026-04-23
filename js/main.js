@@ -5,7 +5,16 @@ function startGameFlow() {
   } catch (e) {
     console.warn(e);
   }
-  setSeed(el.inputSeed.value);
+  const seed = el.inputSeed.value || ((Math.random() * 4294967296) >>> 0).toString();
+  setSeed(seed);
+  state.runStats.seedUsed = seed;
+  state.runStats.startTime = Date.now();
+  state.runStats.totalMoves = 0;
+  state.runStats.totalCoinsSpent = 0;
+  state.runStats.maxMultiplier = 1.0;
+  state.runStats.totalMerges = 0;
+  state.runStats.maxDamage = 0;
+
   Object.keys(CLASSES).forEach((k) => {
     if (CLASSES[k].ability) CLASSES[k].ability.count = 1;
   });
@@ -81,18 +90,15 @@ function changeState(newState) {
 
     case "GAME_OVER":
     case "VICTORY":
+      state.runStats.endTime = Date.now();
       el.endTitle.innerText = newState === "VICTORY" ? "VICTORY!" : "RUN OVER";
       el.endTitle.className = `text-4xl md:text-5xl font-black mb-2 font-serif ${newState === "VICTORY" ? "text-amber-400" : "text-white"}`;
       el.endDesc.innerText =
         newState === "VICTORY"
           ? "You conquered the dungeon."
-          : "The dungeon claims another soul.";
+          : (state.runStats.endReason || "The dungeon claims another soul.");
 
-      el.endStatClass.innerText = `${state.playerClass.icon} ${state.playerClass.id}`;
-      el.endStatAnte.innerText = state.encounterIdx + 1;
-      el.endStatDmg.innerText = Math.floor(state.runStats.maxDamage);
-      el.endStatMerges.innerText = state.runStats.totalMerges;
-      el.endStatSeed.innerText = el.inputSeed.value || "RANDOM";
+      renderEndScreenStats();
 
       el.modalBackdrop.classList.remove("hide");
       el.screenEnd.classList.remove("hide");
@@ -136,7 +142,10 @@ function checkGameState() {
 
   if (state.monsterHp <= 0) {
     setTimeout(() => {
-      if (state.encounterIdx >= ENCOUNTERS.length - 1) changeState("VICTORY");
+      if (state.encounterIdx >= ENCOUNTERS.length - 1) {
+        state.runStats.endReason = "Conquered all bosses!";
+        changeState("VICTORY");
+      }
       else {
         state.gold +=
           20 + prngInt(0, 10) + 30 * getArtifactLevel("RING_WEALTH");
@@ -148,12 +157,14 @@ function checkGameState() {
   }
   if (state.slidesLeft <= 0) {
     setTimeout(() => {
+      state.runStats.endReason = "Out of slides!";
       changeState("GAME_OVER");
     }, 300);
     return;
   }
   if (checkGridlock()) {
     setTimeout(() => {
+      state.runStats.endReason = "Gridlock: No more moves!";
       changeState("GAME_OVER");
     }, 500);
     return;
@@ -167,7 +178,18 @@ function resetGame() {
   state.gold = config.startingGold;
   state.multiplier = 1.0;
   state.artifacts = [];
-  state.runStats = { maxDamage: 0, totalMerges: 0 };
+  state.runStats = { 
+    maxDamage: 0, 
+    totalMerges: 0,
+    totalMoves: 0,
+    totalCoinsSpent: 0,
+    maxMultiplier: 1.0,
+    lastRoundDamage: 0,
+    startTime: 0,
+    endTime: 0,
+    seedUsed: "",
+    endReason: ""
+  };
   el.inputSeed.value = "";
   changeState("START");
   el.modalBackdrop.classList.add("hide");
@@ -226,6 +248,22 @@ window.addEventListener("keydown", (e) => {
     }
     if (state.gameState === "GAME_OVER" || state.gameState === "VICTORY") {
       resetGame();
+      return;
+    }
+  }
+
+  // Help Modal Navigation
+  if (!el.modalHelp.classList.contains("hide")) {
+    if (["ArrowLeft", "a", "A", "ArrowUp", "w", "W"].includes(e.key)) {
+      prevHelpPage();
+      return;
+    }
+    if (["ArrowRight", "d", "D", "ArrowDown", "s", "S"].includes(e.key)) {
+      nextHelpPage();
+      return;
+    }
+    if (e.key === "Escape") {
+      closeHelp();
       return;
     }
   }
