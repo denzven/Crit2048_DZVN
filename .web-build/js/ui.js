@@ -47,6 +47,15 @@ const el = {
   endStatDmg: document.getElementById("end-stat-dmg"),
   endStatMerges: document.getElementById("end-stat-merges"),
   endStatSeed: document.getElementById("end-stat-seed"),
+  endStatDate: document.getElementById("end-stat-date"),
+  endStatTime: document.getElementById("end-stat-time"),
+  endStatDuration: document.getElementById("end-stat-duration"),
+  endStatLastDmg: document.getElementById("end-stat-last-dmg"),
+  endStatMaxMult: document.getElementById("end-stat-max-mult"),
+  endStatMoves: document.getElementById("end-stat-moves"),
+  endStatSpent: document.getElementById("end-stat-spent"),
+  endArtifactsList: document.getElementById("end-artifacts-list"),
+  endCaptureArea: document.getElementById("end-capture-area"),
   modalSettings: document.getElementById("modal-settings"),
   inputSettingTurns: document.getElementById("input-setting-turns"),
   inputSettingGold: document.getElementById("input-setting-gold"),
@@ -64,6 +73,9 @@ const el = {
   modalHelp: document.getElementById("modal-help"),
   btnHome: document.getElementById("btn-home"),
   modalConfirm: document.getElementById("modal-confirm"),
+  modalLeaderboard: document.getElementById("modal-leaderboard"),
+  leaderboardList: document.getElementById("leaderboard-list"),
+  btnStartLeaderboard: document.getElementById("btn-start-leaderboard"),
 };
 
 // --- UI HELPERS ---
@@ -144,3 +156,155 @@ function renderSidebar() {
       (el.sidebarArtifacts.innerHTML += `<div class="bg-slate-800 p-2 rounded-lg border border-slate-700 flex items-center gap-2 mb-1" title="${a.desc(a.level)}"><span>${a.icon}</span> <div class="flex flex-col"><span class="text-[10px] font-bold truncate leading-tight">${a.name}</span><span class="text-[9px] text-amber-400 font-mono">Lvl ${a.level}</span></div></div>`),
   );
 }
+
+function renderEndScreenStats() {
+  const rs = state.runStats;
+  const start = new Date(rs.startTime);
+  const end = new Date(rs.endTime);
+  const diff = rs.endTime - rs.startTime;
+  const mins = Math.floor(diff / 60000);
+  const secs = Math.floor((diff % 60000) / 1000);
+
+  el.endStatClass.innerText = `${state.playerClass.icon} ${state.playerClass.id}`;
+  el.endStatAnte.innerText = state.encounterIdx + 1;
+  el.endStatDate.innerText = start.toLocaleDateString();
+  el.endStatTime.innerText = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  el.endStatDuration.innerText = `${mins}m ${secs}s`;
+  el.endStatSeed.innerText = rs.seedUsed;
+  
+  el.endStatDmg.innerText = Math.floor(rs.maxDamage);
+  el.endStatLastDmg.innerText = Math.floor(rs.lastRoundDamage);
+  el.endStatMaxMult.innerText = `x${rs.maxMultiplier.toFixed(1)}`;
+  el.endStatMoves.innerText = rs.totalMoves;
+  el.endStatMerges.innerText = rs.totalMerges;
+  el.endStatSpent.innerText = `💰 ${rs.totalCoinsSpent}`;
+
+  // Artifacts list
+  if (state.artifacts.length > 0) {
+    el.endArtifactsList.innerHTML = state.artifacts.map(a => `
+      <div class="bg-slate-800 px-2 py-1 rounded-lg border border-slate-700 flex items-center gap-1.5 shadow-sm">
+        <span class="text-sm">${a.icon}</span>
+        <div class="flex flex-col">
+          <span class="text-[8px] font-bold text-white uppercase leading-tight">${a.name}</span>
+          <span class="text-[7px] text-amber-400 font-mono">LVL ${a.level}</span>
+        </div>
+      </div>
+    `).join("");
+  } else {
+    el.endArtifactsList.innerHTML = '<p class="text-[10px] text-slate-600 italic">No artifacts found.</p>';
+  }
+}
+
+function copySeed() {
+  const seed = state.runStats.seedUsed;
+  navigator.clipboard.writeText(seed).then(() => {
+    addLog("Seed copied to clipboard!");
+    alert("Seed copied to clipboard!");
+  });
+}
+
+async function shareRun() {
+  const area = el.endCaptureArea;
+  try {
+    const canvas = await html2canvas(area, {
+      backgroundColor: "#0f172a", // Match slate-950
+      scale: 2, // Higher quality
+      logging: false,
+      useCORS: true
+    });
+    
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], `crit2048_run_${state.runStats.seedUsed}.png`, { type: 'image/png' });
+      
+      const shareData = {
+        title: 'Crit 2048 Run Summary',
+        text: `Check out my ${state.playerClass.id} run in Crit 2048! Ante ${state.encounterIdx + 1}, Seed: ${state.runStats.seedUsed}`
+      };
+
+      if (window.Plugins && window.Plugins.isTauri) {
+        await window.Plugins.share(shareData);
+      } else if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            ...shareData,
+            files: [file],
+          });
+        } catch (err) {
+          if (err.name !== 'AbortError') console.error('Share failed:', err);
+        }
+      } else {
+        // Fallback: Download the image
+        const link = document.createElement('a');
+        link.download = `crit2048_run_${state.runStats.seedUsed}.png`;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        alert("Sharing not supported on this browser. Image downloaded instead!");
+      }
+    });
+  } catch (e) {
+    console.error("Screenshot failed", e);
+    alert("Failed to generate screenshot.");
+  }
+}
+
+function renderLeaderboard() {
+  const leaderboard = getLeaderboard();
+  if (!el.leaderboardList) return;
+
+  if (leaderboard.length === 0) {
+    el.leaderboardList.innerHTML = '<p class="text-slate-600 italic text-center py-10">No legends recorded yet. Descend into the dungeon to make history!</p>';
+    return;
+  }
+
+  el.leaderboardList.innerHTML = leaderboard.map((entry, index) => {
+    const date = new Date(entry.date).toLocaleDateString();
+    const durationMins = Math.floor(entry.duration / 60000);
+    const durationSecs = Math.floor((entry.duration % 60000) / 1000);
+    
+    return `
+      <div class="bg-slate-950/50 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3 relative group hover:border-indigo-500/50 transition-all shadow-inner">
+        <div class="flex justify-between items-start">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">${entry.icon}</span>
+            <div>
+              <h4 class="text-white font-black uppercase text-sm">${entry.class}</h4>
+              <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">${date} • ${durationMins}m ${durationSecs}s</p>
+            </div>
+          </div>
+          <div class="flex flex-col items-end">
+            <span class="text-rose-500 font-black text-xl leading-none">ANTE ${entry.ante}</span>
+            <span class="text-[9px] text-slate-600 font-mono uppercase">Rank #${index + 1}</span>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-slate-900/80 rounded-lg p-2 border border-slate-800/50">
+            <span class="block text-[8px] text-slate-500 uppercase font-black">Max DMG</span>
+            <span class="text-amber-400 font-bold text-xs">${Math.floor(entry.maxDamage)}</span>
+          </div>
+          <div class="bg-slate-900/80 rounded-lg p-2 border border-slate-800/50">
+            <span class="block text-[8px] text-slate-500 uppercase font-black">Moves</span>
+            <span class="text-indigo-400 font-bold text-xs">${entry.totalMoves}</span>
+          </div>
+          <div class="bg-slate-900/80 rounded-lg p-2 border border-slate-800/50">
+            <span class="block text-[8px] text-slate-500 uppercase font-black">Multiplier</span>
+            <span class="text-rose-400 font-bold text-xs">x${entry.maxMultiplier.toFixed(1)}</span>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-1">
+          <span class="text-[8px] text-slate-600 font-mono italic truncate max-w-[70%]">Reason: ${entry.reason || "Unknown"}</span>
+          <button onclick="removeLeaderboardEntry(${entry.id})" class="text-slate-700 hover:text-rose-500 transition-colors text-[10px] font-black uppercase tracking-widest">
+            Remove
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+window.renderEndScreenStats = renderEndScreenStats;
+window.copySeed = copySeed;
+window.shareRun = shareRun;
+window.renderLeaderboard = renderLeaderboard;
+

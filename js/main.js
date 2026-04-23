@@ -41,6 +41,29 @@ function changeState(newState) {
     el.btnHome.classList.remove("hide");
   }
 
+  // Update Discord Presence
+  if (window.Plugins) {
+    let details = "Main Menu";
+    let stateStr = "Preparing for a run...";
+    
+    if (newState === "PLAYING" || newState === "DICE") {
+      const enc = ENCOUNTERS[state.encounterIdx];
+      details = `Fighting ${enc.name}`;
+      stateStr = `${state.playerClass.id} (Ante ${state.encounterIdx + 1}) - Score: ${state.score}`;
+    } else if (newState === "TAVERN") {
+      details = "Resting at the Tavern";
+      stateStr = `Preparing for Ante ${state.encounterIdx + 2}`;
+    } else if (newState === "GAME_OVER" || newState === "VICTORY") {
+      details = newState === "VICTORY" ? "Victory!" : "Run Over";
+      stateStr = `Final Score: ${state.score}`;
+    } else if (newState === "CLASS_SELECT") {
+      details = "Choosing a Class";
+      stateStr = "Preparing for the dungeon...";
+    }
+    
+    window.Plugins.updatePresence(details, stateStr);
+  }
+
   switch (newState) {
     case "START":
       el.screenStart.classList.remove("hide");

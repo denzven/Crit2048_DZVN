@@ -88,12 +88,18 @@ async function shareLeaderboard() {
     canvas.toBlob(async (blob) => {
       const file = new File([blob], `crit2048_leaderboard.png`, { type: 'image/png' });
       
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      const shareData = {
+        title: 'Crit 2048 Leaderboard',
+        text: `Check out my progress in Crit 2048! Here is my Hall of Heroes.`
+      };
+
+      if (window.Plugins && window.Plugins.isTauri) {
+        await window.Plugins.share(shareData);
+      } else if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
+            ...shareData,
             files: [file],
-            title: 'Crit 2048 Leaderboard',
-            text: `Check out my progress in Crit 2048! Here is my Hall of Heroes.`
           });
         } catch (err) {
           if (err.name !== 'AbortError') console.error('Share failed:', err);

@@ -52,6 +52,16 @@ android {
     buildFeatures {
         buildConfig = true
     }
+
+    applicationVariants.all {
+        outputs.all {
+            val output = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            val name = "Crit2048"
+            val version = versionName
+            val type = buildType.name
+            output?.outputFileName = "${name}_v${version}_${type}.apk"
+        }
+    }
 }
 
 rust {

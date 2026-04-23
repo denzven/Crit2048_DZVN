@@ -47,6 +47,7 @@ function buyArtifact(id) {
   if (state.gold >= cost) {
     SFX.coin();
     state.gold -= cost;
+    state.runStats.totalCoinsSpent += cost;
     let existing = state.artifacts.find((a) => a.id === id);
     if (existing) existing.level++;
     else

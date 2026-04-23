@@ -1,6 +1,7 @@
 // --- CORE GAME LOGIC ---
 function processMove(direction) {
   if (state.gameState !== "PLAYING" || state.isRolling) return;
+  state.runStats.totalMoves++;
   let newGrid = [...state.grid];
   let changed = false,
     damageThisTurn = 0,
@@ -112,6 +113,7 @@ function processMove(direction) {
 
   if (damageThisTurn > 0) {
     SFX.merge();
+    state.runStats.lastRoundDamage = damageThisTurn;
     applyDamage(damageThisTurn);
   }
   if (goldEarnedThisTurn > 0) state.gold += goldEarnedThisTurn;
@@ -182,6 +184,7 @@ function processMove(direction) {
 
 function applyDamage(dmg) {
   if (dmg > state.runStats.maxDamage) state.runStats.maxDamage = dmg;
+  if (state.multiplier > state.runStats.maxMultiplier) state.runStats.maxMultiplier = state.multiplier;
   state.monsterHp = Math.max(0, state.monsterHp - dmg);
   addLog(`Dealt ${Math.floor(dmg)} dmg!`);
   SFX.hit();

@@ -1,5 +1,4 @@
-// --- API KEY & GLOBAL CONFIG ---
-const apiKey = "";
+// --- GLOBAL CONFIG ---
 const config = {
   turnsBeforeDice: 5,
   startingGold: 0,

@@ -3,6 +3,7 @@ async function rollD20() {
   if (state.isRolling) return;
   state.isRolling = true;
   el.diceActionBtn.classList.add("hide");
+  if (window.Plugins) window.Plugins.vibrate('impactHeavy');
   let roll = prngInt(1, 20);
   await FixedDiceEngine.roll("d20-render-target", [20], [roll]);
   processD20Result(roll);

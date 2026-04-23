@@ -19,7 +19,18 @@ const state = {
   isRolling: false,
   shopPool: [],
   currentAttackInfo: null,
-  runStats: { maxDamage: 0, totalMerges: 0 },
+  runStats: { 
+    maxDamage: 0, 
+    totalMerges: 0,
+    totalMoves: 0,
+    totalCoinsSpent: 0,
+    maxMultiplier: 1.0,
+    lastRoundDamage: 0,
+    startTime: 0,
+    endTime: 0,
+    seedUsed: "",
+    endReason: "" 
+  },
   lastDirection: null,
   hunterMarkLeft: 0,
 };

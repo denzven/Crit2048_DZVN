@@ -66,7 +66,16 @@ function closeConfirm() {
 }
 function executeHome() {
   closeConfirm();
-  resetGame();
+  state.runStats.endReason = "Forfeit: You left the dungeon midway.";
+  changeState("GAME_OVER");
+}
+
+function openLeaderboard() {
+  renderLeaderboard();
+  el.modalLeaderboard.classList.remove("hide");
+}
+function closeLeaderboard() {
+  el.modalLeaderboard.classList.add("hide");
 }
 
 function openSettings() {

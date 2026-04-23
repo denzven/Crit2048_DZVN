@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Crit2048",
-  "version": "0.1.0",
+  "version": "1.2.1",
   "identifier": "com.crit2048.app",
   "build": {
     "frontendDist": "../.web-build",
@@ -20,7 +20,8 @@
     ],
     "security": {
       "csp": null
-    }
+    },
+    "withGlobalTauri": true
   },
   "bundle": {
     "active": true,

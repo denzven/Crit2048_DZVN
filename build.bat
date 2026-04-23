@@ -2,8 +2,18 @@
 setlocal EnableDelayedExpansion
 
 echo ========================================
-echo CRIT2048 - NATIVE APP BUILD SCRIPT
-echo ========================================
+echo.
+
+echo [Step 0] Optional version update...
+set /p NEW_VERSION="Enter new version (e.g. 0.1.1) or press Enter to keep current: "
+if not "!NEW_VERSION!"=="" (
+    node scripts/update-version.js !NEW_VERSION!
+    if !ERRORLEVEL! neq 0 (
+        echo [ERROR] Version update failed.
+        pause
+        exit /b !ERRORLEVEL!
+    )
+)
 echo.
 
 echo [Step 1] Preparing web assets...

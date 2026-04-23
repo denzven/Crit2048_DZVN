@@ -23,28 +23,15 @@ async function callGeminiOracle() {
   };
 
   let resultData = null;
-  let delays = [1000, 2000, 4000];
-
-  for (let attempt = 0; attempt <= 3; attempt++) {
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        },
-      );
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) {
-        resultData = JSON.parse(text);
-        break;
-      }
-    } catch (e) {
-      if (attempt === 3) break;
-      await new Promise((r) => setTimeout(r, delays[attempt]));
+  try {
+    const jsonString = await window.__TAURI__.core.invoke('call_gemini_api', { prompt });
+    const data = JSON.parse(jsonString);
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (text) {
+      resultData = JSON.parse(text);
     }
+  } catch (e) {
+    console.error("Gemini API error:", e);
   }
 
   el.aiLoading.classList.add("hide");
