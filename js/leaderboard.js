@@ -52,12 +52,24 @@ function removeLeaderboardEntry(id) {
   leaderboard = leaderboard.filter(entry => entry.id !== id);
   localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(leaderboard));
   renderLeaderboard();
+  updateStartLeaderboardVisibility();
 }
 
 function clearLeaderboard() {
   if (confirm("Are you sure you want to clear the entire leaderboard? This cannot be undone.")) {
     localStorage.removeItem(LEADERBOARD_KEY);
     renderLeaderboard();
+    updateStartLeaderboardVisibility();
+  }
+}
+
+function updateStartLeaderboardVisibility() {
+  if (state.gameState === "START" && el.btnStartLeaderboard) {
+    if (getLeaderboard().length > 0) {
+      el.btnStartLeaderboard.classList.remove("hide");
+    } else {
+      el.btnStartLeaderboard.classList.add("hide");
+    }
   }
 }
 

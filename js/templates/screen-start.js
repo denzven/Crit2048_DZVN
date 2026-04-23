@@ -30,6 +30,9 @@ window.ViewTemplates["screen-start"] = `
         <button onclick="startGameFlow()" class="w-full px-8 py-4 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg transition-all text-xl uppercase tracking-widest border border-rose-500/50">
           Enter the Dungeon
         </button>
+        <button id="btn-start-leaderboard" onclick="openLeaderboard()" class="hide w-full px-8 py-3 bg-slate-800 hover:bg-slate-700 text-indigo-400 font-bold rounded-xl transition-colors uppercase tracking-widest border border-slate-700 text-sm">
+          🏆 View Hall of Heroes
+        </button>
       </div>
     </div>
 

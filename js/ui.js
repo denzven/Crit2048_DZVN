@@ -75,6 +75,7 @@ const el = {
   modalConfirm: document.getElementById("modal-confirm"),
   modalLeaderboard: document.getElementById("modal-leaderboard"),
   leaderboardList: document.getElementById("leaderboard-list"),
+  btnStartLeaderboard: document.getElementById("btn-start-leaderboard"),
 };
 
 // --- UI HELPERS ---

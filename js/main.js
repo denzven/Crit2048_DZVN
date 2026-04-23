@@ -44,6 +44,11 @@ function changeState(newState) {
   switch (newState) {
     case "START":
       el.screenStart.classList.remove("hide");
+      if (getLeaderboard().length > 0) {
+        el.btnStartLeaderboard.classList.remove("hide");
+      } else {
+        el.btnStartLeaderboard.classList.add("hide");
+      }
       break;
 
     case "CLASS_SELECT":
