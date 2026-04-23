@@ -62,6 +62,10 @@ window.ViewTemplates["screen-end"] = `
             <span class="text-xl group-hover:scale-125 transition-transform">📸</span> Share Run Summary
           </button>
           
+          <button onclick="openLeaderboard()" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-indigo-400 font-bold rounded-xl transition-colors uppercase tracking-widest w-full border border-slate-700 text-sm">
+            🏆 View Leaderboard
+          </button>
+          
           <button onclick="resetGame()" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors uppercase tracking-widest w-full border border-slate-700 text-sm">
             Try Again
           </button>

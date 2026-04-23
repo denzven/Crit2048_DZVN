@@ -73,6 +73,8 @@ const el = {
   modalHelp: document.getElementById("modal-help"),
   btnHome: document.getElementById("btn-home"),
   modalConfirm: document.getElementById("modal-confirm"),
+  modalLeaderboard: document.getElementById("modal-leaderboard"),
+  leaderboardList: document.getElementById("leaderboard-list"),
 };
 
 // --- UI HELPERS ---
@@ -238,7 +240,64 @@ async function shareRun() {
   }
 }
 
+function renderLeaderboard() {
+  const leaderboard = getLeaderboard();
+  if (!el.leaderboardList) return;
+
+  if (leaderboard.length === 0) {
+    el.leaderboardList.innerHTML = '<p class="text-slate-600 italic text-center py-10">No legends recorded yet. Descend into the dungeon to make history!</p>';
+    return;
+  }
+
+  el.leaderboardList.innerHTML = leaderboard.map((entry, index) => {
+    const date = new Date(entry.date).toLocaleDateString();
+    const durationMins = Math.floor(entry.duration / 60000);
+    const durationSecs = Math.floor((entry.duration % 60000) / 1000);
+    
+    return `
+      <div class="bg-slate-950/50 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3 relative group hover:border-indigo-500/50 transition-all shadow-inner">
+        <div class="flex justify-between items-start">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">${entry.icon}</span>
+            <div>
+              <h4 class="text-white font-black uppercase text-sm">${entry.class}</h4>
+              <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">${date} • ${durationMins}m ${durationSecs}s</p>
+            </div>
+          </div>
+          <div class="flex flex-col items-end">
+            <span class="text-rose-500 font-black text-xl leading-none">ANTE ${entry.ante}</span>
+            <span class="text-[9px] text-slate-600 font-mono uppercase">Rank #${index + 1}</span>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-slate-900/80 rounded-lg p-2 border border-slate-800/50">
+            <span class="block text-[8px] text-slate-500 uppercase font-black">Max DMG</span>
+            <span class="text-amber-400 font-bold text-xs">${Math.floor(entry.maxDamage)}</span>
+          </div>
+          <div class="bg-slate-900/80 rounded-lg p-2 border border-slate-800/50">
+            <span class="block text-[8px] text-slate-500 uppercase font-black">Moves</span>
+            <span class="text-indigo-400 font-bold text-xs">${entry.totalMoves}</span>
+          </div>
+          <div class="bg-slate-900/80 rounded-lg p-2 border border-slate-800/50">
+            <span class="block text-[8px] text-slate-500 uppercase font-black">Multiplier</span>
+            <span class="text-rose-400 font-bold text-xs">x${entry.maxMultiplier.toFixed(1)}</span>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-1">
+          <span class="text-[8px] text-slate-600 font-mono italic truncate max-w-[70%]">Reason: ${entry.reason || "Unknown"}</span>
+          <button onclick="removeLeaderboardEntry(${entry.id})" class="text-slate-700 hover:text-rose-500 transition-colors text-[10px] font-black uppercase tracking-widest">
+            Remove
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
 window.renderEndScreenStats = renderEndScreenStats;
 window.copySeed = copySeed;
 window.shareRun = shareRun;
+window.renderLeaderboard = renderLeaderboard;
 

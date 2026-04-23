@@ -99,6 +99,7 @@ function changeState(newState) {
           : (state.runStats.endReason || "The dungeon claims another soul.");
 
       renderEndScreenStats();
+      saveRunToLeaderboard(state.runStats, state.playerClass, state.encounterIdx);
 
       el.modalBackdrop.classList.remove("hide");
       el.screenEnd.classList.remove("hide");
@@ -268,6 +269,12 @@ window.addEventListener("keydown", (e) => {
     }
   }
 
+  // Global Escape to go home
+  if (e.key === "Escape") {
+    confirmHome();
+    return;
+  }
+
   if (state.gameState !== "PLAYING") return;
   
   // Prevent movement or spell casts if any interaction modal is open
@@ -325,6 +332,8 @@ window.prevHelpPage = prevHelpPage;
 window.confirmHome = confirmHome;
 window.closeConfirm = closeConfirm;
 window.executeHome = executeHome;
+window.openLeaderboard = openLeaderboard;
+window.closeLeaderboard = closeLeaderboard;
 window.openSettings = openSettings;
 window.closeSettings = closeSettings;
 window.saveSettings = saveSettings;
