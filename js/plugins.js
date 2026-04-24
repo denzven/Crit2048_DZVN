@@ -44,10 +44,16 @@
 
       // Diagnostic 2: Haptics
       try {
-        await window.__TAURI__.core.invoke('plugin:haptics|requestPermissions');
+        // Tauri v2 haptics plugin might have request_permissions (underscore)
+        await window.__TAURI__.core.invoke('plugin:haptics|request_permissions').catch(() => {
+          // If it fails, maybe it's not implemented or not needed, try camelCase just in case
+          return window.__TAURI__.core.invoke('plugin:haptics|requestPermissions');
+        }).catch(() => {
+          console.debug('Haptics permission request skipped (likely not required on this platform)');
+        });
         console.log('✅ Haptics: Responsive');
       } catch (e) {
-        console.warn('❌ Haptics: Failed or Busy', e);
+        console.warn('❌ Haptics: Diagnostics failed', e);
       }
 
       // Diagnostic 3: Share
@@ -79,37 +85,38 @@
       if (intensity <= 0) return;
 
       try {
-        // According to documentation: vibrate, impactFeedback, notificationFeedback, selectionFeedback
+        console.log(`Triggering haptic: ${type} (intensity: ${intensity})`);
+        // According to documentation: vibrate, impact_feedback, notification_feedback, selection_feedback
         switch (type) {
           case 'vibrate':
-            await window.__TAURI__.core.invoke('plugin:haptics|vibrate', { label: Math.floor(100 * intensity) });
+            await window.__TAURI__.core.invoke('plugin:haptics|vibrate', { duration: Math.floor(100 * intensity) });
             break;
           case 'impactLight':
-            await window.__TAURI__.core.invoke('plugin:haptics|impact', { style: 'light' });
+            await window.__TAURI__.core.invoke('plugin:haptics|impact_feedback', { style: 'light' });
             break;
           case 'impactMedium':
-            await window.__TAURI__.core.invoke('plugin:haptics|impact', { style: 'medium' });
+            await window.__TAURI__.core.invoke('plugin:haptics|impact_feedback', { style: 'medium' });
             break;
           case 'impactHeavy':
-            await window.__TAURI__.core.invoke('plugin:haptics|impact', { style: 'heavy' });
+            await window.__TAURI__.core.invoke('plugin:haptics|impact_feedback', { style: 'heavy' });
             break;
           case 'notificationSuccess':
-            await window.__TAURI__.core.invoke('plugin:haptics|notification', { type: 'success' });
+            await window.__TAURI__.core.invoke('plugin:haptics|notification_feedback', { type: 'success' });
             break;
           case 'notificationWarning':
-            await window.__TAURI__.core.invoke('plugin:haptics|notification', { type: 'warning' });
+            await window.__TAURI__.core.invoke('plugin:haptics|notification_feedback', { type: 'warning' });
             break;
           case 'notificationError':
-            await window.__TAURI__.core.invoke('plugin:haptics|notification', { type: 'error' });
+            await window.__TAURI__.core.invoke('plugin:haptics|notification_feedback', { type: 'error' });
             break;
           case 'selection':
-            await window.__TAURI__.core.invoke('plugin:haptics|selection');
+            await window.__TAURI__.core.invoke('plugin:haptics|selection_feedback');
             break;
           default:
-            await window.__TAURI__.core.invoke('plugin:haptics|vibrate', { label: Math.floor(50 * intensity) });
+            await window.__TAURI__.core.invoke('plugin:haptics|vibrate', { duration: Math.floor(50 * intensity) });
         }
       } catch (e) {
-        console.debug('Haptics call skipped or failed:', e);
+        console.error(`❌ Haptics [${type}] failed:`, e);
       }
     },
 

@@ -412,15 +412,16 @@ async function executeFinalSave() {
   try {
     if (window.Plugins && window.Plugins.isTauri) {
       if (window.Plugins.isMobile()) {
-        const storageDir = await window.__TAURI__.path.downloadDir();
-        const filePath = await window.__TAURI__.path.join(storageDir, fileName);
+        const pathApi = window.__TAURI__.path;
+        const storageDir = pathApi.pictureDir ? await pathApi.pictureDir() : await pathApi.downloadDir();
+        const filePath = await pathApi.join(storageDir, fileName);
         const fs = window.__TAURI__.fs || window.__TAURI__.pluginFs;
         if (fs && fs.writeFile) {
           await fs.writeFile(filePath, currentShareBytes);
         } else {
           await window.__TAURI__.core.invoke('plugin:fs|write_file', { path: filePath, data: currentShareBytes });
         }
-        alert("Saved to Downloads!", "Success", "💾");
+        alert(`Saved to ${pathApi.pictureDir ? 'Gallery' : 'Downloads'}!`, "Success", "🖼️");
       } else {
         await window.Plugins.saveWithDialog(currentShareBytes, fileName);
       }
@@ -493,7 +494,51 @@ function renderLeaderboard() {
 }
 
 async function downloadRunSummary() {
-  openShareModal();
+  const btn = event.currentTarget;
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳ Capturing...</span>';
+
+  try {
+    const canvas = await html2canvas(el.endCaptureArea, {
+      backgroundColor: "#020617",
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+    
+    const dataUrl = canvas.toDataURL("image/png");
+    const fileName = `crit2048_summary_${state.runStats.seedUsed || Date.now()}.png`;
+
+    if (window.Plugins && window.Plugins.isTauri) {
+        const bytes = Uint8Array.from(atob(dataUrl.split(',')[1]), c => c.charCodeAt(0));
+        if (window.Plugins.isMobile()) {
+            const pathApi = window.__TAURI__.path;
+            const storageDir = pathApi.pictureDir ? await pathApi.pictureDir() : await pathApi.downloadDir();
+            const filePath = await pathApi.join(storageDir, fileName);
+            const fs = window.__TAURI__.fs || window.__TAURI__.pluginFs;
+            if (fs && fs.writeFile) {
+              await fs.writeFile(filePath, bytes);
+            } else {
+              await window.__TAURI__.core.invoke('plugin:fs|write_file', { path: filePath, data: Array.from(bytes) });
+            }
+            alert(`Saved to ${pathApi.pictureDir ? 'Gallery' : 'Downloads'}!`, "Success", "🖼️");
+        } else {
+            await window.Plugins.saveWithDialog(bytes, fileName);
+        }
+    } else {
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = dataUrl;
+        link.click();
+    }
+  } catch (e) {
+    console.error("Capture failed", e);
+    alert("Capture failed: " + e.message, "Error", "❌");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
 }
 
 window.renderEndScreenStats = renderEndScreenStats;

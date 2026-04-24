@@ -11,7 +11,7 @@ window.ViewTemplates["modal-share"] = `
 <div id="modal-share" class="hide fixed inset-0 z-[110] flex items-center justify-center p-0 md:p-6">
   <div class="absolute inset-0 bg-slate-950/95 backdrop-blur-xl" onclick="closeShareModal()"></div>
   
-  <div class="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-none md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row h-full md:h-[85vh] fx-entrance-pop">
+  <div class="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-none md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row h-full md:h-[85vh] fx-entrance-pop" style="padding-top: var(--p-safe-top); padding-bottom: var(--p-safe-bottom); padding-left: var(--p-safe-left); padding-right: var(--p-safe-right);">
     
     <!-- LEFT: PREVIEW AREA -->
     <div class="w-full md:w-1/2 bg-black flex items-center justify-center p-4 md:p-8 border-b md:border-b-0 md:border-r border-slate-800 relative group">

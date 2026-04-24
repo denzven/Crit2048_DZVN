@@ -19,3 +19,4 @@ Thumbs.db
 # IDEs
 .vscode/
 .idea/
+output_terminal_log.txt

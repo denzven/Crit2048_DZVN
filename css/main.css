@@ -9,6 +9,10 @@
   --display-scale: 1;
   --p-safe: 1rem;
   --p-fluid: clamp(1rem, 5vw, 2.5rem);
+  --p-safe-top: env(safe-area-inset-top, 0px);
+  --p-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --p-safe-left: env(safe-area-inset-left, 0px);
+  --p-safe-right: env(safe-area-inset-right, 0px);
 }
 
 html, body {
@@ -18,6 +22,13 @@ html, body {
   background-color: #020617; /* slate-950 */
   transition: font-size 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   --header-h: 40px;
+}
+header { 
+  min-height: var(--header-h); 
+  padding-top: max(var(--p-safe-top), 0.25rem); 
+  padding-bottom: 0.25rem; 
+  padding-left: max(var(--p-safe-left), 1rem);
+  padding-right: max(var(--p-safe-right), 1rem);
 }
 @media (max-width: 640px) {
   :root { --header-h: 52px; }
@@ -278,7 +289,7 @@ html, body {
     display: block;
   }
   
-  header { height: var(--header-h); }
+  header { height: auto; }
   header h1 { font-size: 1.1rem !important; }
   header .text-xs { font-size: 0.7rem !important; }
   header .flex { height: 100%; align-items: center; }
@@ -383,12 +394,16 @@ html, body {
   max-width: 1200px;
   margin: 0 auto;
   padding: var(--p-fluid);
+  padding-left: max(var(--p-fluid), var(--p-safe-left));
+  padding-right: max(var(--p-fluid), var(--p-safe-right));
+  padding-bottom: calc(var(--p-fluid) + var(--p-safe-bottom));
   transition: padding 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
 }
 
 #screen-tavern, #screen-end {
   max-width: none !important;
   padding: 0 !important;
+  padding-bottom: var(--p-safe-bottom) !important;
 }
 
 .tavern-container {

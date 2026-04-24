@@ -72,6 +72,12 @@ window.ViewTemplates["modal-settings"] = `
                 <label class="flex justify-between text-slate-400 text-[10px] mb-2 font-bold uppercase tracking-wider">Haptic Intensity <span id="label-setting-haptics" class="text-white">1.0</span></label>
                 <input type="range" id="input-setting-haptics-intensity" min="0" max="1" step="0.1" class="w-full accent-rose-500">
               </div>
+              <div class="grid grid-cols-2 gap-2">
+                <button onclick="Plugins.vibrate('impactLight')" class="py-2 bg-slate-800 text-slate-300 text-[8px] font-bold uppercase rounded-lg border border-slate-700 hover:bg-slate-700">Light</button>
+                <button onclick="Plugins.vibrate('impactMedium')" class="py-2 bg-slate-800 text-slate-300 text-[8px] font-bold uppercase rounded-lg border border-slate-700 hover:bg-slate-700">Medium</button>
+                <button onclick="Plugins.vibrate('impactHeavy')" class="py-2 bg-slate-800 text-slate-300 text-[8px] font-bold uppercase rounded-lg border border-slate-700 hover:bg-slate-700">Heavy</button>
+                <button onclick="Plugins.vibrate('vibrate')" class="py-2 bg-slate-800 text-slate-300 text-[8px] font-bold uppercase rounded-lg border border-slate-700 hover:bg-slate-700">Long</button>
+              </div>
               <div class="pt-2">
                 <label class="flex justify-between text-slate-400 text-[10px] mb-2 font-bold uppercase tracking-wider">UI Scale <span id="label-setting-ui-scale" class="text-white">100%</span></label>
                 <input type="range" id="input-setting-ui-scale" min="0.5" max="1.5" step="0.05" class="w-full accent-rose-500">
