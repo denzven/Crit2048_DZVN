@@ -123,6 +123,20 @@ if "!ANDROID_BUILD_SUCCESS!"=="0" (
     exit /b 1
 )
 
+echo [Step 7] Creating Webview distribution in dist/webview...
+if not exist "dist\webview" mkdir "dist\webview"
+copy /Y "index.html" "dist\webview\"
+if exist "css" (
+    if not exist "dist\webview\css" mkdir "dist\webview\css"
+    xcopy /E /I /Y "css" "dist\webview\css" >nul
+)
+if exist "js" (
+    if not exist "dist\webview\js" mkdir "dist\webview\js"
+    xcopy /E /I /Y "js" "dist\webview\js" >nul
+)
+if exist "app_icon.png" copy /Y "app_icon.png" "dist\webview\"
+echo [OK] Webview distribution created successfully.
+
 :end
 echo.
 echo ========================================
