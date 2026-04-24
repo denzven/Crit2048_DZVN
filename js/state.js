@@ -34,3 +34,31 @@ const state = {
   lastDirection: null,
   hunterMarkLeft: 0,
 };
+
+function saveGameState() {
+  const bundle = {
+    state,
+    tileIdCounter,
+    config
+  };
+  localStorage.setItem("crit2048_save", JSON.stringify(bundle));
+}
+
+function loadGameState() {
+  const saved = localStorage.getItem("crit2048_save");
+  if (!saved) return false;
+  try {
+    const bundle = JSON.parse(saved);
+    Object.assign(state, bundle.state);
+    tileIdCounter = bundle.tileIdCounter;
+    Object.assign(config, bundle.config);
+    return true;
+  } catch (e) {
+    console.error("Load failed", e);
+    return false;
+  }
+}
+
+function clearSave() {
+  localStorage.removeItem("crit2048_save");
+}

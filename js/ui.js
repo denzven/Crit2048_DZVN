@@ -64,6 +64,18 @@ const el = {
   inputSettingShake: document.getElementById("input-setting-shake"),
   inputSettingHapticsEnabled: document.getElementById("input-setting-haptics-enabled"),
   inputSettingHapticsIntensity: document.getElementById("input-setting-haptics-intensity"),
+  inputSettingAtmosphere: document.getElementById("input-setting-atmosphere"),
+  labelSettingTurns: document.getElementById("label-setting-turns"),
+  labelSettingGold: document.getElementById("label-setting-gold"),
+  labelSettingSfx: document.getElementById("label-setting-sfx"),
+  labelSettingShake: document.getElementById("label-setting-shake"),
+  labelSettingHaptics: document.getElementById("label-setting-haptics"),
+  inputSettingUiScale: document.getElementById("input-setting-ui-scale"),
+  labelSettingUiScale: document.getElementById("label-setting-ui-scale"),
+  inputSettingFontScale: document.getElementById("input-setting-font-scale"),
+  labelSettingFontScale: document.getElementById("label-setting-font-scale"),
+  inputSettingDisplayScale: document.getElementById("input-setting-display-scale"),
+  labelSettingDisplayScale: document.getElementById("label-setting-display-scale"),
   modalAttack: document.getElementById("modal-attack"),
   attackTitle: document.getElementById("attack-title"),
   attackDiceContainer: document.getElementById("attack-dice-container"),
@@ -78,6 +90,7 @@ const el = {
   modalLeaderboard: document.getElementById("modal-leaderboard"),
   leaderboardList: document.getElementById("leaderboard-list"),
   btnStartLeaderboard: document.getElementById("btn-start-leaderboard"),
+  btnResume: document.getElementById("btn-resume"),
 };
 
 // --- UI HELPERS ---

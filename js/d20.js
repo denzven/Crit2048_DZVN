@@ -64,7 +64,7 @@ function processD20Result(roll) {
     SFX.fail();
   }
 
-  triggerScreenShake();
+  triggerScreenShake(isCrit ? 2.5 : 1);
 
   // Prominently display the rolled number in the modal
   el.diceResultMsg.innerHTML = `<span class="block text-5xl font-black mb-2 font-mono" style="color: ${color}">${rawRoll}</span><span class="text-sm font-bold text-white">${msg}</span>`;

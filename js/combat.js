@@ -20,7 +20,7 @@ function processMove(direction) {
         let tA = line[i],
           tB = line[i + 1],
           newVal = tA.val * 2;
-        combined.push({ id: tA.id, val: newVal, pop: true });
+        combined.push({ id: tA.id, val: newVal, pop: true, merged: true });
         state.runStats.totalMerges++;
         if (window.Plugins) window.Plugins.vibrate('impactMedium');
 
@@ -57,6 +57,14 @@ function processMove(direction) {
         }
 
         damageThisTurn += dmgForThisMerge;
+        
+        // Show individual damage text
+        const tIdx = lineIndices[combined.length - 1];
+        const r = Math.floor(tIdx / 4), c = tIdx % 4;
+        const posX = `calc(var(--cell-size) * ${c} + var(--gap) * ${c} + var(--cell-size) * 0.5)`;
+        const posY = `calc(var(--cell-size) * ${r} + var(--gap) * ${r} + var(--cell-size) * 0.5)`;
+        playCombatText(`-${Math.floor(dmgForThisMerge)}`, "text-white", posX, posY);
+
         if (state.playerClass.id === "Rogue") goldEarnedThisTurn += 1;
         const assLvl = getArtifactLevel("ASSASSIN_MARK");
         if (assLvl > 0 && newVal === 4) multIncrease += 0.1 * assLvl;
@@ -88,7 +96,10 @@ function processMove(direction) {
     for (let c = 0; c < 4; c++) processLine([c + 12, c + 8, c + 4, c]);
   }
 
-  if (!changed) return;
+  if (!changed) {
+    triggerGridBump();
+    return;
+  }
   SFX.slide();
   if (window.Plugins) window.Plugins.vibrate('selection');
 
@@ -189,8 +200,12 @@ function applyDamage(dmg) {
   if (state.multiplier > state.runStats.maxMultiplier) state.runStats.maxMultiplier = state.multiplier;
   state.monsterHp = Math.max(0, state.monsterHp - dmg);
   addLog(`Dealt ${Math.floor(dmg)} dmg!`);
+  // If damage is huge, show a special total text
+  if (dmg > 500) {
+    playCombatText(`TOTAL: ${Math.floor(dmg)}`, "text-amber-400 text-2xl md:text-4xl", "50%", "30%");
+  }
   SFX.hit();
-  triggerScreenShake();
+  triggerScreenShake(dmg > 300 ? 1.5 : 0.7);
 }
 
 function applyBossPowersPostMove() {

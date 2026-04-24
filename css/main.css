@@ -1,10 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap');
 
-:root { --gap: 2%; --cell-size: 23.5%; --shake-px: 4px; }
+:root { --gap: 2%; --cell-size: 23.5%; --shake-px: 4px; --ui-scale: 1; --font-scale: 1; --display-scale: 1; }
 
 html, body {
   margin: 0; padding: 0; width: 100vw; height: 100vh;
   overflow: hidden; overscroll-behavior: none;
+  font-size: calc(16px * var(--font-scale, 1));
 }
 
 .hide { display: none !important; }
@@ -12,27 +13,65 @@ html, body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
-#grid-container { touch-action: none; position: relative; }
+#grid-container { 
+  touch-action: none; 
+  position: relative;
+  max-width: calc(var(--display-scale, 1) * 440px) !important;
+}
 
 .tile {
   position: absolute; width: var(--cell-size); height: var(--cell-size);
-  transition: top 0.1s ease-in-out, left 0.1s ease-in-out, transform 0.1s ease-in-out, opacity 0.1s ease-out;
+  transition: top 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94), left 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.1s ease-out;
   border-radius: 0.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; user-select: none;
+  will-change: left, top, transform;
 }
 
 @keyframes popIn {
-  0% { transform: scale(0.8); }
-  50% { transform: scale(1.1); }
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
   100% { transform: scale(1); }
 }
-.pop-in { animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.pop-in { animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes tileMerge {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); filter: brightness(1.5) drop-shadow(0 0 15px white); }
+  100% { transform: scale(1); }
+}
+.tile-merge { animation: tileMerge 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+@keyframes gridBump {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+.grid-bump { animation: gridBump 0.15s ease-out; }
+
+@keyframes combatText {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+  80% { transform: translateY(-60px) scale(1); opacity: 1; }
+  100% { transform: translateY(-80px) scale(0.8); opacity: 0; }
+}
+.fx-combat-text {
+  position: absolute; pointer-events: none; z-index: 100;
+  font-weight: 900; font-family: 'Cinzel', serif;
+  text-shadow: 0 0 4px rgba(0,0,0,0.8), 0 0 10px rgba(0,0,0,0.5);
+  animation: combatText 0.8s ease-out forwards;
+  white-space: nowrap;
+}
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(calc(-1 * var(--shake-px))) translateY(calc(0.5 * var(--shake-px))); }
-  20%, 40%, 60%, 80% { transform: translateX(var(--shake-px)) translateY(calc(-0.5 * var(--shake-px))); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  10%, 90% { transform: translate3d(calc(-1px * var(--shake-intensity, 1)), 0, 0); }
+  20%, 80% { transform: translate3d(calc(2px * var(--shake-intensity, 1)), 0, 0); }
+  30%, 50%, 70% { transform: translate3d(calc(-4px * var(--shake-intensity, 1)), 0, 0); }
+  40%, 60% { transform: translate3d(calc(4px * var(--shake-intensity, 1)), 0, 0); }
 }
-.shake { animation: shake 0.35s cubic-bezier(.36,.07,.19,.97) both; }
+.shake { 
+  --shake-intensity: 1;
+  animation: shake 0.35s cubic-bezier(.36,.07,.19,.97) both; 
+}
 
 /* Visual Grid Effects for Spells */
 .fx-fireball {
@@ -166,4 +205,96 @@ html, body {
 
 .loading-pulse { animation: pulse 1.5s infinite ease-in-out; }
 @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+/* Screen Transitions */
+@keyframes pullUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.pull-up { animation: pullUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes descend {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(0.9); filter: brightness(0.2); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+.fx-descend { animation: descend 1.2s ease-in-out forwards; }
+
+@keyframes announcement {
+  0% { transform: scale(0.5); opacity: 0; letter-spacing: 20px; }
+  20% { transform: scale(1.1); opacity: 1; letter-spacing: 2px; }
+  80% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+.fx-announcement {
+  position: fixed; inset: 0; z-index: 150;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  pointer-events: none; text-align: center;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: opacity 0.5s ease;
+}
+.fx-announcement h2 {
+  font-size: 4rem; font-weight: 900; color: #facc15; text-transform: uppercase;
+  font-family: 'Cinzel', serif; text-shadow: 0 0 20px rgba(250,204,21,0.5);
+  animation: announcement 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.fx-announcement p {
+  font-size: 1.5rem; color: white; font-weight: bold;
+  animation: announcement 1.5s 0.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes tavernItemFlyIn {
+  from { transform: translateX(30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.tavern-item { 
+  animation: tavernItemFlyIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; 
+}
+
+@keyframes descendBar {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+.descend-bar { 
+  height: 4px; 
+  background: #f43f5e; 
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
+  animation: descendBar 1s linear forwards; 
+}
+
+@keyframes popInEntrance {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.fx-entrance-pop { animation: popInEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes slideInLeft {
+  0% { transform: translateX(-40px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+.fx-entrance-left { animation: slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes slideInRight {
+  0% { transform: translateX(40px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+.fx-entrance-right { animation: slideInRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes modalEntrance {
+  0% { transform: scale(0.95) translateY(10px); opacity: 0; filter: blur(4px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+}
+.fx-modal-entrance { animation: modalEntrance 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+#main-container > div:not(#modal-backdrop) {
+  --ui-scale-val: var(--ui-scale, 1);
+}
+/* We use a wrapper or apply it to the children to avoid animation conflicts */
+#screen-start, #screen-playing, #screen-class, #screen-tavern, #screen-end {
+  scale: var(--ui-scale, 1);
+  transform-origin: center center;
+}
+
 .font-serif { font-family: 'Cinzel', serif; }

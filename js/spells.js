@@ -54,6 +54,7 @@ function useClassAbility() {
   document.getElementById("attack-dice-container").appendChild(rollBtn);
   el.modalBackdrop.classList.remove("hide");
   el.modalAttack.classList.remove("hide");
+  triggerEntrance(el.modalAttack.children[0]);
   renderHUD();
 }
 

@@ -9,9 +9,9 @@
 window.ViewTemplates = window.ViewTemplates || {};
 
 window.ViewTemplates["screen-playing"] = `
-    <div id="screen-playing" class="hide flex flex-col items-center w-full max-w-4xl relative z-10 h-full">
+    <div id="screen-playing" class="hide flex flex-col items-center w-full max-w-4xl relative z-10 h-full justify-center scale-origin-center">
       
-      <div class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-3 md:p-4 mb-4 relative overflow-hidden flex flex-col gap-2 shrink-0 shadow-lg">
+      <div id="playing-hud" class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-3 md:p-4 mb-4 relative overflow-hidden flex flex-col gap-2 shrink-0 shadow-lg">
         <div class="absolute inset-0 bg-slate-800/50 w-full z-0">
           <div id="hud-hp-bar" class="h-full bg-rose-600/80 transition-all duration-300 ease-out" style="width: 100%"></div>
         </div>
@@ -35,12 +35,12 @@ window.ViewTemplates["screen-playing"] = `
 
       <div class="flex flex-row gap-4 items-stretch w-full justify-center min-h-0 flex-1">
         
-        <div class="hidden md:flex flex-col gap-2 w-48 shrink-0 min-h-0">
+        <div id="playing-sidebar-left" class="hidden md:flex flex-col gap-2 w-48 lg:w-56 shrink-0 min-h-0">
           <h4 class="text-xs uppercase tracking-widest text-slate-500 font-bold shrink-0">Inventory</h4>
           <div id="sidebar-artifacts" class="space-y-2 overflow-y-auto pr-1 flex-1"></div>
         </div>
 
-        <div id="grid-container" class="relative bg-slate-800 p-2 md:p-3 rounded-2xl border border-slate-700 w-full max-w-[340px] md:max-w-[400px] aspect-square shrink-0 self-center shadow-xl">
+        <div id="grid-container" class="relative bg-slate-800 p-2 md:p-3 rounded-2xl border border-slate-700 w-full max-w-[340px] md:max-w-[400px] lg:max-w-[440px] aspect-square shrink-0 self-center shadow-xl">
           <div class="grid grid-cols-4 grid-rows-4 gap-[2%] w-full h-full absolute inset-2 md:inset-3" style="width: 96%; height: 96%;">
             <div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div>
             <div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div><div class="bg-slate-900/80 rounded-xl shadow-inner"></div>
@@ -50,7 +50,7 @@ window.ViewTemplates["screen-playing"] = `
           <div id="tiles-layer" class="absolute inset-2 md:inset-3" style="width: 96%; height: 96%;"></div>
         </div>
 
-        <div class="hidden md:flex flex-col gap-4 w-48 shrink-0 min-h-0">
+        <div id="playing-sidebar-right" class="hidden md:flex flex-col gap-4 w-48 lg:w-56 shrink-0 min-h-0">
           <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700 text-center shadow-lg relative overflow-hidden shrink-0">
             <span id="sidebar-class-icon" class="text-4xl block mb-2 relative z-10">😡</span>
             <p id="sidebar-class-name" class="font-black text-sm text-white uppercase tracking-wider relative z-10">Hero</p>

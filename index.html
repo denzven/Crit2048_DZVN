@@ -15,6 +15,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 flex flex-col h-screen w-screen overflow-hidden">
+  
+  <!-- PRELOADER -->
+  <div id="preloader" class="fixed inset-0 bg-slate-950 z-[200] flex flex-col items-center justify-center transition-opacity duration-300">
+    <div class="relative w-16 h-16">
+      <div class="w-full h-full border-2 border-rose-500/10 border-t-rose-500 rounded-full animate-spin shadow-[0_0_15px_rgba(244,63,94,0.3)]"></div>
+    </div>
+  </div>
 
   <header class="p-3 md:p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 relative z-40" style="padding-top: max(env(safe-area-inset-top), 0.75rem); padding-left: max(env(safe-area-inset-left), 0.75rem); padding-right: max(env(safe-area-inset-right), 0.75rem);">
     <div class="flex items-center gap-2">
@@ -86,6 +93,7 @@
   <script src="js/api.js"></script>
   <script src="js/modals.js"></script>
   <script src="js/plugins.js"></script>
+  <script src="js/atmosphere.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

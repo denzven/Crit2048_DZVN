@@ -1,11 +1,19 @@
 let currentHelpPage = 1;
 const totalHelpPages = 6;
 
+function triggerEntrance(element) {
+  if (!element) return;
+  element.classList.remove("fx-modal-entrance");
+  void element.offsetWidth;
+  element.classList.add("fx-modal-entrance");
+}
+
 // --- MODAL & OVERLAY HELPERS ---
 function openHelp() {
   currentHelpPage = 1;
   updateHelpPagination();
   el.modalHelp.classList.remove("hide");
+  triggerEntrance(el.modalHelp.children[0]);
 }
 
 function closeHelp() {
@@ -57,6 +65,7 @@ function updateHelpPagination() {
 function confirmHome() {
   if (["PLAYING", "TAVERN", "DICE"].includes(state.gameState)) {
     el.modalConfirm.classList.remove("hide");
+    triggerEntrance(el.modalConfirm.children[0]);
   } else {
     resetGame();
   }
@@ -66,6 +75,7 @@ function closeConfirm() {
 }
 function executeHome() {
   closeConfirm();
+  clearSave();
   state.runStats.endReason = "Forfeit: You left the dungeon midway.";
   changeState("GAME_OVER");
 }
@@ -73,6 +83,7 @@ function executeHome() {
 function openLeaderboard() {
   renderLeaderboard();
   el.modalLeaderboard.classList.remove("hide");
+  triggerEntrance(el.modalLeaderboard.children[0]);
 }
 function closeLeaderboard() {
   el.modalLeaderboard.classList.add("hide");
@@ -86,10 +97,42 @@ function openSettings() {
   el.inputSettingShake.value = config.screenShake;
   el.inputSettingHapticsEnabled.checked = config.hapticsEnabled;
   el.inputSettingHapticsIntensity.value = config.hapticsIntensity;
+  el.inputSettingAtmosphere.checked = config.showAtmosphere;
+  el.inputSettingUiScale.value = config.uiScale || 1.0;
+  el.inputSettingFontScale.value = config.fontScale || 1.0;
+  el.inputSettingDisplayScale.value = config.displayScale || 1.0;
+  
+  updateSettingLabels();
   el.modalSettings.classList.remove("hide");
+  triggerEntrance(el.modalSettings.children[0]);
 }
+
+function updateSettingLabels() {
+  if (el.labelSettingTurns) el.labelSettingTurns.innerText = el.inputSettingTurns.value;
+  if (el.labelSettingGold) el.labelSettingGold.innerText = el.inputSettingGold.value;
+  if (el.labelSettingSfx) el.labelSettingSfx.innerText = `${Math.round(el.inputSettingSFX.value * 100)}%`;
+  if (el.labelSettingShake) el.labelSettingShake.innerText = parseFloat(el.inputSettingShake.value).toFixed(1);
+  if (el.labelSettingHaptics) el.labelSettingHaptics.innerText = parseFloat(el.inputSettingHapticsIntensity.value).toFixed(1);
+  if (el.labelSettingUiScale) el.labelSettingUiScale.innerText = `${Math.round(el.inputSettingUiScale.value * 100)}%`;
+  if (el.labelSettingFontScale) el.labelSettingFontScale.innerText = `${Math.round(el.inputSettingFontScale.value * 100)}%`;
+  if (el.labelSettingDisplayScale) el.labelSettingDisplayScale.innerText = `${Math.round(el.inputSettingDisplayScale.value * 100)}%`;
+}
+
+// Add live listeners
+["input-setting-turns", "input-setting-gold", "input-setting-sfx", "input-setting-shake", "input-setting-haptics-intensity", "input-setting-ui-scale", "input-setting-font-scale", "input-setting-display-scale"].forEach(id => {
+  const input = document.getElementById(id);
+  if (input) input.addEventListener("input", updateSettingLabels);
+});
+
 function closeSettings() {
   el.modalSettings.classList.add("hide");
+}
+
+function resetSettingsToDefault() {
+  if (confirm("Reset all settings to factory defaults?")) {
+    Object.assign(config, DEFAULT_CONFIG);
+    openSettings();
+  }
 }
 
 function saveSettings() {
@@ -98,7 +141,12 @@ function saveSettings() {
     vol = parseFloat(el.inputSettingSFX.value),
     shake = parseFloat(el.inputSettingShake.value),
     hapticEnabled = el.inputSettingHapticsEnabled.checked,
-    hapticIntensity = parseFloat(el.inputSettingHapticsIntensity.value);
+    hapticIntensity = parseFloat(el.inputSettingHapticsIntensity.value),
+    atmosphere = el.inputSettingAtmosphere.checked,
+    uiScale = parseFloat(el.inputSettingUiScale.value),
+    fontScale = parseFloat(el.inputSettingFontScale.value),
+    displayScale = parseFloat(el.inputSettingDisplayScale.value);
+
   if (!isNaN(t) && t > 0) config.turnsBeforeDice = t;
   if (!isNaN(g) && g >= 0) config.startingGold = g;
   if (!isNaN(vol) && vol >= 0) config.sfxVolume = vol;
@@ -108,12 +156,26 @@ function saveSettings() {
   }
   config.hapticsEnabled = hapticEnabled;
   if (!isNaN(hapticIntensity)) config.hapticsIntensity = hapticIntensity;
+  config.showAtmosphere = atmosphere;
+  config.uiScale = uiScale;
+  config.fontScale = fontScale;
+  config.displayScale = displayScale;
   
+  document.documentElement.style.setProperty("--ui-scale", uiScale);
+  document.documentElement.style.setProperty("--font-scale", fontScale);
+  document.documentElement.style.setProperty("--display-scale", displayScale);
+  
+  // Toggle atmosphere visibility immediately
+  const canvas = document.getElementById("atmosphere-canvas");
+  if (canvas) canvas.style.display = atmosphere ? "block" : "none";
+
   config.diceTheme = el.inputSettingTheme.value;
   if (state.gameState === "START" || state.gameState === "CLASS_SELECT")
     state.gold = config.startingGold;
   document.getElementById("instruction-turns").innerText =
     config.turnsBeforeDice;
+  
+  saveGameState(); // Persist settings too
   closeSettings();
 }
 

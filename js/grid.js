@@ -41,6 +41,12 @@ function renderGrid() {
       tileEl.classList.add("pop-in");
       tile.pop = false;
     }
+    if (tile.merged) {
+      tileEl.classList.remove("tile-merge");
+      void tileEl.offsetWidth;
+      tileEl.classList.add("tile-merge");
+      tile.merged = false;
+    }
   });
 
   Array.from(el.tilesLayer.children).forEach((child) => {
@@ -70,13 +76,24 @@ function renderGrid() {
   });
 }
 
-function triggerScreenShake() {
+function triggerScreenShake(intensity = 1) {
   if (config.screenShake <= 0) return;
-  if (window.Plugins) window.Plugins.vibrate('impactHeavy');
+  const shakePower = intensity * config.screenShake;
+  if (window.Plugins) {
+    if (shakePower > 2) window.Plugins.vibrate('impactHeavy');
+    else window.Plugins.vibrate('impactMedium');
+  }
+  el.mainContainer.style.setProperty("--shake-intensity", shakePower);
   el.mainContainer.classList.remove("shake");
   void el.mainContainer.offsetWidth;
   el.mainContainer.classList.add("shake");
   setTimeout(() => el.mainContainer.classList.remove("shake"), 400);
+}
+
+function triggerGridBump() {
+  el.gridContainer.classList.remove("grid-bump");
+  void el.gridContainer.offsetWidth;
+  el.gridContainer.classList.add("grid-bump");
 }
 
 function playGridFx(type, r, c) {
@@ -149,6 +166,34 @@ function playGridFx(type, r, c) {
     el.gridContainer.appendChild(fx);
     setTimeout(() => { if (fx.parentNode) fx.remove(); }, 800);
   }
+}
+
+function playCombatText(text, colorClass, x, y) {
+  const fct = document.createElement("div");
+  fct.className = `fx-combat-text ${colorClass} text-xl md:text-3xl`;
+  fct.innerText = text;
+  fct.style.left = x;
+  fct.style.top = y;
+  el.gridContainer.appendChild(fct);
+  setTimeout(() => {
+    if (fct.parentNode) fct.remove();
+  }, 850);
+}
+
+function playAnnouncementText(title, subtext) {
+  const ann = document.createElement("div");
+  ann.className = "fx-announcement";
+  ann.innerHTML = `
+    <h2>${title}</h2>
+    <p>${subtext}</p>
+  `;
+  document.body.appendChild(ann);
+  setTimeout(() => {
+    ann.style.opacity = "0";
+    setTimeout(() => {
+      if (ann.parentNode) ann.remove();
+    }, 500);
+  }, 1600);
 }
 
 function checkGridlock() {

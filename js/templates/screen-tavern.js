@@ -44,7 +44,7 @@ window.ViewTemplates["screen-tavern"] = `
           </div>
 
           <h3 class="text-slate-500 font-black uppercase tracking-widest text-[10px] shrink-0 pt-2">Wares</h3>
-          <div id="tavern-artifacts" class="grid md:grid-cols-2 gap-3 shrink-0"></div>
+          <div id="tavern-artifacts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 shrink-0 pb-4"></div>
       </div>
       
       <div class="pt-3 text-center shrink-0">

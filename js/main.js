@@ -14,6 +14,7 @@ function startGameFlow() {
   state.runStats.maxMultiplier = 1.0;
   state.runStats.totalMerges = 0;
   state.runStats.maxDamage = 0;
+  clearSave();
 
   Object.keys(CLASSES).forEach((k) => {
     if (CLASSES[k].ability) CLASSES[k].ability.count = 1;
@@ -21,117 +22,150 @@ function startGameFlow() {
   changeState("CLASS_SELECT");
 }
 
-function changeState(newState) {
-  state.gameState = newState;
-  [
-    el.screenStart,
-    el.screenClass,
-    el.screenPlaying,
-    el.screenTavern,
-    el.screenEnd,
-  ].forEach((s) => s.classList.add("hide"));
-
-  if (["START", "CLASS_SELECT"].includes(newState)) {
-    el.headerStats.classList.add("hide");
-    el.headerAnte.classList.add("hide");
-    el.btnHome.classList.add("hide");
-  } else {
-    el.headerStats.classList.remove("hide");
-    el.headerAnte.classList.remove("hide");
-    el.btnHome.classList.remove("hide");
+function resumeGame() {
+  if (loadGameState()) {
+    changeState(state.gameState, true);
   }
+}
 
-  // Update Discord Presence
-  if (window.Plugins) {
-    let details = "Main Menu";
-    let stateStr = "Preparing for a run...";
-    
-    if (newState === "PLAYING" || newState === "DICE") {
-      const enc = ENCOUNTERS[state.encounterIdx];
-      details = `Fighting ${enc.name}`;
-      stateStr = `${state.playerClass.id} (Ante ${state.encounterIdx + 1}) - Score: ${state.score}`;
-    } else if (newState === "TAVERN") {
-      details = "Resting at the Tavern";
-      stateStr = `Preparing for Ante ${state.encounterIdx + 2}`;
-    } else if (newState === "GAME_OVER" || newState === "VICTORY") {
-      details = newState === "VICTORY" ? "Victory!" : "Run Over";
-      stateStr = `Final Score: ${state.score}`;
-    } else if (newState === "CLASS_SELECT") {
-      details = "Choosing a Class";
-      stateStr = "Preparing for the dungeon...";
+function changeState(newState, triggerEntrance = false) {
+  const oldState = state.gameState;
+  const updateState = () => {
+    state.gameState = newState;
+    [
+      el.screenStart,
+      el.screenClass,
+      el.screenPlaying,
+      el.screenTavern,
+      el.screenEnd,
+    ].forEach((s) => s.classList.add("hide"));
+
+    if (["START", "CLASS_SELECT"].includes(newState)) {
+      el.headerStats.classList.add("hide");
+      el.headerAnte.classList.add("hide");
+      el.btnHome.classList.add("hide");
+    } else {
+      el.headerStats.classList.remove("hide");
+      el.headerAnte.classList.remove("hide");
+      el.btnHome.classList.remove("hide");
+    }
+
+    // Update Discord Presence
+    if (window.Plugins) {
+      let details = "Main Menu";
+      let stateStr = "Preparing for a run...";
+      
+      if (newState === "PLAYING" || newState === "DICE") {
+        const enc = ENCOUNTERS[state.encounterIdx];
+        details = `Fighting ${enc.name}`;
+        stateStr = `${state.playerClass.id} (Ante ${state.encounterIdx + 1}) - Score: ${state.score}`;
+      } else if (newState === "TAVERN") {
+        details = "Resting at the Tavern";
+        stateStr = `Preparing for Ante ${state.encounterIdx + 2}`;
+      } else if (newState === "GAME_OVER" || newState === "VICTORY") {
+        details = newState === "VICTORY" ? "Victory!" : "Run Over";
+        stateStr = `Final Score: ${state.score}`;
+      } else if (newState === "CLASS_SELECT") {
+        details = "Choosing a Class";
+        stateStr = "Preparing for the dungeon...";
+      }
+      
+      window.Plugins.updatePresence(details, stateStr);
+    }
+
+    switch (newState) {
+      case "START":
+        el.screenStart.classList.remove("hide");
+        if (getLeaderboard().length > 0) {
+          el.btnStartLeaderboard.classList.remove("hide");
+        } else {
+          el.btnStartLeaderboard.classList.add("hide");
+        }
+        if (localStorage.getItem("crit2048_save")) {
+          el.btnResume.classList.remove("hide");
+        } else {
+          el.btnResume.classList.add("hide");
+        }
+        break;
+
+      case "CLASS_SELECT":
+        el.classContainer.innerHTML = Object.entries(CLASSES)
+          .map(
+            ([key, cls]) => `
+          <div tabindex="0" onclick="selectClass('${key}')" onkeydown="if(event.key==='Enter') selectClass('${key}')" class="bg-slate-900 border border-slate-700 hover:border-rose-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500 p-4 rounded-2xl cursor-pointer transition-all flex flex-col items-center text-center shadow-lg">
+            <span class="text-4xl mb-2">${cls.icon}</span><h3 class="text-lg font-black text-white uppercase tracking-wider">${cls.id}</h3><p class="text-slate-400 text-xs mt-1 leading-tight">${cls.desc}</p>
+          </div>`,
+          )
+          .join("");
+        el.screenClass.classList.remove("hide");
+        setTimeout(() => {
+          const first = el.classContainer.querySelector("div");
+          if (first) first.focus();
+        }, 50);
+        break;
+
+      case "PLAYING":
+      case "DICE":
+        el.screenPlaying.classList.remove("hide");
+        if (newState === "DICE") {
+          el.diceActionBtn.classList.remove("hide");
+          el.dicePostRoll.classList.add("hide");
+          el.diceResultMsg.innerHTML = "";
+          el.modalBackdrop.classList.remove("hide");
+          el.modalDice.classList.remove("hide");
+          triggerEntrance(el.modalDice.children[0]);
+          document.getElementById("instruction-turns").innerText =
+            config.turnsBeforeDice;
+          el.diceActionBtn.classList.remove("hide");
+          el.dicePostRoll.classList.add("hide");
+          let m = state.playerClass.d20Mod || 0;
+          el.diceAnteLevel.innerText = m >= 0 ? `+${m}` : m;
+        } else {
+          el.modalBackdrop.classList.add("hide");
+          el.modalDice.classList.add("hide");
+        }
+        renderHUD();
+        renderGrid();
+        renderSidebar();
+        if (triggerEntrance) triggerSetupTransition();
+        break;
+
+      case "TAVERN":
+        renderTavern();
+        el.screenTavern.classList.remove("hide");
+        break;
+
+      case "GAME_OVER":
+      case "VICTORY":
+        state.runStats.endTime = Date.now();
+        el.endTitle.innerText = newState === "VICTORY" ? "VICTORY!" : "RUN OVER";
+        el.endTitle.className = `text-4xl md:text-5xl font-black mb-2 font-serif ${newState === "VICTORY" ? "text-amber-400" : "text-white"}`;
+        el.endDesc.innerText =
+          newState === "VICTORY"
+            ? "You conquered the dungeon."
+            : (state.runStats.endReason || "The dungeon claims another soul.");
+
+        renderEndScreenStats();
+        saveRunToLeaderboard(state.runStats, state.playerClass, state.encounterIdx);
+        clearSave();
+
+        el.modalBackdrop.classList.remove("hide");
+        el.screenEnd.classList.remove("hide");
+        break;
     }
     
-    window.Plugins.updatePresence(details, stateStr);
-  }
+    // Add Tavern Pull-up effect
+    if (newState === "TAVERN") {
+      el.screenTavern.classList.remove("pull-up");
+      void el.screenTavern.offsetWidth;
+      el.screenTavern.classList.add("pull-up");
+    }
+  };
 
-  switch (newState) {
-    case "START":
-      el.screenStart.classList.remove("hide");
-      if (getLeaderboard().length > 0) {
-        el.btnStartLeaderboard.classList.remove("hide");
-      } else {
-        el.btnStartLeaderboard.classList.add("hide");
-      }
-      break;
-
-    case "CLASS_SELECT":
-      el.classContainer.innerHTML = Object.entries(CLASSES)
-        .map(
-          ([key, cls]) => `
-        <div tabindex="0" onclick="selectClass('${key}')" onkeydown="if(event.key==='Enter') selectClass('${key}')" class="bg-slate-900 border border-slate-700 hover:border-rose-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500 p-4 rounded-2xl cursor-pointer transition-all flex flex-col items-center text-center shadow-lg">
-          <span class="text-4xl mb-2">${cls.icon}</span><h3 class="text-lg font-black text-white uppercase tracking-wider">${cls.id}</h3><p class="text-slate-400 text-xs mt-1 leading-tight">${cls.desc}</p>
-        </div>`,
-        )
-        .join("");
-      el.screenClass.classList.remove("hide");
-      setTimeout(() => {
-        const first = el.classContainer.querySelector("div");
-        if (first) first.focus();
-      }, 50);
-      break;
-
-    case "PLAYING":
-    case "DICE":
-      el.screenPlaying.classList.remove("hide");
-      if (newState === "DICE") {
-        el.modalBackdrop.classList.remove("hide");
-        el.modalDice.classList.remove("hide");
-        document.getElementById("instruction-turns").innerText =
-          config.turnsBeforeDice;
-        el.diceActionBtn.classList.remove("hide");
-        el.dicePostRoll.classList.add("hide");
-        let m = state.playerClass.d20Mod || 0;
-        el.diceAnteLevel.innerText = m >= 0 ? `+${m}` : m;
-      } else {
-        el.modalBackdrop.classList.add("hide");
-        el.modalDice.classList.add("hide");
-      }
-      renderHUD();
-      renderGrid();
-      renderSidebar();
-      break;
-
-    case "TAVERN":
-      renderTavern();
-      el.screenTavern.classList.remove("hide");
-      break;
-
-    case "GAME_OVER":
-    case "VICTORY":
-      state.runStats.endTime = Date.now();
-      el.endTitle.innerText = newState === "VICTORY" ? "VICTORY!" : "RUN OVER";
-      el.endTitle.className = `text-4xl md:text-5xl font-black mb-2 font-serif ${newState === "VICTORY" ? "text-amber-400" : "text-white"}`;
-      el.endDesc.innerText =
-        newState === "VICTORY"
-          ? "You conquered the dungeon."
-          : (state.runStats.endReason || "The dungeon claims another soul.");
-
-      renderEndScreenStats();
-      saveRunToLeaderboard(state.runStats, state.playerClass, state.encounterIdx);
-
-      el.modalBackdrop.classList.remove("hide");
-      el.screenEnd.classList.remove("hide");
-      break;
+  if (document.startViewTransition) {
+    document.startViewTransition(updateState);
+  } else {
+    updateState();
   }
 }
 
@@ -140,6 +174,7 @@ function selectClass(clsKey) {
   const giantLvl = getArtifactLevel("GIANT_POTION");
   state.multiplier = 1.0 + 0.3 * giantLvl;
   initEncounter(0, false);
+  saveGameState();
 }
 
 function initEncounter(eIdx, maintainStats = false) {
@@ -160,7 +195,8 @@ function initEncounter(eIdx, maintainStats = false) {
   el.headerAnte.innerText = `Ante ${eIdx + 1}`;
   if (!maintainStats) state.logs = [];
   addLog(`Encountered ${enc.name}!`);
-  changeState("PLAYING");
+  changeState("PLAYING", true);
+  saveGameState();
 }
 
 function checkGameState() {
@@ -170,6 +206,10 @@ function checkGameState() {
   renderSidebar();
 
   if (state.monsterHp <= 0) {
+    const enc = ENCOUNTERS[state.encounterIdx];
+    playAnnouncementText(`${enc.name}`, "Defeated!");
+    triggerScreenShake(3.5);
+    if (window.Plugins) window.Plugins.vibrate('impactHeavy');
     setTimeout(() => {
       if (state.encounterIdx >= ENCOUNTERS.length - 1) {
         state.runStats.endReason = "Conquered all bosses!";
@@ -181,7 +221,7 @@ function checkGameState() {
         generateShop();
         changeState("TAVERN");
       }
-    }, 300);
+    }, 1800);
     return;
   }
   if (state.slidesLeft <= 0) {
@@ -201,9 +241,11 @@ function checkGameState() {
   if (state.slidesSinceRoll >= config.turnsBeforeDice) {
     setTimeout(() => changeState("DICE"), 300);
   }
+  saveGameState();
 }
 
 function resetGame() {
+  clearSave();
   state.gold = config.startingGold;
   state.multiplier = 1.0;
   state.artifacts = [];
@@ -224,6 +266,25 @@ function resetGame() {
   el.modalBackdrop.classList.add("hide");
   el.modalDice.classList.add("hide");
   el.modalAttack.classList.add("hide");
+}
+
+function triggerSetupTransition() {
+  const hud = document.getElementById("playing-hud");
+  const left = document.getElementById("playing-sidebar-left");
+  const right = document.getElementById("playing-sidebar-right");
+  const grid = document.getElementById("grid-container");
+
+  const trigger = (el, cls) => {
+    if (!el) return;
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+  };
+
+  trigger(hud, "fx-entrance-pop");
+  trigger(grid, "fx-entrance-pop");
+  trigger(left, "fx-entrance-left");
+  trigger(right, "fx-entrance-right");
 }
 
 // --- CONTROLS ---
@@ -322,6 +383,7 @@ window.addEventListener("keydown", (e) => {
   if (e.key === " ") {
     useClassAbility();
   }
+  saveGameState();
 });
 
 // Global Button Haptics
@@ -356,6 +418,7 @@ el.gridContainer.addEventListener(
     } else {
       if (Math.abs(dy) > 30) processMove(dy > 0 ? "DOWN" : "UP");
     }
+    saveGameState();
   },
   { passive: false },
 );
@@ -395,7 +458,9 @@ window.closeLeaderboard = closeLeaderboard;
 window.openSettings = openSettings;
 window.closeSettings = closeSettings;
 window.saveSettings = saveSettings;
+window.resetSettingsToDefault = resetSettingsToDefault;
 window.startGameFlow = startGameFlow;
+window.resumeGame = resumeGame;
 window.changeState = changeState;
 window.selectClass = selectClass;
 window.processMove = processMove;
@@ -412,7 +477,25 @@ window.upgradeSpell = upgradeSpell;
 window.restoreSpells = restoreSpells;
 
 // --- BOOT ---
-if (window.Plugins) {
-  window.Plugins.init();
+async function bootstrapGame() {
+  if (config.uiScale) document.documentElement.style.setProperty("--ui-scale", config.uiScale);
+  if (config.fontScale) document.documentElement.style.setProperty("--font-scale", config.fontScale);
+  if (config.displayScale) document.documentElement.style.setProperty("--display-scale", config.displayScale);
+  // Pre-load check: Fonts
+  try {
+    if (document.fonts) await document.fonts.ready;
+  } catch (e) {}
+
+  // Snappy delay to ensure DOM is ready
+  setTimeout(() => {
+    const preloader = document.getElementById("preloader");
+    if (preloader) {
+      preloader.style.opacity = "0";
+      setTimeout(() => preloader.remove(), 300);
+    }
+    if (window.Plugins) window.Plugins.init();
+    changeState("START");
+  }, 400);
 }
-changeState("START");
+
+bootstrapGame();
