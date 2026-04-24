@@ -23,6 +23,7 @@ const el = {
   tilesLayer: document.getElementById("tiles-layer"),
   gridContainer: document.getElementById("grid-container"),
   sidebarArtifacts: document.getElementById("sidebar-artifacts"),
+  mobileInventory: document.getElementById("mobile-inventory"),
   sidebarClassIcon: document.getElementById("sidebar-class-icon"),
   sidebarClassName: document.getElementById("sidebar-class-name"),
   sidebarClassUses: document.getElementById("sidebar-class-uses"),
@@ -32,7 +33,10 @@ const el = {
   mobileClassIcon: document.getElementById("mobile-class-icon"),
   mobileSpellUses: document.getElementById("mobile-spell-uses"),
   combatLogDesktop: document.getElementById("combat-log-desktop"),
-  combatLogMobile: document.getElementById("combat-log-mobile"),
+  mobileInventoryModal: document.getElementById("mobile-inventory-modal"),
+  mobileInventoryList: document.getElementById("mobile-inventory-list"),
+  mobileLogModal: document.getElementById("mobile-log-modal"),
+  mobileLogContent: document.getElementById("combat-log-modal-content"),
   diceAnteLevel: document.getElementById("dice-mod-val"),
   diceActionBtn: document.getElementById("dice-action-btn"),
   dicePostRoll: document.getElementById("dice-post-roll"),
@@ -64,12 +68,26 @@ const el = {
   inputSettingShake: document.getElementById("input-setting-shake"),
   inputSettingHapticsEnabled: document.getElementById("input-setting-haptics-enabled"),
   inputSettingHapticsIntensity: document.getElementById("input-setting-haptics-intensity"),
+  inputSettingAtmosphere: document.getElementById("input-setting-atmosphere"),
+  labelSettingTurns: document.getElementById("label-setting-turns"),
+  labelSettingGold: document.getElementById("label-setting-gold"),
+  labelSettingSfx: document.getElementById("label-setting-sfx"),
+  labelSettingShake: document.getElementById("label-setting-shake"),
+  labelSettingHaptics: document.getElementById("label-setting-haptics"),
+  inputSettingUiScale: document.getElementById("input-setting-ui-scale"),
+  labelSettingUiScale: document.getElementById("label-setting-ui-scale"),
+  inputSettingFontScale: document.getElementById("input-setting-font-scale"),
+  labelSettingFontScale: document.getElementById("label-setting-font-scale"),
+  inputSettingDisplayScale: document.getElementById("input-setting-display-scale"),
+  labelSettingDisplayScale: document.getElementById("label-setting-display-scale"),
   modalAttack: document.getElementById("modal-attack"),
   attackTitle: document.getElementById("attack-title"),
   attackDiceContainer: document.getElementById("attack-dice-container"),
   attackResult: document.getElementById("attack-result"),
   attackTotal: document.getElementById("attack-total"),
   btnAiOracle: document.getElementById("btn-ai-oracle"),
+  btnRest: document.getElementById("btn-rest"),
+  btnUpgrade: document.getElementById("btn-upgrade"),
   aiLoading: document.getElementById("ai-loading"),
   upgradeCost: document.getElementById("upgrade-cost"),
   modalHelp: document.getElementById("modal-help"),
@@ -78,12 +96,27 @@ const el = {
   modalLeaderboard: document.getElementById("modal-leaderboard"),
   leaderboardList: document.getElementById("leaderboard-list"),
   btnStartLeaderboard: document.getElementById("btn-start-leaderboard"),
+  btnResume: document.getElementById("btn-resume"),
+  btnRespin: document.getElementById("btn-respin"),
+  modalAlert: document.getElementById("modal-alert"),
+  alertTitle: document.getElementById("alert-title"),
+  alertMessage: document.getElementById("alert-message"),
+  alertIcon: document.getElementById("alert-icon"),
+  alertBtnOk: document.getElementById("alert-btn-ok"),
+  confirmBtns: document.getElementById("confirm-btns"),
+  confirmBtnOk: document.getElementById("confirm-btn-ok"),
+  confirmBtnCancel: document.getElementById("confirm-btn-cancel"),
+  modalShare: document.getElementById("modal-share"),
+  sharePreviewContainer: document.getElementById("share-preview-container"),
+  shareToggleSeed: document.getElementById("share-toggle-seed"),
+  shareToggleArtifacts: document.getElementById("share-toggle-artifacts"),
+  shareToggleExtra: document.getElementById("share-toggle-extra"),
 };
 
 // --- UI HELPERS ---
 function addLog(msg) {
   state.logs.push(msg);
-  if (state.logs.length > 6) state.logs.shift();
+  if (state.logs.length > 20) state.logs.shift(); // Keep more for the modal
   const html = state.logs
     .map(
       (log) =>
@@ -92,8 +125,10 @@ function addLog(msg) {
     .join("");
   el.combatLogDesktop.innerHTML = html;
   el.combatLogDesktop.scrollTop = el.combatLogDesktop.scrollHeight;
-  el.combatLogMobile.innerHTML = html;
-  el.combatLogMobile.scrollTop = el.combatLogMobile.scrollHeight;
+  if (el.mobileLogContent) {
+    el.mobileLogContent.innerHTML = html;
+    el.mobileLogContent.scrollTop = el.mobileLogContent.scrollHeight;
+  }
 }
 
 function getArtifactLevel(id) {
@@ -153,10 +188,42 @@ function renderSidebar() {
   el.sidebarArtifacts.innerHTML = state.artifacts.length
     ? ""
     : '<p class="text-[10px] text-slate-600">None equipped</p>';
-  state.artifacts.forEach(
-    (a) =>
-      (el.sidebarArtifacts.innerHTML += `<div class="bg-slate-800 p-2 rounded-lg border border-slate-700 flex items-center gap-2 mb-1" title="${a.desc(a.level)}"><span>${a.icon}</span> <div class="flex flex-col"><span class="text-[10px] font-bold truncate leading-tight">${a.name}</span><span class="text-[9px] text-amber-400 font-mono">Lvl ${a.level}</span></div></div>`),
-  );
+  if (el.mobileInventoryList) el.mobileInventoryList.innerHTML = "";
+  state.artifacts.forEach((a) => {
+    const html = `<div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 flex items-center gap-3 mb-1" title="${a.desc(a.level)}">
+        <span class="text-xl">${a.icon}</span> 
+        <div class="flex flex-col">
+          <span class="text-xs font-bold text-white uppercase leading-tight">${a.name}</span>
+          <span class="text-[10px] text-amber-400 font-mono">Lvl ${a.level}</span>
+        </div>
+      </div>`;
+    el.sidebarArtifacts.innerHTML += html;
+    if (el.mobileInventoryList) el.mobileInventoryList.innerHTML += html;
+  });
+}
+
+function toggleMobileInventory() {
+  if (!el.mobileInventoryModal) return;
+  const isHidden = el.mobileInventoryModal.classList.contains('hide');
+  el.mobileLogModal?.classList.add('hide'); // Close other modal
+  if (isHidden) {
+    el.mobileInventoryModal.classList.remove('hide');
+    el.mobileInventoryModal.classList.add('fx-entrance-pop');
+  } else {
+    el.mobileInventoryModal.classList.add('hide');
+  }
+}
+
+function toggleMobileLog() {
+  if (!el.mobileLogModal) return;
+  const isHidden = el.mobileLogModal.classList.contains('hide');
+  el.mobileInventoryModal?.classList.add('hide'); // Close other modal
+  if (isHidden) {
+    el.mobileLogModal.classList.remove('hide');
+    el.mobileLogModal.classList.add('fx-entrance-pop');
+  } else {
+    el.mobileLogModal.classList.add('hide');
+  }
 }
 
 function renderEndScreenStats() {
@@ -201,52 +268,171 @@ function copySeed() {
   const seed = state.runStats.seedUsed;
   navigator.clipboard.writeText(seed).then(() => {
     addLog("Seed copied to clipboard!");
-    alert("Seed copied to clipboard!");
+    alert("Seed copied to clipboard!", "Success", "📋");
   });
 }
 
 async function shareRun() {
-  const area = el.endCaptureArea;
-  try {
-    const canvas = await html2canvas(area, {
-      backgroundColor: "#0f172a", // Match slate-950
-      scale: 2, // Higher quality
-      logging: false,
-      useCORS: true
-    });
-    
-    canvas.toBlob(async (blob) => {
-      const file = new File([blob], `crit2048_run_${state.runStats.seedUsed}.png`, { type: 'image/png' });
-      
-      const shareData = {
-        title: 'Crit 2048 Run Summary',
-        text: `Check out my ${state.playerClass.id} run in Crit 2048! Ante ${state.encounterIdx + 1}, Seed: ${state.runStats.seedUsed}`
-      };
+  openShareModal();
+}
 
-      if (window.Plugins && window.Plugins.isTauri) {
-        shareData.files = [file];
-        await window.Plugins.share(shareData);
-      } else if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            ...shareData,
-            files: [file],
-          });
-        } catch (err) {
-          if (err.name !== 'AbortError') console.error('Share failed:', err);
-        }
-      } else {
-        // Fallback: Download the image
-        const link = document.createElement('a');
-        link.download = `crit2048_run_${state.runStats.seedUsed}.png`;
-        link.href = URL.createObjectURL(blob);
-        link.click();
-        alert("Sharing not supported on this browser. Image downloaded instead!");
-      }
-    });
+let currentShareTheme = 'classic';
+let currentShareBytes = null;
+
+async function openShareModal() {
+  if (!el.modalShare) return;
+  el.modalShare.classList.remove('hide');
+  refreshSharePreview();
+}
+
+function closeShareModal() {
+  el.modalShare?.classList.add('hide');
+}
+
+function updateShareTheme(theme) {
+  currentShareTheme = theme;
+  // Update UI active state
+  document.querySelectorAll('.share-theme-btn').forEach(btn => {
+    const dot = btn.querySelector('div');
+    const label = btn.querySelector('span');
+    if (dot) {
+      dot.classList.remove('ring-2', 'ring-rose-500', 'ring-offset-2', 'ring-offset-slate-900');
+      dot.classList.add('ring-1', 'ring-white/10');
+    }
+    if (label) {
+      label.classList.remove('text-white', 'opacity-100');
+      label.classList.add('text-slate-500', 'opacity-60');
+    }
+  });
+
+  const activeBtn = event.currentTarget;
+  const activeDot = activeBtn.querySelector('div');
+  const activeLabel = activeBtn.querySelector('span');
+  if (activeDot) {
+    activeDot.classList.add('ring-2', 'ring-rose-500', 'ring-offset-2', 'ring-offset-slate-900');
+    activeDot.classList.remove('ring-1', 'ring-white/10');
+  }
+  if (activeLabel) {
+    activeLabel.classList.add('text-white', 'opacity-100');
+    activeLabel.classList.remove('text-slate-500', 'opacity-60');
+  }
+  
+  refreshSharePreview();
+}
+
+async function refreshSharePreview() {
+  const container = el.sharePreviewContainer;
+  if (!container) return;
+  
+  // Show loading
+  const loading = document.getElementById('share-preview-loading');
+  if (loading) loading.classList.remove('hide');
+
+  try {
+    const rs = state.runStats;
+    const diff = rs.endTime - rs.startTime;
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+
+    const shareData = {
+      ante: state.encounterIdx + 1,
+      classIcon: state.playerClass.icon,
+      className: state.playerClass.id,
+      maxDamage: rs.maxDamage,
+      lastRoundDamage: rs.lastRoundDamage,
+      totalMoves: rs.totalMoves,
+      maxMultiplier: rs.maxMultiplier,
+      totalMerges: rs.totalMerges,
+      totalCoinsSpent: rs.totalCoinsSpent,
+      totalDamageDealt: rs.totalDamageDealt || 0,
+      highestTileValue: rs.highestTileValue || 2,
+      totalHazardsCleared: rs.totalHazardsCleared || 0,
+      mostMergedVal: rs.mostMergedVal || 2,
+      spellDamageDealt: rs.spellDamageDealt || 0,
+      hazardsSpawned: rs.hazardsSpawned || 0,
+      luckFactor: rs.luckFactor || 10,
+      duration: `${mins}m ${secs}s`,
+      startTime: rs.startTime,
+      seedUsed: rs.seedUsed,
+      artifacts: state.artifacts
+    };
+
+    const options = {
+      theme: currentShareTheme,
+      showSeed: el.shareToggleSeed?.checked,
+      showArtifacts: el.shareToggleArtifacts?.checked,
+      showExtraStats: el.shareToggleExtra?.checked
+    };
+
+    currentShareBytes = await ImageGenerator.generate(shareData, options);
+    
+    // Create preview image
+    const blob = new Blob([currentShareBytes], { type: 'image/png' });
+    const url = URL.createObjectURL(blob);
+    
+    container.innerHTML = `<img src="${url}" class="w-full h-full object-contain fx-entrance-pop">`;
   } catch (e) {
-    console.error("Screenshot failed", e);
-    alert("Failed to generate screenshot.");
+    console.error("Preview failed", e);
+  } finally {
+    if (loading) loading.classList.add('hide');
+  }
+}
+
+async function executeFinalShare() {
+  if (!currentShareBytes) return;
+  
+  const btn = event.currentTarget;
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳ Opening Share...</span>';
+
+  try {
+    if (window.Plugins && window.Plugins.isTauri) {
+      await window.Plugins.share({
+        title: 'Crit 2048 Run Summary',
+        text: `Check out my ${state.playerClass.id} run in Crit 2048!`,
+        files: [currentShareBytes]
+      });
+    } else {
+      executeFinalSave();
+    }
+  } catch (e) {
+    alert("Share failed: " + e.message, "Error", "❌");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+async function executeFinalSave() {
+  if (!currentShareBytes) return;
+  
+  const fileName = `crit2048_run_${state.runStats.seedUsed || Date.now()}.png`;
+
+  try {
+    if (window.Plugins && window.Plugins.isTauri) {
+      if (window.Plugins.isMobile()) {
+        const storageDir = await window.__TAURI__.path.downloadDir();
+        const filePath = await window.__TAURI__.path.join(storageDir, fileName);
+        const fs = window.__TAURI__.fs || window.__TAURI__.pluginFs;
+        if (fs && fs.writeFile) {
+          await fs.writeFile(filePath, currentShareBytes);
+        } else {
+          await window.__TAURI__.core.invoke('plugin:fs|write_file', { path: filePath, data: currentShareBytes });
+        }
+        alert("Saved to Downloads!", "Success", "💾");
+      } else {
+        await window.Plugins.saveWithDialog(currentShareBytes, fileName);
+      }
+    } else {
+      const blob = new Blob([currentShareBytes], { type: 'image/png' });
+      const link = document.createElement('a');
+      link.download = fileName;
+      link.href = URL.createObjectURL(blob);
+      link.click();
+    }
+  } catch (e) {
+    alert("Save failed", "Error", "❌");
   }
 }
 
@@ -307,41 +493,7 @@ function renderLeaderboard() {
 }
 
 async function downloadRunSummary() {
-  if (!window.Plugins || !window.Plugins.isTauri) {
-    // Fallback if not in Tauri
-    shareRun(); 
-    return;
-  }
-
-  try {
-    const area = el.endCaptureArea;
-    const fileName = `crit2048_run_${state.runStats.seedUsed || Date.now()}.png`;
-    
-    // Generate canvas
-    const canvas = await html2canvas(area, {
-      backgroundColor: "#0f172a",
-      scale: 2,
-      logging: false,
-      useCORS: true
-    });
-
-    // Convert to Uint8Array
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    const arrayBuffer = await blob.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-
-    if (window.Plugins.isMobile()) {
-      // On Mobile: Save to Downloads folder directly
-      await window.Plugins.saveScreenshot('end-capture-area', fileName);
-      alert("Run summary saved to your Downloads folder!");
-    } else {
-      // On Desktop: Open "Save As" Dialog
-      await window.Plugins.saveWithDialog(uint8Array, fileName);
-    }
-  } catch (e) {
-    console.error("Save failed", e);
-    alert("Failed to save summary: " + (e.message || e));
-  }
+  openShareModal();
 }
 
 window.renderEndScreenStats = renderEndScreenStats;
@@ -349,4 +501,10 @@ window.copySeed = copySeed;
 window.shareRun = shareRun;
 window.downloadRunSummary = downloadRunSummary;
 window.renderLeaderboard = renderLeaderboard;
+window.openShareModal = openShareModal;
+window.closeShareModal = closeShareModal;
+window.updateShareTheme = updateShareTheme;
+window.refreshSharePreview = refreshSharePreview;
+window.executeFinalShare = executeFinalShare;
+window.executeFinalSave = executeFinalSave;
 

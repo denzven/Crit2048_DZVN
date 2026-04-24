@@ -11,9 +11,18 @@ function startGameFlow() {
   state.runStats.startTime = Date.now();
   state.runStats.totalMoves = 0;
   state.runStats.totalCoinsSpent = 0;
-  state.runStats.maxMultiplier = 1.0;
   state.runStats.totalMerges = 0;
   state.runStats.maxDamage = 0;
+  state.runStats.totalDamageDealt = 0;
+  state.runStats.highestTileValue = 2;
+  state.runStats.totalHazardsCleared = 0;
+  state.runStats.mostMergedVal = 2;
+  state.runStats.mergeCounts = {};
+  state.runStats.abilityUses = 0;
+  state.runStats.spellDamageDealt = 0;
+  state.runStats.totalSpellsCast = 0;
+  state.runStats.hazardsSpawned = 0;
+  state.runStats.luckFactor = 10;
   clearSave();
 
   Object.keys(CLASSES).forEach((k) => {
@@ -264,11 +273,21 @@ function resetGame() {
   state.artifacts = [];
   state.runStats = { 
     maxDamage: 0, 
+    totalDamageDealt: 0,
     totalMerges: 0,
     totalMoves: 0,
     totalCoinsSpent: 0,
     maxMultiplier: 1.0,
     lastRoundDamage: 0,
+    highestTileValue: 2,
+    totalHazardsCleared: 0,
+    mostMergedVal: 2,
+    mergeCounts: {},
+    abilityUses: 0,
+    spellDamageDealt: 0,
+    totalSpellsCast: 0,
+    hazardsSpawned: 0,
+    luckFactor: 10,
     startTime: 0,
     endTime: 0,
     seedUsed: "",

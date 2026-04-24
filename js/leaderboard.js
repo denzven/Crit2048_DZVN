@@ -96,23 +96,22 @@ async function shareLeaderboard() {
       };
 
       if (window.Plugins && window.Plugins.isTauri) {
-        shareData.files = [file];
-        await window.Plugins.share(shareData);
-      } else if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            ...shareData,
-            files: [file],
-          });
-        } catch (err) {
-          if (err.name !== 'AbortError') console.error('Share failed:', err);
-        }
+        // Use our robust share plugin
+        await window.Plugins.share({
+          files: [new Uint8Array(await file.arrayBuffer())],
+          title: shareData.title,
+          text: shareData.text
+        });
+      } else if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          ...shareData,
+          files: [file],
+        });
       } else {
         const link = document.createElement('a');
         link.download = `crit2048_leaderboard.png`;
         link.href = URL.createObjectURL(blob);
         link.click();
-        alert("Sharing not supported on this browser. Image downloaded instead!", "Notice", "📥");
       }
     });
   } catch (e) {

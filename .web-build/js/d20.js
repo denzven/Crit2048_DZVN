@@ -9,7 +9,14 @@ async function rollD20() {
   processD20Result(roll);
 }
 
+function trackRoll(val) {
+  state.runStats.totalRolls = (state.runStats.totalRolls || 0) + 1;
+  state.runStats.rollSum = (state.runStats.rollSum || 0) + val;
+  state.runStats.luckFactor = state.runStats.rollSum / state.runStats.totalRolls;
+}
+
 function processD20Result(roll) {
+  trackRoll(roll);
   if (state.playerClass.id === "Bard") {
     state.gold += 5;
     addLog("🎵 Bard gained 5 gold from performing!");
@@ -64,7 +71,7 @@ function processD20Result(roll) {
     SFX.fail();
   }
 
-  triggerScreenShake();
+  triggerScreenShake(isCrit ? 2.5 : 1);
 
   // Prominently display the rolled number in the modal
   el.diceResultMsg.innerHTML = `<span class="block text-5xl font-black mb-2 font-mono" style="color: ${color}">${rawRoll}</span><span class="text-sm font-bold text-white">${msg}</span>`;

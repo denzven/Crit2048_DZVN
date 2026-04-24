@@ -40,6 +40,7 @@ function useClassAbility() {
     state.usesLeft <= 0
   )
     return;
+  state.runStats.abilityUses++;
   const ab = state.playerClass.ability;
   state.usesLeft--;
   el.attackTitle.innerText = `Casting ${ab.name}...`;
@@ -60,6 +61,7 @@ function useClassAbility() {
 
 async function executeAttackRoll(ab) {
   state.isRolling = true;
+  state.runStats.totalSpellsCast++;
   el.attackDiceContainer.innerHTML = "";
   let diceArray = [];
   for (let i = 0; i < ab.count; i++) diceArray.push(ab.sides);
@@ -84,6 +86,7 @@ function resolveAttack() {
   if (!info) return;
 
   let totalDmg = info.sum * state.multiplier;
+  state.runStats.spellDamageDealt += totalDmg;
   const ab = state.playerClass.ability;
   const spellType = ab ? ab.spellType : null;
 

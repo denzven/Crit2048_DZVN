@@ -69,124 +69,117 @@
 
     /**
      * Trigger a haptic feedback (vibration)
+     * Optimized for Tauri v2 plugin-haptics (Android/iOS)
      * @param {string} type - 'vibrate', 'impactLight', 'impactMedium', 'impactHeavy', 'notificationSuccess', 'notificationWarning', 'notificationError', 'selection'
      */
     async vibrate(type = 'vibrate') {
-      if (!this.isTauri || !config.hapticsEnabled) return;
+      if (!this.isTauri || !config.hapticsEnabled || !this.isMobile()) return;
       
       const intensity = config.hapticsIntensity || 1.0;
       if (intensity <= 0) return;
 
       try {
-        // Tauri v2 Plugin Haptics Commands
+        // According to documentation: vibrate, impactFeedback, notificationFeedback, selectionFeedback
         switch (type) {
           case 'vibrate':
-            await window.__TAURI__.core.invoke('plugin:haptics|vibrate', { duration: Math.floor(100 * intensity) });
+            await window.__TAURI__.core.invoke('plugin:haptics|vibrate', { label: Math.floor(100 * intensity) });
             break;
           case 'impactLight':
-            await window.__TAURI__.core.invoke('plugin:haptics|impact', { style: 'Light' });
+            await window.__TAURI__.core.invoke('plugin:haptics|impact', { style: 'light' });
             break;
           case 'impactMedium':
-            await window.__TAURI__.core.invoke('plugin:haptics|impact', { style: 'Medium' });
+            await window.__TAURI__.core.invoke('plugin:haptics|impact', { style: 'medium' });
             break;
           case 'impactHeavy':
-            await window.__TAURI__.core.invoke('plugin:haptics|impact', { style: 'Heavy' });
+            await window.__TAURI__.core.invoke('plugin:haptics|impact', { style: 'heavy' });
             break;
           case 'notificationSuccess':
-            await window.__TAURI__.core.invoke('plugin:haptics|notification', { type: 'Success' });
+            await window.__TAURI__.core.invoke('plugin:haptics|notification', { type: 'success' });
             break;
           case 'notificationWarning':
-            await window.__TAURI__.core.invoke('plugin:haptics|notification', { type: 'Warning' });
+            await window.__TAURI__.core.invoke('plugin:haptics|notification', { type: 'warning' });
             break;
           case 'notificationError':
-            await window.__TAURI__.core.invoke('plugin:haptics|notification', { type: 'Error' });
+            await window.__TAURI__.core.invoke('plugin:haptics|notification', { type: 'error' });
             break;
           case 'selection':
             await window.__TAURI__.core.invoke('plugin:haptics|selection');
             break;
           default:
-            await window.__TAURI__.core.invoke('plugin:haptics|vibrate', { duration: Math.floor(50 * intensity) });
+            await window.__TAURI__.core.invoke('plugin:haptics|vibrate', { label: Math.floor(50 * intensity) });
         }
       } catch (e) {
-        console.warn('Haptics failed:', e);
+        console.debug('Haptics call skipped or failed:', e);
       }
     },
 
     /**
-     * Manual Middleman Share (Android/iOS)
-     * 1. Extracts the Blob from memory.
-     * 2. Writes it to a physical file in the app cache.
-     * 3. Hands the file path to the native Android Intent system.
-     * @param {Object} options - { files }
+     * Professional Native Share
+     * Hands the absolute path to the native Intent system (Android/iOS)
+     * @param {Object} options - { files: [Uint8Array|File], mime: string }
      */
     async share(options) {
       if (!this.isTauri) {
-        console.log('Not in Tauri, using navigator.share if available');
-        if (navigator.share) navigator.share(options);
+        console.log('Not in Tauri, using navigator.share');
+        if (navigator.share) await navigator.share(options).catch(console.error);
         return;
       }
 
-      if (!options.files || options.files.length === 0) {
-        console.warn('Share skipped: No files provided in options.', options);
-        return;
-      }
+      if (!options.files || options.files.length === 0) return;
 
-      console.log('--- Manual Middleman Share Start ---');
       try {
-        const file = options.files[0];
-        console.log('Input File Info:', { name: file.name, type: file.type, size: file.size });
+        const fileData = options.files[0];
+        const uint8Array = (fileData instanceof Uint8Array) ? fileData : new Uint8Array(await fileData.arrayBuffer());
         
-        const arrayBuffer = await file.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        const dataArray = Array.from(uint8Array);
-        console.log('Binary Conversion Success. Byte count:', dataArray.length);
-        
-        // Step 1: Resolve the physical cache directory path
-        let storageDir;
-        try {
-          if (window.__TAURI__.path && window.__TAURI__.path.appCacheDir) {
-            storageDir = await window.__TAURI__.path.appCacheDir();
-          } else {
-            storageDir = await window.__TAURI__.core.invoke('get_app_cache_dir');
-          }
-        } catch (e) {
-          throw new Error('Could not resolve any usable storage directory for sharing.');
-        }
+        // 1. Resolve Storage Path (Cache is best for temporary sharing)
+        const cacheDir = (window.__TAURI__.path && window.__TAURI__.path.appCacheDir) 
+          ? await window.__TAURI__.path.appCacheDir() 
+          : await window.__TAURI__.core.invoke('get_app_cache_dir');
         
         const fileName = `crit2048_share_${Date.now()}.png`;
-        let filePath;
+        const filePath = (window.__TAURI__.path && window.__TAURI__.path.join)
+          ? await window.__TAURI__.path.join(cacheDir, fileName)
+          : `${cacheDir}/${fileName}`;
         
-        if (window.__TAURI__.path && window.__TAURI__.path.join) {
-          filePath = await window.__TAURI__.path.join(storageDir, fileName);
+        // 2. Write File
+        const fs = window.__TAURI__.fs || window.__TAURI__.pluginFs;
+        if (fs && fs.writeFile) {
+          await fs.writeFile(filePath, uint8Array);
         } else {
-          filePath = `${storageDir}/${fileName}`;
+          await window.__TAURI__.core.invoke('plugin:fs|write_file', { path: filePath, data: uint8Array });
         }
         
-        console.log('Target Storage Path:', filePath);
-        
-        // Step 2: Write the binary data to the physical disk
-        console.log('Writing file to disk...');
-        await window.__TAURI__.core.invoke('plugin:fs|write_file', { 
-          path: filePath, 
-          data: dataArray 
-        });
-        console.log('✅ File write successful.');
-
-        // Step 3: Hand the absolute path to the native Intent system
-        console.log('Handing off to Native Intent (plugin:share|share_file)...');
+        // 3. Invoke Native Share Plugin
+        // According to documentation: invoke('plugin:share|share_file', { path, mime })
         await window.__TAURI__.core.invoke('plugin:share|share_file', { 
           path: filePath,
-          mime: 'image/png',
-          mimeType: 'image/png' // satisfy both API variants
+          mime: options.mime || 'image/png'
         });
         
-        console.log('✅ Native Share Sheet triggered!');
+        console.log('✅ Native Share Success');
       } catch (e) {
-        const errorMsg = `❌ Share Failed: ${e.message || e}\nCheck logcat/console for details.`;
-        console.error(errorMsg, e);
-        alert(errorMsg, "Plugin Error", "🔌");
+        console.error('❌ Share Failed:', e);
+        if (window.alert) alert(`Share Error: ${e.message || e}`, "Plugin Error", "🔌");
       }
-      console.log('--- Manual Middleman Share End ---');
+    },
+
+    /**
+     * Future-proofing: Check for files shared TO this app
+     * (e.g. importing a run from another player)
+     */
+    async checkIncomingShares() {
+      if (!this.isTauri) return [];
+      try {
+        // According to documentation: invoke('plugin:share|get_shared_files', { group, path })
+        const shared = await window.__TAURI__.core.invoke('plugin:share|get_shared_files', { 
+          group: '', // Android empty, iOS needs app group ID
+          path: 'temp' 
+        });
+        return shared || [];
+      } catch (e) {
+        console.debug('No incoming shares detected');
+        return [];
+      }
     },
 
     /**
@@ -255,83 +248,6 @@
     },
 
     /**
-     * Take a screenshot of a DOM element and save it to the user's Downloads folder
-     * @param {string} elementId - The ID of the DOM element to screenshot
-     * @param {string} fileName - The name to save the file as (e.g. 'screenshot.png')
-     */
-    async saveScreenshot(elementId, fileName = 'crit2048_screenshot.png') {
-      if (!this.isTauri) {
-        console.warn('Screenshot skipped: Not in Tauri environment.');
-        return;
-      }
-
-      if (typeof html2canvas === 'undefined') {
-        throw new Error('html2canvas is not loaded.');
-      }
-
-      const element = document.getElementById(elementId);
-      if (!element) {
-        throw new Error(`Element with ID "${elementId}" not found.`);
-      }
-
-      try {
-        console.log(`Capturing screenshot of #${elementId}...`);
-        
-        // 1. Generate canvas using html2canvas
-        const canvas = await html2canvas(element, {
-          backgroundColor: '#0f172a', // Matches slate-950
-          logging: false,
-          useCORS: true,
-          scale: 2 // Higher quality
-        });
-
-        // 2. Convert canvas to Blob
-        const blob = await new Promise((resolve, reject) => {
-          canvas.toBlob((b) => {
-            if (b) resolve(b);
-            else reject(new Error('Canvas to Blob failed'));
-          }, 'image/png');
-        });
-
-        // 3. Convert Blob to Uint8Array
-        const arrayBuffer = await blob.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-
-        // 4. Resolve save path
-        let baseDownloadPath;
-        if (window.__TAURI__.path && window.__TAURI__.path.downloadDir) {
-          baseDownloadPath = await window.__TAURI__.path.downloadDir();
-        } else {
-          throw new Error('Path API (downloadDir) not available.');
-        }
-
-        let filePath;
-        if (window.__TAURI__.path.join) {
-          filePath = await window.__TAURI__.path.join(baseDownloadPath, fileName);
-        } else {
-          filePath = `${baseDownloadPath}/${fileName}`;
-        }
-
-        // 5. Write file to disk
-        const fs = window.__TAURI__.fs || window.__TAURI__.pluginFs;
-        if (!fs || !fs.writeFile) {
-          await window.__TAURI__.core.invoke('plugin:fs|write_file', { 
-            path: filePath, 
-            data: Array.from(uint8Array) 
-          });
-        } else {
-          await fs.writeFile(filePath, uint8Array);
-        }
-
-        console.log(`✅ Screenshot saved to: ${filePath}`);
-        return filePath;
-      } catch (error) {
-        console.error('❌ Screenshot failed:', error);
-        throw error;
-      }
-    },
-
-    /**
      * Open a "Save As" dialog and save binary data to the chosen path (Desktop Only)
      * @param {Uint8Array} data - The binary data to save
      * @param {string} defaultName - The suggested filename
@@ -381,12 +297,12 @@
     /**
      * Update Discord Rich Presence (Desktop Only)
      */
-    async updatePresence(details, state) {
+    async updatePresence(details, stateStr) {
       if (!this.isTauri) return;
       try {
         await window.__TAURI__.core.invoke('set_discord_presence', { 
           details: details || "Main Menu",
-          stateStr: state || "Preparing for a run..."
+          stateStr: stateStr || "Preparing for a run..."
         });
       } catch (e) {
         console.debug('DRP update skipped');

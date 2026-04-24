@@ -9,7 +9,14 @@ async function rollD20() {
   processD20Result(roll);
 }
 
+function trackRoll(val) {
+  state.runStats.totalRolls = (state.runStats.totalRolls || 0) + 1;
+  state.runStats.rollSum = (state.runStats.rollSum || 0) + val;
+  state.runStats.luckFactor = state.runStats.rollSum / state.runStats.totalRolls;
+}
+
 function processD20Result(roll) {
+  trackRoll(roll);
   if (state.playerClass.id === "Bard") {
     state.gold += 5;
     addLog("🎵 Bard gained 5 gold from performing!");

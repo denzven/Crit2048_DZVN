@@ -6,6 +6,7 @@ function spawnRandomTile(valOverride = null) {
   if (emptyIndices.length > 0) {
     const rIdx = emptyIndices[prngInt(0, emptyIndices.length - 1)];
     const val = valOverride !== null ? valOverride : prng() > 0.9 ? 4 : 2;
+    if (val < 0) state.runStats.hazardsSpawned = (state.runStats.hazardsSpawned || 0) + 1;
     state.grid[rIdx] = { id: tileIdCounter++, val: val, pop: true };
   }
 }

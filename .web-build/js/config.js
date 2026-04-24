@@ -1,5 +1,4 @@
-// --- GLOBAL CONFIG ---
-const config = {
+const DEFAULT_CONFIG = {
   turnsBeforeDice: 5,
   startingGold: 0,
   sfxVolume: 1.0,
@@ -7,7 +6,13 @@ const config = {
   diceTheme: "default",
   hapticsEnabled: true,
   hapticsIntensity: 1.0,
+  showAtmosphere: true,
+  uiScale: 1.0,
+  fontScale: 1.0,
+  displayScale: 1.0
 };
+
+const config = { ...DEFAULT_CONFIG };
 
 const DICE_THEMES = {
   default: {

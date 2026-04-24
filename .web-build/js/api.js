@@ -52,7 +52,7 @@ async function callGeminiOracle() {
     renderTavern();
   } else {
     state.gold += 50;
-    alert("Oracle asleep (API Error). Gold refunded.");
+    alert("Oracle asleep (API Error). Gold refunded.", "API Error", "💤");
     renderHUD();
   }
 }

@@ -58,6 +58,7 @@
     <script src="js/templates/modal-confirm.js"></script>
     <script src="js/templates/modal-leaderboard.js"></script>
     <script src="js/templates/modal-alert.js"></script>
+    <script src="js/templates/modal-share.js"></script>
 
     <!-- Inject UI Native Components -->
     <script>
@@ -68,7 +69,8 @@
           const keys = [
             'screen-start', 'screen-class', 'screen-playing', 'modal-attack',
             'modal-dice', 'screen-tavern', 'screen-end', 'modal-settings',
-            'modal-help', 'modal-confirm', 'modal-leaderboard', 'modal-alert'
+            'modal-help', 'modal-confirm', 'modal-leaderboard', 'modal-alert',
+            'modal-share'
           ];
           keys.forEach(k => { if (window.ViewTemplates[k]) fullHtmlStr += window.ViewTemplates[k]; });
         }
@@ -84,6 +86,7 @@
   <script src="js/prng.js"></script>
   <script src="js/sfx.js"></script>
   <script src="js/dice.js"></script>
+  <script src="js/image-generator.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/leaderboard.js"></script>
   <script src="js/grid.js"></script>

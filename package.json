@@ -1,6 +1,6 @@
 {
   "name": "crit2048_scale",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "<div align=\"center\">",
   "main": "index.js",
   "scripts": {

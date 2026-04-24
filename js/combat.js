@@ -22,6 +22,11 @@ function processMove(direction) {
           newVal = tA.val * 2;
         combined.push({ id: tA.id, val: newVal, pop: true, merged: true });
         state.runStats.totalMerges++;
+        state.runStats.mergeCounts[newVal] = (state.runStats.mergeCounts[newVal] || 0) + 1;
+        if (state.runStats.mergeCounts[newVal] > (state.runStats.mergeCounts[state.runStats.mostMergedVal] || 0)) {
+          state.runStats.mostMergedVal = newVal;
+        }
+        if (newVal > state.runStats.highestTileValue) state.runStats.highestTileValue = newVal;
         if (window.Plugins) window.Plugins.vibrate('impactMedium');
 
         let tB_el = document.getElementById(`tile-${tB.id}`);
@@ -131,7 +136,7 @@ function processMove(direction) {
   }
   if (goldEarnedThisTurn > 0) state.gold += goldEarnedThisTurn;
   if (multIncrease > 0) state.multiplier += multIncrease;
-
+  
   if (damageThisTurn >= 100) {
     let cleared = false;
     newGrid = newGrid.map((c) => {
@@ -141,7 +146,10 @@ function processMove(direction) {
       }
       return c;
     });
-    if (cleared) addLog(`🟢 Slimes obliterated!`);
+    if (cleared) {
+      addLog(`🟢 Slimes obliterated!`);
+      state.runStats.totalHazardsCleared++;
+    }
   }
   if (damageThisTurn >= 75) {
     let cleared = false;
@@ -152,7 +160,10 @@ function processMove(direction) {
       }
       return c;
     });
-    if (cleared) addLog(`🕸️ Web cleared!`);
+    if (cleared) {
+      addLog(`🕸️ Web cleared!`);
+      state.runStats.totalHazardsCleared++;
+    }
   }
   if (damageThisTurn >= 50) {
     let cleared = false;
@@ -163,7 +174,10 @@ function processMove(direction) {
       }
       return c;
     });
-    if (cleared) addLog(`👺 Goblins cleared!`);
+    if (cleared) {
+      addLog(`👺 Goblins cleared!`);
+      state.runStats.totalHazardsCleared++;
+    }
   }
 
   state.grid = newGrid;
@@ -197,6 +211,7 @@ function processMove(direction) {
 
 function applyDamage(dmg) {
   if (dmg > state.runStats.maxDamage) state.runStats.maxDamage = dmg;
+  state.runStats.totalDamageDealt += dmg;
   if (state.multiplier > state.runStats.maxMultiplier) state.runStats.maxMultiplier = state.multiplier;
   state.monsterHp = Math.max(0, state.monsterHp - dmg);
   addLog(`Dealt ${Math.floor(dmg)} dmg!`);

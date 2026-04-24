@@ -106,6 +106,11 @@ const el = {
   confirmBtns: document.getElementById("confirm-btns"),
   confirmBtnOk: document.getElementById("confirm-btn-ok"),
   confirmBtnCancel: document.getElementById("confirm-btn-cancel"),
+  modalShare: document.getElementById("modal-share"),
+  sharePreviewContainer: document.getElementById("share-preview-container"),
+  shareToggleSeed: document.getElementById("share-toggle-seed"),
+  shareToggleArtifacts: document.getElementById("share-toggle-artifacts"),
+  shareToggleExtra: document.getElementById("share-toggle-extra"),
 };
 
 // --- UI HELPERS ---
@@ -268,47 +273,166 @@ function copySeed() {
 }
 
 async function shareRun() {
-  const area = el.endCaptureArea;
-  try {
-    const canvas = await html2canvas(area, {
-      backgroundColor: "#0f172a", // Match slate-950
-      scale: 2, // Higher quality
-      logging: false,
-      useCORS: true
-    });
-    
-    canvas.toBlob(async (blob) => {
-      const file = new File([blob], `crit2048_run_${state.runStats.seedUsed}.png`, { type: 'image/png' });
-      
-      const shareData = {
-        title: 'Crit 2048 Run Summary',
-        text: `Check out my ${state.playerClass.id} run in Crit 2048! Ante ${state.encounterIdx + 1}, Seed: ${state.runStats.seedUsed}`
-      };
+  openShareModal();
+}
 
-      if (window.Plugins && window.Plugins.isTauri) {
-        shareData.files = [file];
-        await window.Plugins.share(shareData);
-      } else if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            ...shareData,
-            files: [file],
-          });
-        } catch (err) {
-          if (err.name !== 'AbortError') console.error('Share failed:', err);
-        }
-      } else {
-        // Fallback: Download the image
-        const link = document.createElement('a');
-        link.download = `crit2048_run_${state.runStats.seedUsed}.png`;
-        link.href = URL.createObjectURL(blob);
-        link.click();
-        alert("Sharing not supported on this browser. Image downloaded instead!", "Notice", "📥");
-      }
-    });
+let currentShareTheme = 'classic';
+let currentShareBytes = null;
+
+async function openShareModal() {
+  if (!el.modalShare) return;
+  el.modalShare.classList.remove('hide');
+  refreshSharePreview();
+}
+
+function closeShareModal() {
+  el.modalShare?.classList.add('hide');
+}
+
+function updateShareTheme(theme) {
+  currentShareTheme = theme;
+  // Update UI active state
+  document.querySelectorAll('.share-theme-btn').forEach(btn => {
+    const dot = btn.querySelector('div');
+    const label = btn.querySelector('span');
+    if (dot) {
+      dot.classList.remove('ring-2', 'ring-rose-500', 'ring-offset-2', 'ring-offset-slate-900');
+      dot.classList.add('ring-1', 'ring-white/10');
+    }
+    if (label) {
+      label.classList.remove('text-white', 'opacity-100');
+      label.classList.add('text-slate-500', 'opacity-60');
+    }
+  });
+
+  const activeBtn = event.currentTarget;
+  const activeDot = activeBtn.querySelector('div');
+  const activeLabel = activeBtn.querySelector('span');
+  if (activeDot) {
+    activeDot.classList.add('ring-2', 'ring-rose-500', 'ring-offset-2', 'ring-offset-slate-900');
+    activeDot.classList.remove('ring-1', 'ring-white/10');
+  }
+  if (activeLabel) {
+    activeLabel.classList.add('text-white', 'opacity-100');
+    activeLabel.classList.remove('text-slate-500', 'opacity-60');
+  }
+  
+  refreshSharePreview();
+}
+
+async function refreshSharePreview() {
+  const container = el.sharePreviewContainer;
+  if (!container) return;
+  
+  // Show loading
+  const loading = document.getElementById('share-preview-loading');
+  if (loading) loading.classList.remove('hide');
+
+  try {
+    const rs = state.runStats;
+    const diff = rs.endTime - rs.startTime;
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+
+    const shareData = {
+      ante: state.encounterIdx + 1,
+      classIcon: state.playerClass.icon,
+      className: state.playerClass.id,
+      maxDamage: rs.maxDamage,
+      lastRoundDamage: rs.lastRoundDamage,
+      totalMoves: rs.totalMoves,
+      maxMultiplier: rs.maxMultiplier,
+      totalMerges: rs.totalMerges,
+      totalCoinsSpent: rs.totalCoinsSpent,
+      totalDamageDealt: rs.totalDamageDealt || 0,
+      highestTileValue: rs.highestTileValue || 2,
+      totalHazardsCleared: rs.totalHazardsCleared || 0,
+      mostMergedVal: rs.mostMergedVal || 2,
+      spellDamageDealt: rs.spellDamageDealt || 0,
+      hazardsSpawned: rs.hazardsSpawned || 0,
+      luckFactor: rs.luckFactor || 10,
+      duration: `${mins}m ${secs}s`,
+      startTime: rs.startTime,
+      seedUsed: rs.seedUsed,
+      artifacts: state.artifacts
+    };
+
+    const options = {
+      theme: currentShareTheme,
+      showSeed: el.shareToggleSeed?.checked,
+      showArtifacts: el.shareToggleArtifacts?.checked,
+      showExtraStats: el.shareToggleExtra?.checked
+    };
+
+    currentShareBytes = await ImageGenerator.generate(shareData, options);
+    
+    // Create preview image
+    const blob = new Blob([currentShareBytes], { type: 'image/png' });
+    const url = URL.createObjectURL(blob);
+    
+    container.innerHTML = `<img src="${url}" class="w-full h-full object-contain fx-entrance-pop">`;
   } catch (e) {
-    console.error("Screenshot failed", e);
-    alert("Failed to generate screenshot.", "Error", "❌");
+    console.error("Preview failed", e);
+  } finally {
+    if (loading) loading.classList.add('hide');
+  }
+}
+
+async function executeFinalShare() {
+  if (!currentShareBytes) return;
+  
+  const btn = event.currentTarget;
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳ Opening Share...</span>';
+
+  try {
+    if (window.Plugins && window.Plugins.isTauri) {
+      await window.Plugins.share({
+        title: 'Crit 2048 Run Summary',
+        text: `Check out my ${state.playerClass.id} run in Crit 2048!`,
+        files: [currentShareBytes]
+      });
+    } else {
+      executeFinalSave();
+    }
+  } catch (e) {
+    alert("Share failed: " + e.message, "Error", "❌");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+async function executeFinalSave() {
+  if (!currentShareBytes) return;
+  
+  const fileName = `crit2048_run_${state.runStats.seedUsed || Date.now()}.png`;
+
+  try {
+    if (window.Plugins && window.Plugins.isTauri) {
+      if (window.Plugins.isMobile()) {
+        const storageDir = await window.__TAURI__.path.downloadDir();
+        const filePath = await window.__TAURI__.path.join(storageDir, fileName);
+        const fs = window.__TAURI__.fs || window.__TAURI__.pluginFs;
+        if (fs && fs.writeFile) {
+          await fs.writeFile(filePath, currentShareBytes);
+        } else {
+          await window.__TAURI__.core.invoke('plugin:fs|write_file', { path: filePath, data: currentShareBytes });
+        }
+        alert("Saved to Downloads!", "Success", "💾");
+      } else {
+        await window.Plugins.saveWithDialog(currentShareBytes, fileName);
+      }
+    } else {
+      const blob = new Blob([currentShareBytes], { type: 'image/png' });
+      const link = document.createElement('a');
+      link.download = fileName;
+      link.href = URL.createObjectURL(blob);
+      link.click();
+    }
+  } catch (e) {
+    alert("Save failed", "Error", "❌");
   }
 }
 
@@ -369,41 +493,7 @@ function renderLeaderboard() {
 }
 
 async function downloadRunSummary() {
-  if (!window.Plugins || !window.Plugins.isTauri) {
-    // Fallback if not in Tauri
-    shareRun(); 
-    return;
-  }
-
-  try {
-    const area = el.endCaptureArea;
-    const fileName = `crit2048_run_${state.runStats.seedUsed || Date.now()}.png`;
-    
-    // Generate canvas
-    const canvas = await html2canvas(area, {
-      backgroundColor: "#0f172a",
-      scale: 2,
-      logging: false,
-      useCORS: true
-    });
-
-    // Convert to Uint8Array
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    const arrayBuffer = await blob.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-
-    if (window.Plugins.isMobile()) {
-      // On Mobile: Save to Downloads folder directly
-      await window.Plugins.saveScreenshot('end-capture-area', fileName);
-      alert("Run summary saved to your Downloads folder!", "Success", "💾");
-    } else {
-      // On Desktop: Open "Save As" Dialog
-      await window.Plugins.saveWithDialog(uint8Array, fileName);
-    }
-  } catch (e) {
-    console.error("Save failed", e);
-    alert("Failed to save summary: " + (e.message || e), "Error", "❌");
-  }
+  openShareModal();
 }
 
 window.renderEndScreenStats = renderEndScreenStats;
@@ -411,4 +501,10 @@ window.copySeed = copySeed;
 window.shareRun = shareRun;
 window.downloadRunSummary = downloadRunSummary;
 window.renderLeaderboard = renderLeaderboard;
+window.openShareModal = openShareModal;
+window.closeShareModal = closeShareModal;
+window.updateShareTheme = updateShareTheme;
+window.refreshSharePreview = refreshSharePreview;
+window.executeFinalShare = executeFinalShare;
+window.executeFinalSave = executeFinalSave;
 
