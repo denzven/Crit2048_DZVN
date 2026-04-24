@@ -58,9 +58,14 @@ window.ViewTemplates["screen-end"] = `
         </div>
 
         <div class="flex flex-col gap-3">
-          <button onclick="shareRun()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl transition-all uppercase tracking-widest w-full shadow-lg border border-indigo-500/50 flex items-center justify-center gap-2 group">
-            <span class="text-xl group-hover:scale-125 transition-transform">📸</span> Share Run Summary
-          </button>
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="shareRun()" class="px-4 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl transition-all uppercase tracking-widest shadow-lg border border-indigo-500/50 flex items-center justify-center gap-2 group text-xs">
+              <span class="text-lg group-hover:scale-125 transition-transform">📸</span> Share
+            </button>
+            <button onclick="downloadRunSummary()" class="px-4 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl transition-all uppercase tracking-widest shadow-lg border border-emerald-500/50 flex items-center justify-center gap-2 group text-xs">
+              <span class="text-lg group-hover:scale-125 transition-transform">💾</span> Save
+            </button>
+          </div>
           
           <button onclick="openLeaderboard()" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-indigo-400 font-bold rounded-xl transition-colors uppercase tracking-widest w-full border border-slate-700 text-sm">
             🏆 View Leaderboard

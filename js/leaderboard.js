@@ -94,6 +94,7 @@ async function shareLeaderboard() {
       };
 
       if (window.Plugins && window.Plugins.isTauri) {
+        shareData.files = [file];
         await window.Plugins.share(shareData);
       } else if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {

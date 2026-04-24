@@ -62,6 +62,8 @@ const el = {
   inputSettingTheme: document.getElementById("input-setting-theme"),
   inputSettingSFX: document.getElementById("input-setting-sfx"),
   inputSettingShake: document.getElementById("input-setting-shake"),
+  inputSettingHapticsEnabled: document.getElementById("input-setting-haptics-enabled"),
+  inputSettingHapticsIntensity: document.getElementById("input-setting-haptics-intensity"),
   modalAttack: document.getElementById("modal-attack"),
   attackTitle: document.getElementById("attack-title"),
   attackDiceContainer: document.getElementById("attack-dice-container"),
@@ -222,6 +224,7 @@ async function shareRun() {
       };
 
       if (window.Plugins && window.Plugins.isTauri) {
+        shareData.files = [file];
         await window.Plugins.share(shareData);
       } else if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
@@ -303,8 +306,47 @@ function renderLeaderboard() {
   }).join("");
 }
 
+async function downloadRunSummary() {
+  if (!window.Plugins || !window.Plugins.isTauri) {
+    // Fallback if not in Tauri
+    shareRun(); 
+    return;
+  }
+
+  try {
+    const area = el.endCaptureArea;
+    const fileName = `crit2048_run_${state.runStats.seedUsed || Date.now()}.png`;
+    
+    // Generate canvas
+    const canvas = await html2canvas(area, {
+      backgroundColor: "#0f172a",
+      scale: 2,
+      logging: false,
+      useCORS: true
+    });
+
+    // Convert to Uint8Array
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    const arrayBuffer = await blob.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    if (window.Plugins.isMobile()) {
+      // On Mobile: Save to Downloads folder directly
+      await window.Plugins.saveScreenshot('end-capture-area', fileName);
+      alert("Run summary saved to your Downloads folder!");
+    } else {
+      // On Desktop: Open "Save As" Dialog
+      await window.Plugins.saveWithDialog(uint8Array, fileName);
+    }
+  } catch (e) {
+    console.error("Save failed", e);
+    alert("Failed to save summary: " + (e.message || e));
+  }
+}
+
 window.renderEndScreenStats = renderEndScreenStats;
 window.copySeed = copySeed;
 window.shareRun = shareRun;
+window.downloadRunSummary = downloadRunSummary;
 window.renderLeaderboard = renderLeaderboard;
 

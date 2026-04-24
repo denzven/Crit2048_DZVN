@@ -72,6 +72,7 @@ function renderGrid() {
 
 function triggerScreenShake() {
   if (config.screenShake <= 0) return;
+  if (window.Plugins) window.Plugins.vibrate('impactHeavy');
   el.mainContainer.classList.remove("shake");
   void el.mainContainer.offsetWidth;
   el.mainContainer.classList.add("shake");

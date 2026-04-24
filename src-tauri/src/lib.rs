@@ -27,6 +27,14 @@ fn set_discord_presence(discord: State<'_, DiscordState>, details: String, state
 }
 
 #[tauri::command]
+async fn get_app_cache_dir(app: tauri::AppHandle) -> Result<String, String> {
+    app.path()
+        .app_cache_dir()
+        .map(|p| p.to_string_lossy().to_string())
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn call_gemini_api(prompt: String) -> Result<String, String> {
     let api_key = std::env::var("GEMINI_API_KEY")
         .map_err(|_| "GEMINI_API_KEY not set in environment. Please check your .env file.")?;
@@ -67,7 +75,11 @@ pub fn run() {
   tauri::Builder::default()
     .manage(DiscordState(Mutex::new(None)))
     .plugin(tauri_plugin_haptics::init())
-    .plugin(tauri_plugin_sharekit::init())
+    .plugin(tauri_plugin_fs::init())
+    .plugin(tauri_plugin_http::init())
+    .plugin(tauri_plugin_share::init())
+    .plugin(tauri_plugin_opener::init())
+    .plugin(tauri_plugin_dialog::init())
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(
@@ -78,7 +90,7 @@ pub fn run() {
       }
       Ok(())
     })
-    .invoke_handler(tauri::generate_handler![set_discord_presence, call_gemini_api])
+    .invoke_handler(tauri::generate_handler![set_discord_presence, call_gemini_api, get_app_cache_dir])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

@@ -22,6 +22,7 @@ function processMove(direction) {
           newVal = tA.val * 2;
         combined.push({ id: tA.id, val: newVal, pop: true });
         state.runStats.totalMerges++;
+        if (window.Plugins) window.Plugins.vibrate('impactMedium');
 
         let tB_el = document.getElementById(`tile-${tB.id}`);
         if (tB_el) {
@@ -89,6 +90,7 @@ function processMove(direction) {
 
   if (!changed) return;
   SFX.slide();
+  if (window.Plugins) window.Plugins.vibrate('selection');
 
   let goblinCount = newGrid.filter((t) => t && t.val === -2).length;
   if (goblinCount > 0) {

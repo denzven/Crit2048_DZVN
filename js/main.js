@@ -324,6 +324,14 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
+// Global Button Haptics
+document.addEventListener("click", (e) => {
+  const target = e.target.closest("button") || e.target.closest("[onclick]");
+  if (target && window.Plugins) {
+    window.Plugins.vibrate('impactLight');
+  }
+});
+
 let startX = 0,
   startY = 0;
 el.gridContainer.addEventListener(
@@ -351,6 +359,28 @@ el.gridContainer.addEventListener(
   },
   { passive: false },
 );
+
+// --- HELP MODAL SWIPE CONTROLS ---
+let helpStartX = 0, helpStartY = 0;
+el.modalHelp.addEventListener("touchstart", (e) => {
+  helpStartX = e.touches[0].clientX;
+  helpStartY = e.touches[0].clientY;
+}, { passive: true });
+
+el.modalHelp.addEventListener("touchend", (e) => {
+  if (el.modalHelp.classList.contains("hide")) return;
+  let dx = e.changedTouches[0].clientX - helpStartX;
+  let dy = e.changedTouches[0].clientY - helpStartY;
+  
+  // Horizontal swipe detection
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+    if (dx > 0) {
+      prevHelpPage();
+    } else {
+      nextHelpPage();
+    }
+  }
+}, { passive: true });
 
 // --- GLOBAL FUNCTION EXPORTS (for inline onclick attributes) ---
 window.openHelp = openHelp;
@@ -382,4 +412,7 @@ window.upgradeSpell = upgradeSpell;
 window.restoreSpells = restoreSpells;
 
 // --- BOOT ---
+if (window.Plugins) {
+  window.Plugins.init();
+}
 changeState("START");

@@ -390,7 +390,10 @@ const FixedDiceEngine = (function () {
           let moving = false;
           diceObjects.forEach((mesh) => {
             const bounced = applyPhysics(mesh, spreadX, spreadZ);
-            if (bounced && frames % 5 === 0) SFX.diceClatter();
+            if (bounced && frames % 5 === 0) {
+              SFX.diceClatter();
+              if (window.Plugins) window.Plugins.vibrate('impactLight');
+            }
             if (
               mesh.userData.vel.lengthSq() > 0 ||
               mesh.userData.avel.lengthSq() > 0
@@ -440,7 +443,10 @@ const FixedDiceEngine = (function () {
             );
           });
 
-          if (endFrame === 1) SFX.powerUp(); // Distinct sound as they float up
+          if (endFrame === 1) {
+            SFX.powerUp(); // Distinct sound as they float up
+            if (window.Plugins) window.Plugins.vibrate('notificationSuccess');
+          }
 
           if (endFrame >= 45) {
             // Give user time to see them centered

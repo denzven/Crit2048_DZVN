@@ -41,6 +41,15 @@ window.ViewTemplates["modal-settings"] = `
             <label class="block text-slate-400 text-xs mb-3 font-bold uppercase tracking-wider">Screen Shake Level</label>
             <input type="range" id="input-setting-shake" min="0" max="2" step="0.5" value="1" class="w-full accent-rose-500">
           </div>
+          
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
+            <label class="text-slate-400 text-xs font-bold uppercase tracking-wider">Enable Haptics</label>
+            <input type="checkbox" id="input-setting-haptics-enabled" class="w-6 h-6 accent-rose-500 bg-slate-950 border-slate-800 rounded">
+          </div>
+          <div>
+            <label class="block text-slate-400 text-xs mb-3 font-bold uppercase tracking-wider">Haptic Intensity</label>
+            <input type="range" id="input-setting-haptics-intensity" min="0" max="1" step="0.1" value="1" class="w-full accent-rose-500">
+          </div>
         </div>
         <div class="flex gap-3">
           <button onclick="closeSettings()" class="flex-1 py-4 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-colors uppercase tracking-widest text-xs border border-slate-700">Cancel</button>

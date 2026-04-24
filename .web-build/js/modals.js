@@ -84,6 +84,8 @@ function openSettings() {
   el.inputSettingTheme.value = config.diceTheme;
   el.inputSettingSFX.value = config.sfxVolume;
   el.inputSettingShake.value = config.screenShake;
+  el.inputSettingHapticsEnabled.checked = config.hapticsEnabled;
+  el.inputSettingHapticsIntensity.value = config.hapticsIntensity;
   el.modalSettings.classList.remove("hide");
 }
 function closeSettings() {
@@ -94,7 +96,9 @@ function saveSettings() {
   const t = parseInt(el.inputSettingTurns.value),
     g = parseInt(el.inputSettingGold.value),
     vol = parseFloat(el.inputSettingSFX.value),
-    shake = parseFloat(el.inputSettingShake.value);
+    shake = parseFloat(el.inputSettingShake.value),
+    hapticEnabled = el.inputSettingHapticsEnabled.checked,
+    hapticIntensity = parseFloat(el.inputSettingHapticsIntensity.value);
   if (!isNaN(t) && t > 0) config.turnsBeforeDice = t;
   if (!isNaN(g) && g >= 0) config.startingGold = g;
   if (!isNaN(vol) && vol >= 0) config.sfxVolume = vol;
@@ -102,6 +106,9 @@ function saveSettings() {
     config.screenShake = shake;
     document.documentElement.style.setProperty("--shake-px", `${4 * shake}px`);
   }
+  config.hapticsEnabled = hapticEnabled;
+  if (!isNaN(hapticIntensity)) config.hapticsIntensity = hapticIntensity;
+  
   config.diceTheme = el.inputSettingTheme.value;
   if (state.gameState === "START" || state.gameState === "CLASS_SELECT")
     state.gold = config.startingGold;
@@ -109,3 +116,4 @@ function saveSettings() {
     config.turnsBeforeDice;
   closeSettings();
 }
+

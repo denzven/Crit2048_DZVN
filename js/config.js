@@ -5,6 +5,8 @@ const config = {
   sfxVolume: 1.0,
   screenShake: 1.0,
   diceTheme: "default",
+  hapticsEnabled: true,
+  hapticsIntensity: 1.0,
 };
 
 const DICE_THEMES = {

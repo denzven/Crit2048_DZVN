@@ -67,6 +67,7 @@ async function executeAttackRoll(ab) {
   let sum = results.reduce((a, b) => a + b, 0);
   await FixedDiceEngine.roll("attack-dice-container", diceArray, results);
   SFX.hit();
+  if (window.Plugins) window.Plugins.vibrate('notificationSuccess');
   triggerScreenShake();
   state.currentAttackInfo = { sum, type: ab.type || "damage" };
   el.attackTotal.innerText = sum;

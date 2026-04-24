@@ -324,6 +324,14 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
+// Global Button Haptics
+document.addEventListener("click", (e) => {
+  const target = e.target.closest("button") || e.target.closest("[onclick]");
+  if (target && window.Plugins) {
+    window.Plugins.vibrate('impactLight');
+  }
+});
+
 let startX = 0,
   startY = 0;
 el.gridContainer.addEventListener(
@@ -382,4 +390,7 @@ window.upgradeSpell = upgradeSpell;
 window.restoreSpells = restoreSpells;
 
 // --- BOOT ---
+if (window.Plugins) {
+  window.Plugins.init();
+}
 changeState("START");
