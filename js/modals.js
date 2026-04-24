@@ -129,10 +129,12 @@ function closeSettings() {
 }
 
 function resetSettingsToDefault() {
-  if (confirm("Reset all settings to factory defaults?")) {
-    Object.assign(config, DEFAULT_CONFIG);
-    openSettings();
-  }
+  showConfirm("Reset all settings to factory defaults?", (confirmed) => {
+    if (confirmed) {
+      Object.assign(config, DEFAULT_CONFIG);
+      openSettings();
+    }
+  });
 }
 
 function saveSettings() {
@@ -177,5 +179,68 @@ function saveSettings() {
   
   saveGameState(); // Persist settings too
   closeSettings();
+}
+
+// --- CUSTOM DIALOGS (Alert/Confirm) ---
+let dialogCallback = null;
+
+window.alert = function(message, title = "Notice", icon = "⚠️") {
+  showDialog(message, title, icon, false);
+};
+
+// NOTE: window.confirm cannot be truly overridden synchronously.
+// We provide showConfirm for asynchronous usage.
+window.showConfirm = function(message, callback, title = "Confirm", icon = "❓") {
+  showDialog(message, title, icon, true, callback);
+};
+
+function showDialog(message, title, icon, isConfirm, callback = null) {
+  if (!el.modalAlert) {
+    if (isConfirm) {
+      const res = window.confirm(message);
+      if (callback) callback(res);
+    } else {
+      window.alert(message);
+    }
+    return;
+  }
+
+  el.alertTitle.innerText = title;
+  el.alertMessage.innerText = message;
+  el.alertIcon.innerText = icon;
+  dialogCallback = callback;
+
+  if (isConfirm) {
+    el.alertBtnOk.classList.add("hide");
+    el.confirmBtns.classList.remove("hide");
+  } else {
+    el.alertBtnOk.classList.remove("hide");
+    el.confirmBtns.classList.add("hide");
+  }
+
+  el.modalAlert.classList.remove("hide");
+  triggerEntrance(el.modalAlert.children[0]);
+  
+  if (window.Plugins) {
+    window.Plugins.vibrate(isConfirm ? 'impactMedium' : 'notificationWarning');
+  }
+}
+
+function closeAlert() {
+  if (el.modalAlert) el.modalAlert.classList.add("hide");
+  if (dialogCallback) dialogCallback(false);
+  dialogCallback = null;
+}
+
+function onDialogConfirm() {
+  if (el.modalAlert) el.modalAlert.classList.add("hide");
+  if (dialogCallback) dialogCallback(true);
+  dialogCallback = null;
+}
+
+function onDialogCancel() {
+  if (el.modalAlert) el.modalAlert.classList.add("hide");
+  if (dialogCallback) dialogCallback(false);
+  dialogCallback = null;
 }
 

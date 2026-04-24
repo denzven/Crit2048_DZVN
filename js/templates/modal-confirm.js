@@ -15,8 +15,8 @@ window.ViewTemplates["modal-confirm"] = `
         <h2 class="text-xl font-black tracking-widest mb-4 text-white uppercase">Leave this run?</h2>
         <p class="text-slate-400 text-sm mb-8">Go back to game start. All current progress will be lost.</p>
         <div class="flex gap-3">
-          <button onclick="closeConfirm()" class="flex-1 py-4 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-colors uppercase tracking-widest text-xs border border-slate-700">Cancel</button>
-          <button onclick="executeHome()" class="flex-1 py-4 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-500 transition-colors uppercase tracking-widest text-xs border border-rose-500/50 shadow-lg">Leave</button>
+          <button onclick="closeConfirm()" class="interactive flex-1 py-4 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-colors uppercase tracking-widest text-xs border border-slate-700">Cancel</button>
+          <button onclick="executeHome()" class="interactive flex-1 py-4 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-500 transition-colors uppercase tracking-widest text-xs border border-rose-500/50 shadow-lg">Leave</button>
         </div>
       </div>
     </div>

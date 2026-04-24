@@ -23,6 +23,7 @@ const el = {
   tilesLayer: document.getElementById("tiles-layer"),
   gridContainer: document.getElementById("grid-container"),
   sidebarArtifacts: document.getElementById("sidebar-artifacts"),
+  mobileInventory: document.getElementById("mobile-inventory"),
   sidebarClassIcon: document.getElementById("sidebar-class-icon"),
   sidebarClassName: document.getElementById("sidebar-class-name"),
   sidebarClassUses: document.getElementById("sidebar-class-uses"),
@@ -32,7 +33,10 @@ const el = {
   mobileClassIcon: document.getElementById("mobile-class-icon"),
   mobileSpellUses: document.getElementById("mobile-spell-uses"),
   combatLogDesktop: document.getElementById("combat-log-desktop"),
-  combatLogMobile: document.getElementById("combat-log-mobile"),
+  mobileInventoryModal: document.getElementById("mobile-inventory-modal"),
+  mobileInventoryList: document.getElementById("mobile-inventory-list"),
+  mobileLogModal: document.getElementById("mobile-log-modal"),
+  mobileLogContent: document.getElementById("combat-log-modal-content"),
   diceAnteLevel: document.getElementById("dice-mod-val"),
   diceActionBtn: document.getElementById("dice-action-btn"),
   dicePostRoll: document.getElementById("dice-post-roll"),
@@ -82,6 +86,8 @@ const el = {
   attackResult: document.getElementById("attack-result"),
   attackTotal: document.getElementById("attack-total"),
   btnAiOracle: document.getElementById("btn-ai-oracle"),
+  btnRest: document.getElementById("btn-rest"),
+  btnUpgrade: document.getElementById("btn-upgrade"),
   aiLoading: document.getElementById("ai-loading"),
   upgradeCost: document.getElementById("upgrade-cost"),
   modalHelp: document.getElementById("modal-help"),
@@ -91,12 +97,21 @@ const el = {
   leaderboardList: document.getElementById("leaderboard-list"),
   btnStartLeaderboard: document.getElementById("btn-start-leaderboard"),
   btnResume: document.getElementById("btn-resume"),
+  btnRespin: document.getElementById("btn-respin"),
+  modalAlert: document.getElementById("modal-alert"),
+  alertTitle: document.getElementById("alert-title"),
+  alertMessage: document.getElementById("alert-message"),
+  alertIcon: document.getElementById("alert-icon"),
+  alertBtnOk: document.getElementById("alert-btn-ok"),
+  confirmBtns: document.getElementById("confirm-btns"),
+  confirmBtnOk: document.getElementById("confirm-btn-ok"),
+  confirmBtnCancel: document.getElementById("confirm-btn-cancel"),
 };
 
 // --- UI HELPERS ---
 function addLog(msg) {
   state.logs.push(msg);
-  if (state.logs.length > 6) state.logs.shift();
+  if (state.logs.length > 20) state.logs.shift(); // Keep more for the modal
   const html = state.logs
     .map(
       (log) =>
@@ -105,8 +120,10 @@ function addLog(msg) {
     .join("");
   el.combatLogDesktop.innerHTML = html;
   el.combatLogDesktop.scrollTop = el.combatLogDesktop.scrollHeight;
-  el.combatLogMobile.innerHTML = html;
-  el.combatLogMobile.scrollTop = el.combatLogMobile.scrollHeight;
+  if (el.mobileLogContent) {
+    el.mobileLogContent.innerHTML = html;
+    el.mobileLogContent.scrollTop = el.mobileLogContent.scrollHeight;
+  }
 }
 
 function getArtifactLevel(id) {
@@ -166,10 +183,42 @@ function renderSidebar() {
   el.sidebarArtifacts.innerHTML = state.artifacts.length
     ? ""
     : '<p class="text-[10px] text-slate-600">None equipped</p>';
-  state.artifacts.forEach(
-    (a) =>
-      (el.sidebarArtifacts.innerHTML += `<div class="bg-slate-800 p-2 rounded-lg border border-slate-700 flex items-center gap-2 mb-1" title="${a.desc(a.level)}"><span>${a.icon}</span> <div class="flex flex-col"><span class="text-[10px] font-bold truncate leading-tight">${a.name}</span><span class="text-[9px] text-amber-400 font-mono">Lvl ${a.level}</span></div></div>`),
-  );
+  if (el.mobileInventoryList) el.mobileInventoryList.innerHTML = "";
+  state.artifacts.forEach((a) => {
+    const html = `<div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 flex items-center gap-3 mb-1" title="${a.desc(a.level)}">
+        <span class="text-xl">${a.icon}</span> 
+        <div class="flex flex-col">
+          <span class="text-xs font-bold text-white uppercase leading-tight">${a.name}</span>
+          <span class="text-[10px] text-amber-400 font-mono">Lvl ${a.level}</span>
+        </div>
+      </div>`;
+    el.sidebarArtifacts.innerHTML += html;
+    if (el.mobileInventoryList) el.mobileInventoryList.innerHTML += html;
+  });
+}
+
+function toggleMobileInventory() {
+  if (!el.mobileInventoryModal) return;
+  const isHidden = el.mobileInventoryModal.classList.contains('hide');
+  el.mobileLogModal?.classList.add('hide'); // Close other modal
+  if (isHidden) {
+    el.mobileInventoryModal.classList.remove('hide');
+    el.mobileInventoryModal.classList.add('fx-entrance-pop');
+  } else {
+    el.mobileInventoryModal.classList.add('hide');
+  }
+}
+
+function toggleMobileLog() {
+  if (!el.mobileLogModal) return;
+  const isHidden = el.mobileLogModal.classList.contains('hide');
+  el.mobileInventoryModal?.classList.add('hide'); // Close other modal
+  if (isHidden) {
+    el.mobileLogModal.classList.remove('hide');
+    el.mobileLogModal.classList.add('fx-entrance-pop');
+  } else {
+    el.mobileLogModal.classList.add('hide');
+  }
 }
 
 function renderEndScreenStats() {
@@ -214,7 +263,7 @@ function copySeed() {
   const seed = state.runStats.seedUsed;
   navigator.clipboard.writeText(seed).then(() => {
     addLog("Seed copied to clipboard!");
-    alert("Seed copied to clipboard!");
+    alert("Seed copied to clipboard!", "Success", "📋");
   });
 }
 
@@ -254,12 +303,12 @@ async function shareRun() {
         link.download = `crit2048_run_${state.runStats.seedUsed}.png`;
         link.href = URL.createObjectURL(blob);
         link.click();
-        alert("Sharing not supported on this browser. Image downloaded instead!");
+        alert("Sharing not supported on this browser. Image downloaded instead!", "Notice", "📥");
       }
     });
   } catch (e) {
     console.error("Screenshot failed", e);
-    alert("Failed to generate screenshot.");
+    alert("Failed to generate screenshot.", "Error", "❌");
   }
 }
 
@@ -346,14 +395,14 @@ async function downloadRunSummary() {
     if (window.Plugins.isMobile()) {
       // On Mobile: Save to Downloads folder directly
       await window.Plugins.saveScreenshot('end-capture-area', fileName);
-      alert("Run summary saved to your Downloads folder!");
+      alert("Run summary saved to your Downloads folder!", "Success", "💾");
     } else {
       // On Desktop: Open "Save As" Dialog
       await window.Plugins.saveWithDialog(uint8Array, fileName);
     }
   } catch (e) {
     console.error("Save failed", e);
-    alert("Failed to save summary: " + (e.message || e));
+    alert("Failed to save summary: " + (e.message || e), "Error", "❌");
   }
 }
 

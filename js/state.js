@@ -17,6 +17,7 @@ const state = {
   usesLeft: 0,
   logs: [],
   isRolling: false,
+  isSelecting: false,
   shopPool: [],
   currentAttackInfo: null,
   runStats: { 
@@ -33,6 +34,7 @@ const state = {
   },
   lastDirection: null,
   hunterMarkLeft: 0,
+  tavernRespinCount: 0,
 };
 
 function saveGameState() {

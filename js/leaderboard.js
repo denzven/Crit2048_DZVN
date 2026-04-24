@@ -56,11 +56,13 @@ function removeLeaderboardEntry(id) {
 }
 
 function clearLeaderboard() {
-  if (confirm("Are you sure you want to clear the entire leaderboard? This cannot be undone.")) {
-    localStorage.removeItem(LEADERBOARD_KEY);
-    renderLeaderboard();
-    updateStartLeaderboardVisibility();
-  }
+  showConfirm("Are you sure you want to clear the entire leaderboard? This cannot be undone.", (confirmed) => {
+    if (confirmed) {
+      localStorage.removeItem(LEADERBOARD_KEY);
+      renderLeaderboard();
+      updateStartLeaderboardVisibility();
+    }
+  });
 }
 
 function updateStartLeaderboardVisibility() {
@@ -110,12 +112,12 @@ async function shareLeaderboard() {
         link.download = `crit2048_leaderboard.png`;
         link.href = URL.createObjectURL(blob);
         link.click();
-        alert("Sharing not supported on this browser. Image downloaded instead!");
+        alert("Sharing not supported on this browser. Image downloaded instead!", "Notice", "📥");
       }
     });
   } catch (e) {
     console.error("Screenshot failed", e);
-    alert("Failed to generate screenshot.");
+    alert("Failed to generate screenshot.", "Error", "❌");
   }
 }
 

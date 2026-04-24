@@ -91,8 +91,8 @@ function changeState(newState, triggerEntrance = false) {
       case "CLASS_SELECT":
         el.classContainer.innerHTML = Object.entries(CLASSES)
           .map(
-            ([key, cls]) => `
-          <div tabindex="0" onclick="selectClass('${key}')" onkeydown="if(event.key==='Enter') selectClass('${key}')" class="bg-slate-900 border border-slate-700 hover:border-rose-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500 p-4 rounded-2xl cursor-pointer transition-all flex flex-col items-center text-center shadow-lg">
+            ([key, cls], idx) => `
+          <div tabindex="0" onclick="selectClass('${key}', this)" onkeydown="if(event.key==='Enter') selectClass('${key}', this)" class="bg-slate-900 border border-slate-700 hover:border-rose-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500 p-4 rounded-2xl cursor-pointer transition-all flex flex-col items-center text-center shadow-lg fx-class-card-entrance interactive" style="animation-delay: ${idx * 0.05}s">
             <span class="text-4xl mb-2">${cls.icon}</span><h3 class="text-lg font-black text-white uppercase tracking-wider">${cls.id}</h3><p class="text-slate-400 text-xs mt-1 leading-tight">${cls.desc}</p>
           </div>`,
           )
@@ -101,7 +101,7 @@ function changeState(newState, triggerEntrance = false) {
         setTimeout(() => {
           const first = el.classContainer.querySelector("div");
           if (first) first.focus();
-        }, 50);
+        }, 400);
         break;
 
       case "PLAYING":
@@ -133,6 +133,7 @@ function changeState(newState, triggerEntrance = false) {
       case "TAVERN":
         renderTavern();
         el.screenTavern.classList.remove("hide");
+        initTavernScroll();
         break;
 
       case "GAME_OVER":
@@ -149,7 +150,6 @@ function changeState(newState, triggerEntrance = false) {
         saveRunToLeaderboard(state.runStats, state.playerClass, state.encounterIdx);
         clearSave();
 
-        el.modalBackdrop.classList.remove("hide");
         el.screenEnd.classList.remove("hide");
         break;
     }
@@ -169,12 +169,24 @@ function changeState(newState, triggerEntrance = false) {
   }
 }
 
-function selectClass(clsKey) {
-  state.playerClass = CLASSES[clsKey];
-  const giantLvl = getArtifactLevel("GIANT_POTION");
-  state.multiplier = 1.0 + 0.3 * giantLvl;
-  initEncounter(0, false);
-  saveGameState();
+function selectClass(clsKey, element) {
+  if (state.isSelecting) return;
+  state.isSelecting = true;
+  
+  if (element) {
+    element.classList.add("fx-class-selected");
+  }
+  
+  if (window.Plugins) window.Plugins.vibrate('impactMedium');
+
+  setTimeout(() => {
+    state.playerClass = CLASSES[clsKey];
+    const giantLvl = getArtifactLevel("GIANT_POTION");
+    state.multiplier = 1.0 + 0.3 * giantLvl;
+    initEncounter(0, false);
+    saveGameState();
+    state.isSelecting = false;
+  }, 800);
 }
 
 function initEncounter(eIdx, maintainStats = false) {
@@ -192,6 +204,7 @@ function initEncounter(eIdx, maintainStats = false) {
   state.usesLeft = state.playerClass.ability
     ? state.playerClass.ability.maxUses
     : 0;
+  state.tavernRespinCount = 0;
   el.headerAnte.innerText = `Ante ${eIdx + 1}`;
   if (!maintainStats) state.logs = [];
   addLog(`Encountered ${enc.name}!`);
@@ -261,6 +274,7 @@ function resetGame() {
     seedUsed: "",
     endReason: ""
   };
+  state.tavernRespinCount = 0;
   el.inputSeed.value = "";
   changeState("START");
   el.modalBackdrop.classList.add("hide");
@@ -297,10 +311,20 @@ window.addEventListener("keydown", (e) => {
       let idx = items.indexOf(document.activeElement);
       if (idx === -1) idx = 0;
       
-      if (["ArrowLeft", "a", "A", "ArrowUp", "w", "W"].includes(e.key)) {
+      // Determine grid columns based on tailwind breakpoints
+      let cols = 2; // Default
+      if (window.innerWidth >= 768) cols = 4; // md
+      else if (window.innerWidth >= 640) cols = 3; // sm
+
+      const key = e.key.toLowerCase();
+      if (key === "arrowleft" || key === "a") {
         idx = (idx - 1 + items.length) % items.length;
-      } else {
+      } else if (key === "arrowright" || key === "d") {
         idx = (idx + 1) % items.length;
+      } else if (key === "arrowup" || key === "w") {
+        idx = (idx - cols + items.length) % items.length;
+      } else if (key === "arrowdown" || key === "s") {
+        idx = (idx + cols) % items.length;
       }
       items[idx].focus();
     }
@@ -453,6 +477,10 @@ window.prevHelpPage = prevHelpPage;
 window.confirmHome = confirmHome;
 window.closeConfirm = closeConfirm;
 window.executeHome = executeHome;
+window.closeAlert = closeAlert;
+window.onDialogConfirm = onDialogConfirm;
+window.onDialogCancel = onDialogCancel;
+window.showConfirm = showConfirm;
 window.openLeaderboard = openLeaderboard;
 window.closeLeaderboard = closeLeaderboard;
 window.openSettings = openSettings;
@@ -475,6 +503,9 @@ window.buyArtifact = buyArtifact;
 window.executeAttackRoll = executeAttackRoll;
 window.upgradeSpell = upgradeSpell;
 window.restoreSpells = restoreSpells;
+window.toggleMobileInventory = toggleMobileInventory;
+window.toggleMobileLog = toggleMobileLog;
+window.respinTavern = respinTavern;
 
 // --- BOOT ---
 async function bootstrapGame() {

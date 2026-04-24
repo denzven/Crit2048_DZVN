@@ -184,7 +184,7 @@
       } catch (e) {
         const errorMsg = `❌ Share Failed: ${e.message || e}\nCheck logcat/console for details.`;
         console.error(errorMsg, e);
-        alert(errorMsg);
+        alert(errorMsg, "Plugin Error", "🔌");
       }
       console.log('--- Manual Middleman Share End ---');
     },

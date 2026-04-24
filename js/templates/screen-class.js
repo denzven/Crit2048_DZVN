@@ -9,9 +9,9 @@
 window.ViewTemplates = window.ViewTemplates || {};
 
 window.ViewTemplates["screen-class"] = `
-    <div id="screen-class" class="hide w-full max-w-5xl relative z-10 flex flex-col h-full">
-      <h2 class="text-2xl font-black tracking-widest text-center mb-6 text-white uppercase shrink-0">Choose Your Hero</h2>
-      <div id="class-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4 overflow-y-auto pr-2 pb-4"></div>
+    <div id="screen-class" class="hide w-full flex flex-col h-full relative z-10">
+      <h2 class="text-3xl md:text-5xl font-black tracking-widest text-center mb-8 text-white uppercase shrink-0 fx-entrance-pop font-serif">Choose Your Hero</h2>
+      <div id="class-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6 overflow-y-auto pr-2 pb-8 custom-scrollbar"></div>
     </div>
 
 `;
