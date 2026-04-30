@@ -41,6 +41,9 @@ dist/
 build_log.txt
 output_terminal_log.txt
 
+# Build backups (local only, can be large binaries)
+.build_backups/
+
 # ── Secrets / environment ─────────────────────────────────────
 .env
 .env.*
