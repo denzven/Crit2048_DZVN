@@ -5,6 +5,10 @@ function startGameFlow() {
   } catch (e) {
     console.warn(e);
   }
+  // Reset guard flags
+  state.isGameOver = false;
+  state.isTransitioning = false;
+
   const seed = el.inputSeed.value || ((Math.random() * 4294967296) >>> 0).toString();
   setSeed(seed);
   state.runStats.seedUsed = seed;
@@ -33,6 +37,25 @@ function startGameFlow() {
 
 function resumeGame() {
   if (loadGameState()) {
+    // If saved state is PLAYING with 0 hp (defeated but save raced the setTimeout),
+    // promote to TAVERN so the player isn't dropped into an instant GAME_OVER on resume.
+    if (state.gameState === "PLAYING" && state.monsterHp <= 0) {
+      // Monster was already dead — generate shop and go to tavern
+      if (state.encounterIdx >= ENCOUNTERS.length - 1) {
+        // Was last boss — go to VICTORY
+        state.runStats.endTime = Date.now();
+        changeState("VICTORY");
+      } else {
+        state.gold += 20;
+        generateShop();
+        changeState("TAVERN");
+      }
+      return;
+    }
+    // If saved in PLAYING with 0 slides, give 1 slide to allow proper GAME_OVER display
+    if (state.gameState === "PLAYING" && state.slidesLeft <= 0) {
+      state.slidesLeft = 0; // will trigger GAME_OVER gracefully on first checkGameState
+    }
     changeState(state.gameState, true);
   }
 }
@@ -232,6 +255,8 @@ function checkGameState() {
     playAnnouncementText(`${enc.name}`, "Defeated!");
     triggerScreenShake(3.5);
     if (window.Plugins) window.Plugins.vibrate('impactHeavy');
+    // Set isTransitioning immediately to block further moves during the victory animation
+    state.isTransitioning = true;
     setTimeout(() => {
       if (state.encounterIdx >= ENCOUNTERS.length - 1) {
         state.runStats.endReason = "Conquered all bosses!";
@@ -243,10 +268,13 @@ function checkGameState() {
         generateShop();
         changeState("TAVERN");
       }
+      state.isTransitioning = false;
     }, 1800);
     return;
   }
   if (state.slidesLeft <= 0) {
+    // Set isGameOver immediately — this is the key fix that prevents further processMove calls
+    state.isGameOver = true;
     setTimeout(() => {
       state.runStats.endReason = "Out of slides!";
       changeState("GAME_OVER");
@@ -254,6 +282,8 @@ function checkGameState() {
     return;
   }
   if (checkGridlock()) {
+    // Set isGameOver immediately
+    state.isGameOver = true;
     setTimeout(() => {
       state.runStats.endReason = "Gridlock: No more moves!";
       changeState("GAME_OVER");
@@ -261,13 +291,19 @@ function checkGameState() {
     return;
   }
   if (state.slidesSinceRoll >= config.turnsBeforeDice) {
-    setTimeout(() => changeState("DICE"), 300);
+    state.isTransitioning = true;
+    setTimeout(() => {
+      changeState("DICE");
+      state.isTransitioning = false;
+    }, 300);
   }
   saveGameState();
 }
 
 function resetGame() {
   clearSave();
+  state.isGameOver = false;
+  state.isTransitioning = false;
   state.gold = config.startingGold;
   state.multiplier = 1.0;
   state.artifacts = [];

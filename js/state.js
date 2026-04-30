@@ -18,6 +18,9 @@ const state = {
   logs: [],
   isRolling: false,
   isSelecting: false,
+  // Guard flags — prevent race conditions on rapid input or resume
+  isGameOver: false,       // Set immediately when game-over is detected, before setTimeout
+  isTransitioning: false,  // Set during state transitions to block concurrent processMove calls
   shopPool: [],
   currentAttackInfo: null,
   runStats: { 
@@ -64,6 +67,14 @@ function loadGameState() {
     Object.assign(state, bundle.state);
     tileIdCounter = bundle.tileIdCounter;
     Object.assign(config, bundle.config);
+    // Always reset transient flags — they must never be persisted
+    state.isGameOver = false;
+    state.isTransitioning = false;
+    state.isRolling = false;
+    // Clamp values that should never be negative after a load
+    state.monsterHp = Math.max(0, state.monsterHp || 0);
+    state.slidesLeft = Math.max(0, state.slidesLeft || 0);
+    state.gold = Math.max(0, state.gold || 0);
     return true;
   } catch (e) {
     console.error("Load failed", e);

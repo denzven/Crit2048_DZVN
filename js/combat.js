@@ -1,6 +1,7 @@
 // --- CORE GAME LOGIC ---
 function processMove(direction) {
-  if (state.gameState !== "PLAYING" || state.isRolling) return;
+  // Prevent moves during transitions or after game-over is detected (race condition guard)
+  if (state.gameState !== "PLAYING" || state.isRolling || state.isGameOver || state.isTransitioning) return;
   state.runStats.totalMoves++;
   let newGrid = [...state.grid];
   let changed = false,

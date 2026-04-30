@@ -1,0 +1,9 @@
+/* Tailwind v4 CSS — Static Build Input
+ * Processed by @tailwindcss/cli to generate css/tailwind.css
+ * Do NOT add game CSS here — put that in css/main.css
+ */
+@import "tailwindcss";
+
+/* Source scanning — scans these files for utility class usage */
+@source "../index.html";
+@source "../js/**/*.js";

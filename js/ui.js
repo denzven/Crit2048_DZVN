@@ -379,7 +379,10 @@ async function refreshSharePreview() {
 }
 
 async function executeFinalShare() {
-  if (!currentShareBytes) return;
+  if (!currentShareBytes) {
+    alert("Nothing to share yet — please wait for the preview to load.", "Not Ready", "⏳");
+    return;
+  }
   
   const btn = event.currentTarget;
   const originalText = btn.innerHTML;
@@ -387,17 +390,25 @@ async function executeFinalShare() {
   btn.innerHTML = '<span>⏳ Opening Share...</span>';
 
   try {
-    if (window.Plugins && window.Plugins.isTauri) {
+    if (window.Plugins) {
       await window.Plugins.share({
         title: 'Crit 2048 Run Summary',
-        text: `Check out my ${state.playerClass.id} run in Crit 2048!`,
-        files: [currentShareBytes]
+        text: `Check out my ${state.playerClass.id} run in Crit 2048! 🐉`,
+        files: [currentShareBytes],
+        fileName: `crit2048_share_${state.runStats.seedUsed || Date.now()}.png`
       });
     } else {
+      // Web fallback: trigger browser download
       executeFinalSave();
     }
   } catch (e) {
-    alert("Share failed: " + e.message, "Error", "❌");
+    if (e && e.name === 'AbortError') {
+      // User cancelled — not an error
+      console.log('Share cancelled by user');
+    } else {
+      console.warn("Share failed, falling back to save:", e);
+      executeFinalSave();
+    }
   } finally {
     btn.disabled = false;
     btn.innerHTML = originalText;
@@ -405,35 +416,50 @@ async function executeFinalShare() {
 }
 
 async function executeFinalSave() {
-  if (!currentShareBytes) return;
+  if (!currentShareBytes) {
+    alert("Nothing to save yet — please wait for the preview to load.", "Not Ready", "⏳");
+    return;
+  }
   
   const fileName = `crit2048_run_${state.runStats.seedUsed || Date.now()}.png`;
 
   try {
     if (window.Plugins && window.Plugins.isTauri) {
       if (window.Plugins.isMobile()) {
-        const pathApi = window.__TAURI__.path;
-        const storageDir = pathApi.pictureDir ? await pathApi.pictureDir() : await pathApi.downloadDir();
-        const filePath = await pathApi.join(storageDir, fileName);
-        const fs = window.__TAURI__.fs || window.__TAURI__.pluginFs;
-        if (fs && fs.writeFile) {
-          await fs.writeFile(filePath, currentShareBytes);
-        } else {
-          await window.__TAURI__.core.invoke('plugin:fs|write_file', { path: filePath, data: currentShareBytes });
-        }
-        alert(`Saved to ${pathApi.pictureDir ? 'Gallery' : 'Downloads'}!`, "Success", "🖼️");
+        // Android 10+ Scoped Storage: Cannot write directly to /sdcard/Pictures without MediaStore.
+        // Best practice: write to EXTERNAL_CACHE, then open native share sheet so user can
+        // "Save to Photos" — this is the standard approach used by major apps.
+        const dataArray = Array.from(currentShareBytes);
+        const cacheDir = await window.__TAURI__.core.invoke('get_app_cache_dir');
+        const filePath = `${cacheDir}/${fileName}`;
+
+        await window.__TAURI__.core.invoke('plugin:fs|write_file', { 
+          path: filePath, 
+          data: dataArray 
+        });
+
+        // Open share sheet with save-to-gallery as the top option
+        await window.__TAURI__.core.invoke('plugin:share|share', {
+          title: 'Save Run Card',
+          text: 'Save your Crit 2048 run card to your gallery.',
+          files: [filePath]
+        });
       } else {
+        // Desktop: open a native "Save As" dialog
         await window.Plugins.saveWithDialog(currentShareBytes, fileName);
       }
     } else {
+      // Web / PWA: trigger a browser download
       const blob = new Blob([currentShareBytes], { type: 'image/png' });
       const link = document.createElement('a');
       link.download = fileName;
       link.href = URL.createObjectURL(blob);
       link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 10000);
     }
   } catch (e) {
-    alert("Save failed", "Error", "❌");
+    console.error("Save failed:", e);
+    alert("Save failed: " + (e.message || e), "Error", "❌");
   }
 }
 

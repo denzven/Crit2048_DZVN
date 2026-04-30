@@ -122,13 +122,44 @@
 
     /**
      * Professional Native Share
-     * Hands the absolute path to the native Intent system (Android/iOS)
-     * @param {Object} options - { files: [Uint8Array|File], mime: string }
+     * Writes image to $EXTERNAL_CACHE (Android FileProvider-accessible), then invokes the share Intent.
+     * On web, falls back to navigator.share with File object.
+     * @param {Object} options - { files: [Uint8Array], title, text, fileName, mime }
      */
     async share(options) {
       if (!this.isTauri) {
-        console.log('Not in Tauri, using navigator.share');
-        if (navigator.share) await navigator.share(options).catch(console.error);
+        console.log('Not in Tauri, attempting navigator.share');
+        if (navigator.share) {
+          try {
+            const files = [];
+            if (options.files && options.files.length > 0) {
+              for (const f of options.files) {
+                const uint8Array = (f instanceof Uint8Array) ? f : new Uint8Array(await f.arrayBuffer());
+                const fileName = options.fileName || `crit2048_share_${Date.now()}.png`;
+                files.push(new File([uint8Array], fileName, { type: options.mime || 'image/png' }));
+              }
+            }
+            
+            const shareData = {
+              title: options.title || 'Crit 2048',
+              text: options.text || '',
+            };
+            if (files.length > 0 && navigator.canShare && navigator.canShare({ files })) {
+              shareData.files = files;
+            }
+            
+            await navigator.share(shareData);
+            console.log('✅ navigator.share success');
+          } catch (e) {
+            if (e.name !== 'AbortError') {
+              console.error('❌ navigator.share failed:', e);
+              throw e;
+            }
+          }
+        } else {
+          console.warn('navigator.share not supported on this browser');
+          throw new Error('Sharing not supported on this browser');
+        }
         return;
       }
 
@@ -136,39 +167,50 @@
 
       try {
         const fileData = options.files[0];
+        // CRITICAL: Convert Uint8Array → plain Array<number> for Tauri IPC serialization
         const uint8Array = (fileData instanceof Uint8Array) ? fileData : new Uint8Array(await fileData.arrayBuffer());
+        const dataArray = Array.from(uint8Array);
         
-        // 1. Resolve Storage Path (Cache is best for temporary sharing)
-        const cacheDir = (window.__TAURI__.path && window.__TAURI__.path.appCacheDir) 
-          ? await window.__TAURI__.path.appCacheDir() 
-          : await window.__TAURI__.core.invoke('get_app_cache_dir');
-        
-        const fileName = `crit2048_share_${Date.now()}.png`;
-        const filePath = (window.__TAURI__.path && window.__TAURI__.path.join)
-          ? await window.__TAURI__.path.join(cacheDir, fileName)
-          : `${cacheDir}/${fileName}`;
-        
-        // 2. Write File
-        const fs = window.__TAURI__.fs || window.__TAURI__.pluginFs;
-        if (fs && fs.writeFile) {
-          await fs.writeFile(filePath, uint8Array);
-        } else {
-          await window.__TAURI__.core.invoke('plugin:fs|write_file', { path: filePath, data: uint8Array });
+        // Use $EXTERNAL_CACHE — this is Android FileProvider-accessible (unlike private $CACHE)
+        let cacheDir;
+        try {
+          cacheDir = await window.__TAURI__.core.invoke('get_app_cache_dir');
+        } catch(e) {
+          // Fallback path resolution
+          if (window.__TAURI__.path && window.__TAURI__.path.appCacheDir) {
+            cacheDir = await window.__TAURI__.path.appCacheDir();
+          } else {
+            throw new Error('Cannot resolve cache directory');
+          }
         }
+
+        const fileName = options.fileName || `crit2048_share_${Date.now()}.png`;
+        const filePath = `${cacheDir}/${fileName}`;
         
-        // 3. Invoke Native Share Plugin
-        // According to documentation: invoke('plugin:share|share_file', { path, mime })
-        await window.__TAURI__.core.invoke('plugin:share|share_file', { 
-          path: filePath,
-          mime: options.mime || 'image/png'
+        // Write file using core invoke (most reliable across Tauri versions)
+        await window.__TAURI__.core.invoke('plugin:fs|write_file', { 
+          path: filePath, 
+          data: dataArray 
+        });
+        
+        console.log(`✅ Share file written to: ${filePath}`);
+        
+        // Invoke native Share plugin — it wraps the path in a FileProvider URI internally
+        await window.__TAURI__.core.invoke('plugin:share|share', { 
+          title: options.title || 'Crit 2048 Run Summary',
+          text: options.text || '',
+          files: [filePath]
         });
         
         console.log('✅ Native Share Success');
       } catch (e) {
         console.error('❌ Share Failed:', e);
-        if (window.alert) alert(`Share Error: ${e.message || e}`, "Plugin Error", "🔌");
+        if (e.name !== 'AbortError') {
+          throw e; // Re-throw so caller can fall back to save
+        }
       }
     },
+
 
     /**
      * Future-proofing: Check for files shared TO this app

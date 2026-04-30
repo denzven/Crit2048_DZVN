@@ -1,10 +1,10 @@
 [package]
 name = "app"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+version = "1.2.2"
+description = "Crit 2048 — A roguelike dungeon crawler powered by 2048 mechanics and D&D dice"
+authors = ["denzven"]
+license = "GPL-3.0"
+repository = "https://github.com/denzven/Crit2048_DZVN"
 edition = "2021"
 rust-version = "1.77.2"
 

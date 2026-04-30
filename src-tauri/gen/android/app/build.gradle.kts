@@ -13,6 +13,13 @@ val tauriProperties = Properties().apply {
     }
 }
 
+val keystoreProperties = Properties().apply {
+    val propFile = file("keystore.properties")
+    if (propFile.exists()) {
+        propFile.inputStream().use { load(it) }
+    }
+}
+
 android {
     compileSdk = 36
     namespace = "com.crit2048.app"
@@ -23,6 +30,14 @@ android {
         targetSdk = 36
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
+    }
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+            storeFile = keystoreProperties.getProperty("storeFile")?.let { file(it) }
+            storePassword = keystoreProperties.getProperty("storePassword")
+        }
     }
     buildTypes {
         getByName("debug") {
@@ -38,12 +53,17 @@ android {
         }
         getByName("release") {
             isMinifyEnabled = true
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 *fileTree(".") { include("**/*.pro") }
                     .plus(getDefaultProguardFile("proguard-android-optimize.txt"))
                     .toList().toTypedArray()
             )
+            ndk {
+                // Only ship ARM ABIs — covers 99%+ of real Android devices
+                // Strips x86/x86_64 (emulator-only) to reduce AAB size by ~40%
+                abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            }
         }
     }
     kotlinOptions {
@@ -51,16 +71,6 @@ android {
     }
     buildFeatures {
         buildConfig = true
-    }
-
-    applicationVariants.all {
-        outputs.all {
-            val output = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            val name = "Crit2048"
-            val version = versionName
-            val type = buildType.name
-            output?.outputFileName = "${name}_v${version}_${type}.apk"
-        }
     }
 }
 
