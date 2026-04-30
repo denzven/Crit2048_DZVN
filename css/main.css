@@ -1,4 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap');
+/* ============================================================
+ * LOCAL FONTS — No CDN required, fully offline
+ * Font files vendored in vendor/fonts/
+ * ============================================================ */
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../vendor/fonts/Cinzel-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../vendor/fonts/Cinzel-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('../vendor/fonts/Cinzel-Black.ttf') format('truetype');
+}
 
 :root { 
   --gap: 2%; 

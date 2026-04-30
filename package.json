@@ -1,6 +1,6 @@
 {
   "name": "crit2048",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Crit 2048 — A roguelike dungeon crawler powered by 2048 mechanics and D&D dice",
   "main": "index.js",
   "scripts": {

@@ -1,4 +1,16 @@
-# Ignore all compiled output but keep the folder structure
+# dist/ — Build deliverables
+#
+# This folder and its subdirectories are kept in git (via .gitkeep)
+# so that build.bat can find them on a fresh clone.
+# The actual binaries (APK, AAB, EXE, MSI) are NOT committed.
+#
+# Only .gitignore and .gitkeep files survive in version control.
+
+# Ignore everything by default
 *
+
+# Except these tracking files
 !.gitignore
+!.gitkeep
+!**/.gitignore
 !**/.gitkeep
