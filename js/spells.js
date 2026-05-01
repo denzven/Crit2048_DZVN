@@ -90,6 +90,15 @@ function resolveAttack() {
   const ab = state.playerClass.ability;
   const spellType = ab ? ab.spellType : null;
 
+  if (window.PackEngine) {
+    if (window.PackEngine.runPackSpell(state, ab, info.sum)) {
+      state.currentAttackInfo = null;
+      renderGrid(); renderHUD(); checkGameState();
+      return;
+    }
+    window.PackEngine.onSpellCast(state, spellType);
+  }
+
   switch (spellType) {
     case "fireball":
       SFX.explosion();

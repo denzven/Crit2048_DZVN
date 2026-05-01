@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
 Crit 2048 - Master Build System
-Builds: Windows (EXE/MSI), Android (APK/AAB), Webview bundle
-Cross-platform: Windows, macOS, Linux
+Builds: Windows (EXE/MSI), Android (APK/AAB), Linux (AppImage/deb),
+        macOS (dmg), iOS (ipa), Webview bundle
 
 Usage:
     python build.py              # interactive menu
     python build.py --windows    # Windows only
     python build.py --android    # Android only
+    python build.py --linux      # Linux AppImage + deb
+    python build.py --macos      # macOS dmg
+    python build.py --ios        # iOS IPA (requires macOS + Xcode)
     python build.py --webview    # Webview only
-    python build.py --all        # all targets
+    python build.py --all        # all available targets
 """
 
 import os, sys, json, shutil, subprocess, platform, zipfile, argparse
@@ -100,21 +103,51 @@ def mb(path):
     except: return 0
 
 # ── Run helper ────────────────────────────────────────────────────────────────
-def run(cmd, cwd=None, capture=False):
-    """Run a command. Returns (returncode, stdout). Logs stderr+stdout."""
+def run(cmd, cwd=None, capture=False, env=None):
+    """Stream every output line to BOTH the terminal and the log file in real time.
+    Returns (returncode, captured_stdout_str).
+      capture=True  → suppress terminal echo (still logs everything)
+      env           → dict of extra env vars to inject for this command only
+    """
+    import threading, io
     cwd = cwd or ROOT
     if IS_WINDOWS and isinstance(cmd, list):
-        # Ensure .cmd wrappers are found on Windows
         cmd = ["cmd", "/c"] + cmd
-    log(f"$ {' '.join(str(c) for c in cmd) if isinstance(cmd, list) else cmd}")
+    cmd_str = " ".join(str(c) for c in cmd) if isinstance(cmd, list) else cmd
+    log(f"$ {cmd_str}")
+
+    merged_env = None
+    if env:
+        merged_env = os.environ.copy()
+        merged_env.update(env)
+
     try:
-        result = subprocess.run(
-            cmd, cwd=cwd, capture_output=capture,
-            text=True, shell=not isinstance(cmd, list)
+        proc = subprocess.Popen(
+            cmd,
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,   # merge stderr into stdout pipe
+            text=True,
+            shell=not isinstance(cmd, list),
+            env=merged_env,
+            encoding="utf-8",
+            errors="replace",
+            bufsize=1,
         )
-        if result.stdout: log(result.stdout)
-        if result.stderr: log(result.stderr)
-        return result.returncode, result.stdout or ""
+        collected = io.StringIO()
+
+        def _stream():
+            for line in proc.stdout:
+                log(line.rstrip())
+                collected.write(line)
+                if not capture:
+                    print(line, end="", flush=True)
+
+        t = threading.Thread(target=_stream, daemon=True)
+        t.start()
+        proc.wait()
+        t.join()
+        return proc.returncode, collected.getvalue()
     except FileNotFoundError as e:
         log(f"FileNotFoundError: {e}")
         return 1, ""
@@ -162,6 +195,111 @@ def list_backups():
         print(f"  [{i}] {b.name}  ({mb(b)} MB)")
     return backups
 
+def _is_jdk(java_home: Path) -> bool:
+    """Return True if java_home contains a Java compiler (real JDK, not JRE)."""
+    javac = java_home / "bin" / ("javac.exe" if IS_WINDOWS else "javac")
+    return javac.exists()
+
+def _find_jdk_env() -> dict | None:
+    """Return {'JAVA_HOME': '<jdk-path>'} for the best available JDK, or None.
+
+    Priority:
+      1. Existing JAVA_HOME if it already has javac (already a JDK — nothing to do)
+      2. Android Studio's bundled JBR (auto-installed with Android Studio)
+      3. Gradle toolchain cache  (~/.gradle/jdks/)
+      4. Common Windows install roots (Adoptium, Microsoft, Zulu, Corretto, Oracle)
+      5. Common Linux /usr/lib/jvm entries
+      6. macOS /Library/Java/JavaVirtualMachines
+    Prefers JDK 17+; falls back to any JDK with javac present.
+    """
+    # 1. Current JAVA_HOME is already a JDK
+    current = os.environ.get("JAVA_HOME", "")
+    if current and _is_jdk(Path(current)):
+        return None  # nothing to change
+
+    if current:
+        warn(f"JAVA_HOME='{current}' has no javac (JRE, not JDK). Searching...")
+
+    candidates: list[Path] = []
+
+    if IS_WINDOWS:
+        local = Path(os.environ.get("LOCALAPPDATA", "C:/Users/Public"))
+        appdata = Path(os.environ.get("APPDATA", "C:/Users/Public"))
+        home = Path(os.environ.get("USERPROFILE", "C:/Users/Public"))
+
+        # Android Studio ships a bundled JBR (JetBrains Runtime = full JDK)
+        for as_root in [
+            local / "Programs" / "Android Studio" / "jbr",
+            local / "Programs" / "Android Studio" / "jre",
+            Path("C:/Program Files/Android/Android Studio/jbr"),
+            Path("C:/Program Files/Android/Android Studio/jre"),
+        ]:
+            if as_root.exists():
+                candidates.append(as_root)
+
+        # Gradle auto-provisions JDKs here when toolchain resolution is used
+        gradle_jdks = home / ".gradle" / "jdks"
+        if gradle_jdks.exists():
+            for sub in sorted(gradle_jdks.iterdir(), reverse=True):
+                if sub.is_dir():
+                    candidates.append(sub)
+
+        # Standard install roots
+        pf = Path("C:/Program Files")
+        for vendor_dir in [
+            pf / "Eclipse Adoptium",
+            pf / "Microsoft",
+            pf / "BellSoft",
+            pf / "Amazon Corretto",
+            pf / "Zulu",
+            pf / "Java",
+        ]:
+            if vendor_dir.exists():
+                for sub in sorted(vendor_dir.iterdir(), reverse=True):
+                    if sub.is_dir() and "jdk" in sub.name.lower():
+                        candidates.append(sub)
+
+    elif platform.system() == "Linux":
+        as_linux = Path.home() / ".local/share/Google/AndroidStudio/jbr"
+        if as_linux.exists():
+            candidates.append(as_linux)
+        jvm_root = Path("/usr/lib/jvm")
+        if jvm_root.exists():
+            for sub in sorted(jvm_root.iterdir(), reverse=True):
+                if sub.is_dir() and ("jdk" in sub.name.lower() or "java" in sub.name.lower()):
+                    candidates.append(sub)
+
+    elif platform.system() == "Darwin":
+        for as_mac in [
+            Path("/Applications/Android Studio.app/Contents/jbr/Contents/Home"),
+            Path("/Applications/Android Studio.app/Contents/jre/Contents/Home"),
+        ]:
+            if as_mac.exists():
+                candidates.append(as_mac)
+        vm_root = Path("/Library/Java/JavaVirtualMachines")
+        if vm_root.exists():
+            for sub in sorted(vm_root.iterdir(), reverse=True):
+                home_path = sub / "Contents/Home"
+                if home_path.exists():
+                    candidates.append(home_path)
+
+    # Prefer JDK 17+
+    preferred = [c for c in candidates if _is_jdk(c) and any(
+        f"jdk-{v}" in c.name.lower() or f"jdk{v}" in c.name.lower() or f"-{v}" in c.name
+        for v in range(17, 30)
+    )]
+    fallback = [c for c in candidates if _is_jdk(c)]
+    chosen = (preferred or fallback or [None])[0]
+
+    if chosen:
+        ok(f"Using JDK for Gradle: {chosen}")
+        return {"JAVA_HOME": str(chosen)}
+
+    warn("No JDK with javac found anywhere.")
+    warn("  AAB build will fail. Install JDK 17+ from: https://adoptium.net")
+    warn("  Then set JAVA_HOME=<jdk-path> before running this script.")
+    return None
+
 def restore_backup():
     """Restore a previous dist/ backup."""
     header("Restore Backup")
@@ -180,32 +318,43 @@ def restore_backup():
 
 # ── Step 0: Target selection ──────────────────────────────────────────────────
 def select_targets(args):
-    if args.all:      return True, True, True
-    if args.windows:  return True, False, False
-    if args.android:  return False, True, False
-    if args.webview:  return False, False, True
+    # Returns (windows, android, webview, linux, macos, ios)
+    if args.all:     return True, True, True, True, True, True
+    if args.windows: return True, False, False, False, False, False
+    if args.android: return False, True, False, False, False, False
+    if args.webview: return False, False, True, False, False, False
+    if args.linux:   return False, False, False, True, False, False
+    if args.macos:   return False, False, False, False, True, False
+    if args.ios:     return False, False, False, False, False, True
 
     header("Crit 2048 -- Master Build System")
+    cur_os = platform.system()
     print(f"""
   {C.BOLD}Select build targets:{C.RESET}
 
-    [1]  Windows only    (EXE + MSI)
+    [1]  Windows only    (EXE + MSI)              {'[current OS]' if cur_os=='Windows' else ''}
     [2]  Android only    (APK + AAB)
     [3]  Webview only    (static HTML bundle)
-    [4]  Windows + Android
-    [5]  ALL targets
+    [4]  Linux only      (AppImage + .deb)         {'[current OS]' if cur_os=='Linux' else ''}
+    [5]  macOS only      (DMG)                     {'[current OS]' if cur_os=='Darwin' else ''}
+    [6]  iOS only        (IPA — requires macOS)    {'[current OS]' if cur_os=='Darwin' else ''}
+    [7]  Windows + Android
+    [8]  ALL available targets
     [b]  Restore a backup
     [q]  Quit
 """)
-    choice = input("  Enter choice [1-5/b/q] (default=5): ").strip().lower()
+    choice = input("  Enter choice [1-8/b/q] (default=8): ").strip().lower()
 
     if choice == "q":  sys.exit(0)
     if choice == "b":  restore_backup(); sys.exit(0)
-    if choice in ("", "5"): return True, True, True
-    if choice == "1": return True, False, False
-    if choice == "2": return False, True, False
-    if choice == "3": return False, False, True
-    if choice == "4": return True, True, False
+    if choice in ("", "8"): return True, True, True, True, True, True
+    if choice == "1": return True, False, False, False, False, False
+    if choice == "2": return False, True, False, False, False, False
+    if choice == "3": return False, False, True, False, False, False
+    if choice == "4": return False, False, False, True, False, False
+    if choice == "5": return False, False, False, False, True, False
+    if choice == "6": return False, False, False, False, False, True
+    if choice == "7": return True, True, False, False, False, False
     err(f"Invalid choice: {choice}"); sys.exit(1)
 
 # ── Step 1: Version management ────────────────────────────────────────────────
@@ -390,18 +539,29 @@ def step_android(version):
             copied += 1
             break
 
-    # AAB via Gradle
+    # ── AAB via Gradle ─────────────────────────────────────────────────────────
     info("Building AAB for Play Store  (gradlew bundleRelease)...")
     gradlew = "gradlew.bat" if IS_WINDOWS else "./gradlew"
-    rc2, _ = run([gradlew, "bundleRelease"], cwd=ANDROID)
+
+    # Gradle needs a full JDK (javac). If JAVA_HOME points at a bare JRE
+    # (jre1.8 / jre...) the build fails with "Toolchain does not provide JAVA_COMPILER".
+    # Auto-detect the best available JDK and inject it only for this call.
+    gradle_env = _find_jdk_env()
+
+    rc2, _ = run([gradlew, "bundleRelease"], cwd=ANDROID, env=gradle_env)
     if rc2 != 0:
-        warn("AAB build failed — APK still available. Run manually:")
-        warn(f"  cd {ANDROID}  &&  gradlew bundleRelease")
+        warn("AAB build failed — APK still available. Fix: install JDK 17+ and set")
+        warn("  JAVA_HOME=<path-to-jdk>  (not a JRE).  Adoptium: https://adoptium.net")
+        warn(f"  Manual retry: cd \"{ANDROID}\"  &&  {gradlew} bundleRelease")
     else:
         aab_paths = [
             ANDROID / "app/build/outputs/bundle/universalRelease/app-universal-release.aab",
             ANDROID / "app/build/outputs/bundle/release/app-release.aab",
         ]
+        # Wildcard fallback — catches any Gradle variant name
+        if (ANDROID / "app/build/outputs/bundle").exists():
+            aab_paths += list((ANDROID / "app/build/outputs/bundle").rglob("*.aab"))
+        aab_found = False
         for src in aab_paths:
             if src.exists():
                 dst = DIST / "android" / f"Crit2048_v{version}_Android_PlayStore.aab"
@@ -409,11 +569,85 @@ def step_android(version):
                 ok(f"AAB  -->  {dst.name}  ({mb(dst)} MB)")
                 log(f"Android AAB: {dst}  ({mb(dst)} MB)")
                 copied += 1
+                aab_found = True
                 break
+        if not aab_found:
+            warn("AAB not found after bundleRelease — check Gradle output above.")
 
     if copied == 0:
         err("Android build finished but no APK/AAB found.")
         sys.exit(1)
+
+
+# ── Step 6b: Linux build ────────────────────────────────────────────────────
+def step_linux(version):
+    step(6, "Linux Build  [AppImage + .deb]")
+    if platform.system() != "Linux":
+        warn("Skipping Linux build — not running on Linux.")
+        warn("To build: run this script on a Linux machine or CI runner.")
+        return
+    info("Running: npx tauri build ...")
+    rc, _ = npx(["tauri", "build"])
+    if rc != 0:
+        err(f"Linux build failed. Check {LOG_FILE}"); return
+    bundle = SRC_TAURI / "target/release/bundle"
+    copied = 0
+    if (bundle / "appimage").exists():
+        for src in (bundle / "appimage").glob("*.AppImage"):
+            dst = DIST / "linux" / f"Crit2048_v{version}_Linux.AppImage"
+            shutil.copy2(src, dst); ok(f"AppImage --> {dst.name}  ({mb(dst)} MB)"); copied += 1; break
+    if (bundle / "deb").exists():
+        for src in (bundle / "deb").glob("*.deb"):
+            dst = DIST / "linux" / f"Crit2048_v{version}_Linux.deb"
+            shutil.copy2(src, dst); ok(f"deb      --> {dst.name}  ({mb(dst)} MB)"); copied += 1; break
+    if copied == 0:
+        warn("Linux build succeeded but no AppImage/deb found.")
+
+
+# ── Step 6c: macOS build ────────────────────────────────────────────────────
+def step_macos(version):
+    step(6, "macOS Build  [DMG]")
+    if platform.system() != "Darwin":
+        warn("Skipping macOS build — not running on macOS.")
+        warn("Requires: macOS + Xcode Command Line Tools (xcode-select --install)")
+        return
+    info("Running: npx tauri build ...")
+    rc, _ = npx(["tauri", "build"])
+    if rc != 0:
+        err(f"macOS build failed. Check {LOG_FILE}"); return
+    bundle = SRC_TAURI / "target/release/bundle"
+    if (bundle / "dmg").exists():
+        for src in (bundle / "dmg").glob("*.dmg"):
+            dst = DIST / "macos" / f"Crit2048_v{version}_macOS.dmg"
+            shutil.copy2(src, dst); ok(f"DMG --> {dst.name}  ({mb(dst)} MB)"); break
+    else:
+        warn("macOS build done but no DMG found.")
+
+
+# ── Step 6d: iOS build ────────────────────────────────────────────────────────
+def step_ios(version):
+    step(6, "iOS Build  [IPA]")
+    if platform.system() != "Darwin":
+        err("iOS builds require macOS with Xcode installed.")
+        err("Install Xcode from the App Store then re-run on macOS.")
+        return
+    ios_project = SRC_TAURI / "gen/apple"
+    if not ios_project.exists():
+        info("iOS project not initialised — running: npx tauri ios init")
+        rc, _ = npx(["tauri", "ios", "init"])
+        if rc != 0: err("iOS init failed."); return
+    info("Building iOS IPA  (requires Apple Developer provisioning)...")
+    rc, _ = npx(["tauri", "ios", "build"])
+    if rc != 0:
+        err(f"iOS build failed. Check {LOG_FILE}")
+        err("Ensure: Apple Developer account, provisioning profile, code signing cert.")
+        return
+    found = False
+    for src in (SRC_TAURI / "gen/apple").rglob("*.ipa"):
+        dst = DIST / "ios" / f"Crit2048_v{version}_iOS.ipa"
+        shutil.copy2(src, dst); ok(f"IPA --> {dst.name}  ({mb(dst)} MB)"); found = True; break
+    if not found:
+        warn("iOS build done but IPA not found — check Xcode Organizer for the archive.")
 
 # ── Step 7: Webview bundle ────────────────────────────────────────────────────
 def step_webview():
@@ -428,8 +662,21 @@ def step_webview():
     ok(f"Webview bundle  -->  dist/webview/  ({round(total/1048576,1)} MB total)")
     ok("Open dist/webview/index.html in any browser to play offline.")
 
+
+def _ensure_dist_dirs(do_windows, do_android, do_webview, do_linux, do_macos, do_ios):
+    """Create all required dist subdirectories."""
+    dirs = []
+    if do_windows: dirs.append("windows")
+    if do_android: dirs.append("android")
+    if do_webview: dirs.append("webview")
+    if do_linux:   dirs.append("linux")
+    if do_macos:   dirs.append("macos")
+    if do_ios:     dirs.append("ios")
+    for d in dirs:
+        (DIST / d).mkdir(parents=True, exist_ok=True)
+
 # ── Step 8: Summary ───────────────────────────────────────────────────────────
-def step_summary(version, do_windows, do_android, do_webview, t_start):
+def step_summary(version, do_windows, do_android, do_webview, do_linux, do_macos, do_ios, t_start):
     step(8, "Build Summary")
     elapsed = round(datetime.now().timestamp() - t_start, 1)
     print(f"\n  {C.BOLD}{C.WHITE}Crit 2048 v{version} -- Build Complete{C.RESET}")
@@ -438,14 +685,20 @@ def step_summary(version, do_windows, do_android, do_webview, t_start):
     for label, flag, subdir, exts in [
         ("Windows", do_windows, "windows", (".exe",".msi")),
         ("Android", do_android, "android", (".apk",".aab")),
+        ("Linux",   do_linux,   "linux",   (".AppImage",".deb")),
+        ("macOS",   do_macos,   "macos",   (".dmg",)),
+        ("iOS",     do_ios,     "ios",     (".ipa",)),
     ]:
         if not flag: continue
         d = DIST / subdir
+        if not d.exists(): continue
         files = [f for f in d.iterdir() if f.is_file() and f.suffix in exts]
         if files:
             print(f"  {C.CYAN}dist/{subdir}/{C.RESET}")
             for f in files:
                 print(f"    {C.GREEN}[OK]{C.RESET}  {f.name}  {C.DIM}({mb(f)} MB){C.RESET}")
+        else:
+            print(f"  {C.YELLOW}dist/{subdir}/{C.RESET}  (no artifacts — may have been skipped on this OS)")
 
     if do_webview:
         print(f"  {C.CYAN}dist/webview/{C.RESET}  (open index.html in any browser)")
@@ -461,6 +714,9 @@ def main():
     parser.add_argument("--windows", action="store_true")
     parser.add_argument("--android", action="store_true")
     parser.add_argument("--webview", action="store_true")
+    parser.add_argument("--linux",   action="store_true", help="Linux AppImage + deb (Linux only)")
+    parser.add_argument("--macos",   action="store_true", help="macOS DMG (macOS only)")
+    parser.add_argument("--ios",     action="store_true", help="iOS IPA (macOS + Xcode only)")
     parser.add_argument("--all",     action="store_true")
     parser.add_argument("--restore", action="store_true", help="Restore a backup")
     args = parser.parse_args()
@@ -471,15 +727,22 @@ def main():
     if args.restore:
         restore_backup(); log_close(); return
 
-    do_windows, do_android, do_webview = select_targets(args)
+    do_windows, do_android, do_webview, do_linux, do_macos, do_ios = select_targets(args)
     version = step_version()
     step_prereqs(do_android)
+
+    # Clean and create all dist subdirs
     step_clean(do_windows, do_android, do_webview, version)
+    _ensure_dist_dirs(do_windows, do_android, do_webview, do_linux, do_macos, do_ios)
+
     step_web_assets()
     if do_windows: step_windows(version)
     if do_android: step_android(version)
+    if do_linux:   step_linux(version)
+    if do_macos:   step_macos(version)
+    if do_ios:     step_ios(version)
     if do_webview: step_webview()
-    step_summary(version, do_windows, do_android, do_webview, t_start)
+    step_summary(version, do_windows, do_android, do_webview, do_linux, do_macos, do_ios, t_start)
 
     log_close()
 

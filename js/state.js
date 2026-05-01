@@ -43,7 +43,10 @@ const state = {
     startTime: 0,
     endTime: 0,
     seedUsed: "",
-    endReason: "" 
+    endReason: "",
+    activePackIds: [],
+    packRunLabel: "",
+    customEnemiesDefeated: 0
   },
   lastDirection: null,
   hunterMarkLeft: 0,

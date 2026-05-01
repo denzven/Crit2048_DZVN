@@ -110,6 +110,15 @@
         ctx.font = 'bold 24px "Inter", sans-serif';
         ctx.fillText(dateStr.toUpperCase(), canvas.width / 2, 350);
 
+        // Pack Run Badge (if any packs active)
+        if (data.packRunLabel) {
+          ctx.fillStyle = 'rgba(129, 140, 248, 0.2)';
+          ctx.beginPath(); ctx.roundRect(canvas.width / 2 - 300, 380, 600, 44, 22); ctx.fill();
+          ctx.fillStyle = '#818cf8';
+          ctx.font = 'bold 20px "Inter", sans-serif';
+          ctx.fillText(`📜 MODDED RUN: ${data.packRunLabel.toUpperCase()}`, canvas.width / 2, 410);
+        }
+
         // 6. HERO SECTION: ISOMETRIC ANTE BOX
         const heroY = 580;
         ctx.save();

@@ -5,6 +5,7 @@ const CLASSES = {
     icon: "😡",
     desc: "+10 Dmg to T1&2 combos.",
     d20Mod: -1,
+    mode: "simple",
     ability: null,
   },
   ROGUE: {
@@ -12,6 +13,10 @@ const CLASSES = {
     icon: "🥷",
     desc: "+1 Gold per merge, +2 to D20.",
     d20Mod: 2,
+    mode: "simple",
+    passiveTrigger: "on_merge",
+    passiveEffect: "add_gold",
+    passiveParam: 1,
     ability: null,
   },
   WIZARD: {
@@ -19,164 +24,220 @@ const CLASSES = {
     icon: "🧙‍♂️",
     desc: "+1 to D20. Spell: Fireball.",
     d20Mod: 1,
-    ability: { name: "Fireball", count: 1, sides: 6, maxUses: 1, spellType: "fireball" },
+    mode: "simple",
+    ability: { name: "Fireball", count: 1, sides: 6, maxUses: 1, spellType: "fireball", mode: "simple" },
   },
   WARLOCK: {
     id: "Warlock",
     icon: "👁️",
     desc: "+1 to D20. Spell: Eldritch Blast.",
     d20Mod: 1,
-    ability: { name: "Eldritch Blast", count: 1, sides: 10, maxUses: 3, spellType: "beam" },
+    mode: "simple",
+    ability: { name: "Eldritch Blast", count: 1, sides: 10, maxUses: 3, spellType: "beam", mode: "simple" },
   },
   CLERIC: {
     id: "Cleric",
     icon: "✨",
     desc: "Spell: Divine Aid (Heals Slides).",
     d20Mod: 0,
-    ability: {
-      name: "Divine Aid",
-      count: 1,
-      sides: 8,
-      maxUses: 2,
-      type: "heal",
-      spellType: "divine"
-    },
+    mode: "simple",
+    ability: { name: "Divine Aid", count: 1, sides: 8, maxUses: 2, spellType: "divine", type: "heal", mode: "simple" },
   },
   PALADIN: {
     id: "Paladin",
     icon: "🛡️",
     desc: "Spell: Smite (Mult by max tile).",
     d20Mod: 0,
-    ability: { name: "Divine Smite", count: 1, sides: 8, maxUses: 2, spellType: "smite" },
+    mode: "simple",
+    ability: { name: "Divine Smite", count: 1, sides: 8, maxUses: 2, spellType: "smite", mode: "simple" },
   },
   BARD: {
     id: "Bard",
     icon: "🎵",
     desc: "+5 Gold per D20 roll. +1 to D20. Spell: Vicious Mockery.",
     d20Mod: 1,
-    ability: { name: "Vicious Mockery", count: 1, sides: 6, maxUses: 3, spellType: "song" },
+    mode: "simple",
+    passiveTrigger: "on_crit",
+    passiveEffect: "add_gold",
+    passiveParam: 5,
+    ability: { name: "Vicious Mockery", count: 1, sides: 6, maxUses: 3, spellType: "song", mode: "simple" },
   },
   DRUID: {
     id: "Druid",
     icon: "🌿",
     desc: "20% chance to purify hazard on slide. Spell: Entangle.",
     d20Mod: 0,
-    ability: { name: "Entangle", count: 1, sides: 8, maxUses: 2, spellType: "entangle" },
+    mode: "simple",
+    ability: { name: "Entangle", count: 1, sides: 8, maxUses: 2, spellType: "entangle", mode: "simple" },
   },
   FIGHTER: {
     id: "Fighter",
     icon: "⚔️",
     desc: "+15 Base Dmg to T3+ merges. Spell: Action Surge.",
     d20Mod: 0,
-    ability: { name: "Action Surge", count: 2, sides: 6, maxUses: 2, spellType: "blade_storm" },
+    mode: "simple",
+    ability: { name: "Action Surge", count: 2, sides: 6, maxUses: 2, spellType: "blade_storm", mode: "simple" },
   },
   MONK: {
     id: "Monk",
     icon: "👊",
     desc: "Alternating merge dirs gives +0.1 Mult. +1 to D20.",
     d20Mod: 1,
-    ability: { name: "Flurry of Blows", count: 3, sides: 4, maxUses: 2, spellType: "ki_strike" },
+    mode: "simple",
+    ability: { name: "Flurry of Blows", count: 3, sides: 4, maxUses: 2, spellType: "ki_strike", mode: "simple" },
   },
   RANGER: {
     id: "Ranger",
     icon: "🏹",
     desc: "+25% dmg vs spawning bosses. Spell: Hunter's Mark.",
     d20Mod: -1,
-    ability: { name: "Hunter's Mark", count: 1, sides: 8, maxUses: 3, spellType: "hunter_mark" },
+    mode: "simple",
+    ability: { name: "Hunter's Mark", count: 1, sides: 8, maxUses: 3, spellType: "hunter_mark", mode: "simple" },
   },
   SORCERER: {
     id: "Sorcerer",
     icon: "🔮",
     desc: "D20 crit range expands to 19-20. Spell: Chaos Bolt.",
     d20Mod: 1,
-    ability: { name: "Chaos Bolt", count: 2, sides: 8, maxUses: 1, spellType: "chaos" },
+    mode: "simple",
+    ability: { name: "Chaos Bolt", count: 2, sides: 8, maxUses: 1, spellType: "chaos", mode: "simple" },
   },
 };
 
 const ENCOUNTERS = [
   {
+    id: "goblin_scout",
     name: "Goblin Scout",
     hp: 150,
     slides: 25,
     icon: "👺",
-    power: "Ambush (Spawns a Goblin every 12 slides)",
+    lore: "Ambush (Spawns a Goblin every 12 slides)",
+    mode: "simple",
+    primaryAbility: { trigger: "every_n_slides", triggerParam: 12, effect: "spawn_hazard", effectParam: "goblin", logMessage: "Ambush: Goblin spawned!" }
   },
   {
+    id: "orc_brute",
     name: "Orc Brute",
     hp: 500,
     slides: 30,
     icon: "👹",
-    power: "Tough (-10% Dmg taken)",
+    lore: "Tough (-10% Dmg taken)",
+    mode: "simple",
+    passiveAbility: { effect: "damage_reduction", effectParam: 10, logMessage: "Orc Brute resists ${amount} damage!" }
   },
   {
+    id: "mimic_colony",
     name: "Mimic Colony",
     hp: 800,
     slides: 30,
     icon: "📦",
-    power: "Shapechanger (Spawns Mimic every 10 slides)",
+    lore: "Shapechanger (Spawns Mimic every 10 slides)",
+    mode: "simple",
+    primaryAbility: { trigger: "every_n_slides", triggerParam: 10, effect: "spawn_hazard", effectParam: "mimic", logMessage: "Shapechanger: Mimic spawned!" }
   },
   {
+    id: "slime_king",
     name: "Slime King",
     hp: 1200,
     slides: 35,
     icon: "🟢",
-    power: "Ooze (Spawns a Slime every 8 slides)",
+    lore: "Ooze (Spawns a Slime every 8 slides)",
+    mode: "simple",
+    primaryAbility: { trigger: "every_n_slides", triggerParam: 8, effect: "spawn_hazard", effectParam: "slime", logMessage: "Ooze: Slime spawned!" }
   },
   {
+    id: "owlbear_alpha",
     name: "Owlbear Alpha",
     hp: 2000,
     slides: 35,
     icon: "🦉",
-    power: "Keen Sight (+20% dmg to lowest weapon merges)",
+    lore: "Fierce (Randomly destroys worst weapon every 10 slides)",
+    mode: "simple",
+    primaryAbility: { trigger: "every_n_slides", triggerParam: 10, effect: "weapon_destroy", effectParam: "worst", logMessage: "Owlbear crushes your weakest weapon!" }
   },
   {
+    id: "troll_king",
     name: "Troll King",
     hp: 3500,
     slides: 40,
     icon: "🧌",
-    power: "Regen (Heals 30 HP per slide)",
+    lore: "Regen (Heals 30 HP per slide)",
+    mode: "simple",
+    passiveAbility: { effect: "regen", effectParam: 30 }
   },
   {
+    id: "mind_flayer",
     name: "Mind Flayer",
     hp: 5000,
     slides: 35,
     icon: "🧠",
-    power: "Mind Blast (Shuffles 4 tiles every 8 slides)",
+    lore: "Mind Blast (Shuffles 4 tiles every 8 slides)",
+    mode: "simple",
+    primaryAbility: { trigger: "every_n_slides", triggerParam: 8, effect: "tile_shuffle", effectParam: 4, logMessage: "Mind Blast: Tiles shuffled!" }
   },
   {
+    id: "the_lich",
     name: "The Lich",
     hp: 8000,
     slides: 40,
     icon: "💀",
-    power: "Necromancy (Spawns Skeleton per 12 slides, -10 Start Slides)",
+    lore: "Necromancy (Spawns Skeleton per 12 slides, -10 Start Slides)",
+    mode: "simple",
+    primaryAbility: { trigger: "every_n_slides", triggerParam: 12, effect: "spawn_hazard", effectParam: "skeleton", logMessage: "Necromancy: Skeleton raised!" }
   },
   {
+    id: "beholder",
     name: "Beholder",
     hp: 12000,
     slides: 40,
     icon: "👁️‍🗨️",
-    power: "Antimagic (Double spell cost. Spawns Web per 10 slides)",
+    lore: "Eye Ray (Spawns Web per 10 slides)",
+    mode: "simple",
+    primaryAbility: { trigger: "every_n_slides", triggerParam: 10, effect: "spawn_hazard", effectParam: "web", logMessage: "Eye Ray: Web spawned!" }
   },
   {
+    id: "ancient_dragon",
     name: "Ancient Dragon",
     hp: 20000,
     slides: 45,
     icon: "🐉",
-    power: "Inferno (Burns best weapon every 10 slides)",
+    lore: "Inferno (Burns best weapon every 10 slides)",
+    mode: "simple",
+    primaryAbility: { trigger: "every_n_slides", triggerParam: 10, effect: "weapon_destroy", effectParam: "best", logMessage: "Inferno burned highest weapon!" }
   },
   {
+    id: "vampire_lord",
     name: "Vampire Lord",
     hp: 16000,
     slides: 40,
     icon: "🧛",
-    power: "Charm (Regen 50 HP/slide, degrades best weapon every 15 slides)",
+    lore: "Charm (Regen 50 HP/slide, degrades best weapon every 15 slides)",
+    mode: "simple",
+    passiveAbility: { effect: "regen", effectParam: 50 },
+    primaryAbility: { trigger: "every_n_slides", triggerParam: 15, effect: "weapon_degrade", effectParam: "best", logMessage: "Charm: Best weapon degraded!" }
   },
   {
+    id: "tiamat",
     name: "Tiamat",
     hp: 30000,
     slides: 50,
     icon: "🐲",
-    power: "Five Heads (Composite of all boss powers)",
+    lore: "Five Heads (Composite of all boss powers)",
+    mode: "advanced",
+    script: {
+      onSlide: `
+        if (G.slides > 0) {
+          if (G.slides % 8 === 0) { G.spawnHazard('slime'); G.log('Tiamat spits acid! (Slime)'); }
+          if (G.slides % 12 === 0) { G.spawnHazard('goblin'); G.log('Tiamat summons reinforcements! (Goblin)'); }
+          if (G.slides % 10 === 0) { G.spawnHazard('mimic'); G.spawnHazard('web'); G.log('Tiamat warps reality!'); }
+          if (G.slides % 8 === 0) { G.shuffleTiles(4); G.log('Tiamat mind blasts!'); }
+          if (G.slides % 12 === 0) { G.spawnHazard('skeleton'); G.log('Tiamat raises the dead!'); }
+          if (G.slides % 15 === 0) { G.degradeWeapon('best'); G.log('Tiamat charms your weapon!'); }
+          if (G.slides % 10 === 0) { G.destroyWeapon('best'); G.log('Tiamat breathes fire!'); }
+          if (G.prng() > 0.5) { G.enemy.healHp(40); }
+        }
+      `
+    }
   },
 ];
 

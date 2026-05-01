@@ -29,6 +29,7 @@ function processMove(direction) {
         }
         if (newVal > state.runStats.highestTileValue) state.runStats.highestTileValue = newVal;
         if (window.Plugins) window.Plugins.vibrate('impactMedium');
+        if (window.PackEngine) window.PackEngine.onMerge(state, newVal);
 
         let tB_el = document.getElementById(`tile-${tB.id}`);
         if (tB_el) {
@@ -222,10 +223,16 @@ function applyDamage(dmg) {
   }
   SFX.hit();
   triggerScreenShake(dmg > 300 ? 1.5 : 0.7);
+  if (window.PackEngine) window.PackEngine.onDamage(state, dmg);
 }
 
 function applyBossPowersPostMove() {
   const enc = ENCOUNTERS[state.encounterIdx];
+  if (enc.mode && enc.mode !== "builtin") {
+    if (window.PackEngine) window.PackEngine.onSlide(state);
+    return;
+  }
+
   const applyPower = (powerName, chanceMult = 1.0) => {
     if (prng() > chanceMult) return;
     if (powerName.includes("Troll") && state.monsterHp > 0)

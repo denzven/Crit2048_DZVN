@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-  <external-path name="my_images" path="." />
-  <cache-path name="my_cache_images" path="." />
+  <!-- Internal app cache (getFilesDir()) -->
+  <files-path name="files" path="." />
+  <!-- Internal cache (getCacheDir()) -->
+  <cache-path name="cache" path="." />
+  <!-- External files dir (getExternalFilesDir()) - no permission needed -->
+  <external-files-path name="external_files" path="." />
+  <!-- External cache dir (getExternalCacheDir()) - FileProvider serves share URIs from here -->
+  <external-cache-path name="external_cache" path="." />
+  <!-- Legacy external storage root (Android < 10 fallback) -->
+  <external-path name="external" path="." />
 </paths>

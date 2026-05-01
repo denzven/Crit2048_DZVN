@@ -36,6 +36,8 @@
         <span class="flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm text-rose-400">⚔️ <span id="stat-mult" class="font-mono">1.0</span></span>
       </div>
       <button id="btn-home" onclick="confirmHome()" class="hide text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Home">🏠</button>
+      <button onclick="PackMarketplace.open()" class="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Grimoire">📜</button>
+      <button onclick="PackForge.open()" class="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Forge">⚒️</button>
       <button onclick="openHelp()" class="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Help">❓</button>
       <button onclick="openSettings()" class="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Settings">⚙️</button>
     </div>
@@ -59,6 +61,8 @@
     <script src="js/templates/modal-leaderboard.js"></script>
     <script src="js/templates/modal-alert.js"></script>
     <script src="js/templates/modal-share.js"></script>
+    <script src="js/templates/modal-forge.js"></script>
+    <script src="js/templates/modal-marketplace.js"></script>
 
     <!-- Inject UI Native Components -->
     <script>
@@ -70,7 +74,7 @@
             'screen-start', 'screen-class', 'screen-playing', 'modal-attack',
             'modal-dice', 'screen-tavern', 'screen-end', 'modal-settings',
             'modal-help', 'modal-confirm', 'modal-leaderboard', 'modal-alert',
-            'modal-share'
+            'modal-share', 'modal-forge', 'modal-marketplace'
           ];
           keys.forEach(k => { if (window.ViewTemplates[k]) fullHtmlStr += window.ViewTemplates[k]; });
         }
@@ -83,6 +87,10 @@
   <script src="js/config.js"></script>
   <script src="js/state.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/pack-storage.js"></script>
+  <script src="js/pack-engine.js"></script>
+  <script src="js/pack-forge.js"></script>
+  <script src="js/pack-marketplace.js"></script>
   <script src="js/prng.js"></script>
   <script src="js/sfx.js"></script>
   <script src="js/dice.js"></script>

@@ -1,5 +1,5 @@
 // --- STATE MANAGEMENT & GAME BOOTSTRAP ---
-function startGameFlow() {
+async function startGameFlow() {
   try {
     SFX.init();
   } catch (e) {
@@ -27,6 +27,10 @@ function startGameFlow() {
   state.runStats.totalSpellsCast = 0;
   state.runStats.hazardsSpawned = 0;
   state.runStats.luckFactor = 10;
+  state.runStats.activePackIds = [];
+  state.runStats.packRunLabel = "";
+  state.runStats.customEnemiesDefeated = 0;
+  if (window.PackEngine) await window.PackEngine.refreshRunStats(state);
   clearSave();
 
   Object.keys(CLASSES).forEach((k) => {
@@ -240,6 +244,7 @@ function initEncounter(eIdx, maintainStats = false) {
   el.headerAnte.innerText = `Ante ${eIdx + 1}`;
   if (!maintainStats) state.logs = [];
   addLog(`Encountered ${enc.name}!`);
+  if (window.PackEngine) window.PackEngine.onEncounterStart(state, enc);
   changeState("PLAYING", true);
   saveGameState();
 }
@@ -255,6 +260,7 @@ function checkGameState() {
     playAnnouncementText(`${enc.name}`, "Defeated!");
     triggerScreenShake(3.5);
     if (window.Plugins) window.Plugins.vibrate('impactHeavy');
+    if (window.PackEngine) window.PackEngine.onEncounterEnd(state, enc);
     // Set isTransitioning immediately to block further moves during the victory animation
     state.isTransitioning = true;
     setTimeout(() => {
@@ -327,7 +333,10 @@ function resetGame() {
     startTime: 0,
     endTime: 0,
     seedUsed: "",
-    endReason: ""
+    endReason: "",
+    activePackIds: [],
+    packRunLabel: "",
+    customEnemiesDefeated: 0
   };
   state.tavernRespinCount = 0;
   el.inputSeed.value = "";
@@ -571,6 +580,8 @@ async function bootstrapGame() {
   try {
     if (document.fonts) await document.fonts.ready;
   } catch (e) {}
+
+  if (window.PackEngine) await window.PackEngine.init();
 
   // Snappy delay to ensure DOM is ready
   setTimeout(() => {

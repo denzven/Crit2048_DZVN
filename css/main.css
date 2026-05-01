@@ -486,3 +486,32 @@ header {
   0% { transform: translateX(-100%) rotate(45deg); }
   100% { transform: translateX(200%) rotate(45deg); }
 }
+
+/* ============================================================
+ * SKIN PACK DYNAMIC OVERRIDES
+ * ============================================================ */
+:root {
+  --pack-primary: #f43f5e;
+  --pack-accent: #e11d48;
+  --pack-bg: #020617;
+  --pack-surface: #0f172a;
+  --pack-border: #1e293b;
+  --pack-tile-radius: 0.5rem;
+  --pack-font: 'Cinzel', serif;
+}
+
+html, body { background-color: var(--pack-bg) !important; }
+header { background-color: var(--pack-surface) !important; border-bottom-color: var(--pack-border) !important; }
+.font-serif { font-family: var(--pack-font) !important; }
+
+/* Best-effort dynamic mapping over standard Tailwind classes used heavily */
+.bg-slate-900 { background-color: var(--pack-surface) !important; }
+.bg-slate-950 { background-color: var(--pack-bg) !important; }
+.border-slate-800 { border-color: var(--pack-border) !important; }
+.text-rose-500 { color: var(--pack-primary) !important; }
+.text-rose-400 { color: var(--pack-primary) !important; }
+.bg-rose-600 { background-color: var(--pack-accent) !important; }
+.border-rose-500 { border-color: var(--pack-primary) !important; }
+
+/* Tile shape */
+.tile { border-radius: var(--pack-tile-radius) !important; }

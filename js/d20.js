@@ -42,6 +42,7 @@ function processD20Result(roll) {
     if (valid.length > 0)
       state.grid[valid[prngInt(0, valid.length - 1)]].val *= 2;
     SFX.crit();
+    if (window.PackEngine) window.PackEngine.onCrit(state);
   } else if (roll >= 10) {
     msg = "Success! High-tier weapon spawned.";
     spawnRandomTile(8);
