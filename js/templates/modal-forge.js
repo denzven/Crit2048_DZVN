@@ -44,59 +44,66 @@ window.ViewTemplates["modal-forge"] = `
         </div>
         
         <!-- Main Content Area -->
-        <div class="flex-grow flex flex-col md:flex-row overflow-hidden">
+        <div class="flex-grow flex flex-col md:flex-row overflow-hidden min-h-0">
           
           <!-- SIMPLE MODE WRAPPER -->
-          <div id="forge-simple-view" class="flex-grow flex flex-col md:flex-row w-full h-full">
+          <div id="forge-simple-view" class="flex-grow flex flex-col w-full h-full min-h-0 relative">
             
-            <div class="w-full md:w-48 border-b md:border-r md:border-b-0 border-slate-800 bg-slate-900/30 flex flex-row md:flex-col shrink-0 overflow-x-auto md:overflow-y-auto p-2 gap-1 custom-scrollbar whitespace-nowrap md:whitespace-normal">
-              <button onclick="PackForge.setSection('meta')" id="forge-nav-meta" class="w-auto md:w-full text-left px-3 py-2.5 rounded-md text-xs font-bold text-white bg-slate-800 transition-colors uppercase tracking-wide shrink-0">Pack Info</button>
-              <button onclick="PackForge.setSection('enemies')" id="forge-nav-enemies" class="w-auto md:w-full text-left px-3 py-2.5 rounded-md text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors uppercase tracking-wide shrink-0">Enemies</button>
-              <button onclick="PackForge.setSection('classes')" id="forge-nav-classes" class="w-auto md:w-full text-left px-3 py-2.5 rounded-md text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors uppercase tracking-wide shrink-0">Classes</button>
-              <button onclick="PackForge.setSection('weapons')" id="forge-nav-weapons" class="w-auto md:w-full text-left px-3 py-2.5 rounded-md text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors uppercase tracking-wide shrink-0">Weapons</button>
-              <button onclick="PackForge.setSection('hazards')" id="forge-nav-hazards" class="w-auto md:w-full text-left px-3 py-2.5 rounded-md text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors uppercase tracking-wide shrink-0">Hazards</button>
-              <button onclick="PackForge.setSection('artifacts')" id="forge-nav-artifacts" class="w-auto md:w-full text-left px-3 py-2.5 rounded-md text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors uppercase tracking-wide shrink-0">Artifacts</button>
-              <button onclick="PackForge.setSection('skin')" id="forge-nav-skin" class="w-auto md:w-full text-left px-3 py-2.5 rounded-md text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors uppercase tracking-wide shrink-0">Skin</button>
+            <!-- Step Header -->
+            <div class="px-4 py-3 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center shrink-0">
+              <span id="forge-step-indicator" class="text-xs font-bold text-slate-300 uppercase tracking-widest">Step 1 of 7: Pack Info</span>
+              <span class="text-[10px] text-slate-500 font-mono" id="forge-step-counter">1/7</span>
             </div>
 
             <!-- Form Area -->
-            <div class="flex-grow p-4 overflow-y-auto custom-scrollbar relative" id="forge-form-area">
+            <div class="flex-grow p-4 md:p-6 overflow-y-auto custom-scrollbar relative" id="forge-form-area">
               <!-- Meta Section -->
-              <div id="forge-section-meta" class="space-y-4 max-w-2xl">
-                <h3 class="text-rose-500 font-black uppercase tracking-widest text-sm border-b border-slate-800 pb-2 mb-4">Pack Metadata</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Pack ID *</label>
-                    <input type="text" id="forge-meta-id" placeholder="my-awesome-pack" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-xs font-mono focus:border-rose-500 outline-none" oninput="PackForge.updateMeta()">
+              <div id="forge-section-meta" class="space-y-6 max-w-3xl mx-auto">
+                <div class="flex items-center gap-3 mb-6">
+                  <div class="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20 shadow-lg shadow-rose-900/20">
+                    <span class="text-xl">📄</span>
                   </div>
                   <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Display Name *</label>
-                    <input type="text" id="forge-meta-name" placeholder="Awesome Expansion" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-xs focus:border-rose-500 outline-none" oninput="PackForge.updateMeta()">
+                    <h3 class="text-white font-black uppercase tracking-widest text-sm leading-none">Pack Metadata</h3>
+                    <p class="text-[9px] text-slate-500 uppercase tracking-widest mt-1 font-bold">Core identification & details</p>
                   </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Author *</label>
-                    <input type="text" id="forge-meta-author" placeholder="Your Name" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-xs focus:border-rose-500 outline-none" oninput="PackForge.updateMeta()">
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Version *</label>
-                    <input type="text" id="forge-meta-version" value="1.0.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-xs font-mono focus:border-rose-500 outline-none" oninput="PackForge.updateMeta()">
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Pack Type *</label>
-                    <select id="forge-meta-type" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-xs focus:border-rose-500 outline-none" onchange="PackForge.updateMeta()">
-                      <option value="mega">Mega Pack (All Content)</option>
-                      <option value="dungeon">Dungeon Pack (Enemies)</option>
-                      <option value="class">Class Pack (Classes)</option>
-                      <option value="skin">Skin Pack (Visuals)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Icon Emoji *</label>
-                    <input type="text" id="forge-meta-icon" placeholder="📦" maxlength="2" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-xs focus:border-rose-500 outline-none text-center" oninput="PackForge.updateMeta()">
-                  </div>
-                  <div class="md:col-span-2">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Description *</label>
-                    <textarea id="forge-meta-desc" rows="2" placeholder="Describe your pack..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-xs focus:border-rose-500 outline-none" oninput="PackForge.updateMeta()"></textarea>
+                </div>
+
+                <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Pack Unique ID <span class="text-rose-500">*</span></label>
+                      <input type="text" id="forge-meta-id" placeholder="e.g. dragon-expansion" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs font-mono focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all placeholder:text-slate-700" oninput="PackForge.onIdInput(this)">
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Display Name <span class="text-rose-500">*</span></label>
+                      <input type="text" id="forge-meta-name" placeholder="e.g. The Dragon Expansion" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all placeholder:text-slate-700" oninput="PackForge.updateMeta()">
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Author Name <span class="text-rose-500">*</span></label>
+                      <input type="text" id="forge-meta-author" placeholder="e.g. Unknown Creator" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all placeholder:text-slate-700" oninput="PackForge.updateMeta()">
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Version String <span class="text-rose-500">*</span></label>
+                      <input type="text" id="forge-meta-version" placeholder="1.0.0" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs font-mono focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all placeholder:text-slate-700" oninput="PackForge.updateMeta()">
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Pack Category <span class="text-rose-500">*</span></label>
+                      <select id="forge-meta-type" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:border-rose-500 outline-none transition-all cursor-pointer" onchange="PackForge.updateMeta()">
+                        <option value="mega">Mega Pack (Everything)</option>
+                        <option value="dungeon">Dungeon (Enemies Only)</option>
+                        <option value="class">Class (Heroes Only)</option>
+                        <option value="skin">Skin (Visual Only)</option>
+                      </select>
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Icon Emoji <span class="text-rose-500">*</span></label>
+                      <input type="text" id="forge-meta-icon" placeholder="📦" maxlength="2" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all text-center" oninput="PackForge.updateMeta()">
+                    </div>
+                    <div class="md:col-span-2 space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Description <span class="text-rose-500">*</span></label>
+                      <textarea id="forge-meta-desc" rows="3" placeholder="Describe your expansion pack..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all placeholder:text-slate-700 resize-none" oninput="PackForge.updateMeta()"></textarea>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -157,49 +164,71 @@ window.ViewTemplates["modal-forge"] = `
               </div>
 
               <!-- Skin Section -->
-              <div id="forge-section-skin" class="hide space-y-4 max-w-2xl">
-                <h3 class="text-rose-500 font-black uppercase tracking-widest text-sm border-b border-slate-800 pb-2 mb-4">Visual Skin</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Theme Name</label>
-                    <input type="text" id="forge-skin-theme" placeholder="e.g. Gothic Shadowfell" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-xs focus:border-rose-500 outline-none" oninput="PackForge.updateSkin()">
+              <div id="forge-section-skin" class="hide space-y-6 max-w-3xl mx-auto">
+                <div class="flex items-center gap-3 mb-6">
+                  <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-lg shadow-indigo-900/20">
+                    <span class="text-xl">🎨</span>
                   </div>
                   <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Logo Override Text</label>
-                    <input type="text" id="forge-skin-logo" placeholder="e.g. 🌑 DARK 2048" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-xs focus:border-rose-500 outline-none" oninput="PackForge.updateSkin()">
+                    <h3 class="text-white font-black uppercase tracking-widest text-sm leading-none">Visual Skin</h3>
+                    <p class="text-[9px] text-slate-500 uppercase tracking-widest mt-1 font-bold">Theme & UI Customization</p>
                   </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Font Family</label>
-                    <input type="text" id="forge-skin-fontFamily" placeholder="e.g. Cinzel Decorative" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-xs focus:border-rose-500 outline-none" oninput="PackForge.updateSkin()">
+                </div>
+
+                <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Theme Name</label>
+                      <input type="text" id="forge-skin-theme" placeholder="e.g. Gothic Shadowfell" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:border-rose-500 outline-none transition-all placeholder:text-slate-700" oninput="PackForge.updateSkin()">
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Logo Override</label>
+                      <input type="text" id="forge-skin-logo" placeholder="e.g. 🌑 DARK 2048" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:border-rose-500 outline-none transition-all placeholder:text-slate-700" oninput="PackForge.updateSkin()">
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Font Family</label>
+                      <input type="text" id="forge-skin-fontFamily" placeholder="e.g. Cinzel Decorative" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:border-rose-500 outline-none transition-all placeholder:text-slate-700" oninput="PackForge.updateSkin()">
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Google Font URL</label>
+                      <input type="text" id="forge-skin-fontUrl" placeholder="https://fonts.googleapis.com/css2..." class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-white text-[10px] font-mono focus:border-rose-500 outline-none transition-all placeholder:text-slate-700" oninput="PackForge.updateSkin()">
+                    </div>
                   </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Font URL (Google Fonts)</label>
-                    <input type="text" id="forge-skin-fontUrl" placeholder="https://fonts.googleapis.com/css2..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-xs focus:border-rose-500 outline-none" oninput="PackForge.updateSkin()">
-                  </div>
-                  <div class="md:col-span-2 border-t border-slate-800 pt-4 mt-2">
-                    <h4 class="text-indigo-400 font-bold uppercase tracking-widest text-[10px] mb-3">CSS Variables</h4>
-                    <div class="grid grid-cols-2 gap-2">
-                      <div>
-                        <label class="block text-[9px] font-bold text-slate-500 uppercase">--pack-primary</label>
-                        <input type="text" id="forge-skin-primary" placeholder="#8b5cf6" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-[10px] text-white" oninput="PackForge.updateSkin()">
+
+                  <div class="pt-4 border-t border-slate-800/50">
+                    <div class="flex items-center gap-2 mb-4">
+                      <span class="w-1 h-3 bg-indigo-500 rounded-full"></span>
+                      <h4 class="text-indigo-400 font-black uppercase tracking-widest text-[10px]">CSS Tokens</h4>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div class="space-y-1.5">
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Primary</label>
+                        <input type="text" id="forge-skin-primary" placeholder="#8b5cf6" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-[10px] text-white text-center focus:border-indigo-500 outline-none transition-all" oninput="PackForge.updateSkin()">
                       </div>
-                      <div>
-                        <label class="block text-[9px] font-bold text-slate-500 uppercase">--pack-accent</label>
-                        <input type="text" id="forge-skin-accent" placeholder="#4c1d95" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-[10px] text-white" oninput="PackForge.updateSkin()">
+                      <div class="space-y-1.5">
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Accent</label>
+                        <input type="text" id="forge-skin-accent" placeholder="#4c1d95" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-[10px] text-white text-center focus:border-indigo-500 outline-none transition-all" oninput="PackForge.updateSkin()">
                       </div>
-                      <div>
-                        <label class="block text-[9px] font-bold text-slate-500 uppercase">--pack-bg</label>
-                        <input type="text" id="forge-skin-bg" placeholder="#0d0015" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-[10px] text-white" oninput="PackForge.updateSkin()">
+                      <div class="space-y-1.5">
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Background</label>
+                        <input type="text" id="forge-skin-bg" placeholder="#0d0015" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-[10px] text-white text-center focus:border-indigo-500 outline-none transition-all" oninput="PackForge.updateSkin()">
                       </div>
-                      <div>
-                        <label class="block text-[9px] font-bold text-slate-500 uppercase">--pack-tile-radius</label>
-                        <input type="text" id="forge-skin-radius" placeholder="4px" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-[10px] text-white" oninput="PackForge.updateSkin()">
+                      <div class="space-y-1.5">
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Corner Radius</label>
+                        <input type="text" id="forge-skin-radius" placeholder="4px" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-[10px] text-white text-center focus:border-indigo-500 outline-none transition-all" oninput="PackForge.updateSkin()">
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
+            </div>
+
+            <!-- Wizard Footer -->
+            <div class="p-3 border-t border-slate-800 bg-slate-950/90 shrink-0 flex justify-between items-center z-10">
+              <button id="forge-btn-prev" onclick="PackForge.prevSection()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors hide">◀ Prev Step</button>
+              <div class="flex-grow"></div>
+              <button id="forge-btn-next" onclick="PackForge.nextSection()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors shadow-lg shadow-indigo-900/50">Next Step ▶</button>
             </div>
           </div>
           

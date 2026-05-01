@@ -22,7 +22,7 @@
       if (!_registryCache) {
         await this.fetchRegistry();
       } else {
-        this.renderGrid();
+        await this.renderGrid();
       }
     },
 
@@ -33,7 +33,7 @@
       if (backdrop) backdrop.classList.add("hide");
     },
 
-    setTab(tabId) {
+    async setTab(tabId) {
       _currentTab = tabId;
       
       const tabB = document.getElementById("market-tab-browse");
@@ -52,7 +52,51 @@
         viewI.classList.remove("hide");
         viewB.classList.add("hide");
       }
-      this.renderGrid();
+      await this.renderGrid();
+    },
+
+    
+    async openLocalFolder() {
+      if (window.__TAURI__ && window.__TAURI__.core) {
+        try {
+          const platform = await window.__TAURI__.core.invoke('plugin:os|platform');
+          if (platform === 'android' || platform === 'ios') {
+            alert('File explorer access is not available on mobile devices.');
+            return;
+          }
+          const dir = await window.PackStorage.getPacksDir();
+          if (dir) {
+            await window.__TAURI__.core.invoke('plugin:opener|open_path', { path: dir });
+          }
+        } catch (e) {
+          alert('Failed to open folder. Make sure you are on a desktop OS.');
+        }
+      } else {
+        alert('Local folders are only available in the desktop app. Web versions use browser storage.');
+      }
+    },
+
+    async importPack(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const json = JSON.parse(e.target.result);
+          const res = await window.PackEngine.installPack(json);
+          if (res.success) {
+            alert(`Successfully imported pack: ${json.name}`);
+            if (_currentTab === 'installed') this.renderGrid();
+          } else {
+            alert(`Failed to install pack:\n${res.errors.join('\n')}`);
+          }
+        } catch (err) {
+          alert("Invalid JSON file. Ensure it is a valid Crit2048 Pack format.");
+        }
+        event.target.value = ''; // Reset input
+      };
+      reader.readAsText(file);
     },
 
     async refresh() {
@@ -89,12 +133,12 @@
       
       if (loader) loader.classList.add("hide");
       if (grid) grid.classList.remove("hide");
-      this.renderGrid();
+      await this.renderGrid();
     },
 
-    renderGrid() {
-      if (_currentTab === "browse") this.renderBrowseGrid();
-      else this.renderInstalledGrid();
+    async renderGrid() {
+      if (_currentTab === "browse") await this.renderBrowseGrid();
+      else await this.renderInstalledGrid();
     },
 
     _buildCardHtml(pack, isInstalled, localMeta = null) {
@@ -142,7 +186,7 @@
       `;
     },
 
-    renderBrowseGrid() {
+    async renderBrowseGrid() {
       const grid = document.getElementById("market-browse-grid");
       if (!grid) return;
       if (!_registryCache || !_registryCache.packs) {
@@ -150,7 +194,7 @@
         return;
       }
       
-      const installedPacks = PackEngine.getInstalledPacks();
+      const installedPacks = await PackEngine.getInstalledPacks();
       let html = '';
       _registryCache.packs.forEach(pack => {
         if (pack.id === 'default') return; // Hide default reference pack
@@ -161,12 +205,12 @@
       grid.innerHTML = html || '<p class="text-slate-500 col-span-full text-center py-10">No community packs available yet.</p>';
     },
 
-    renderInstalledGrid() {
+    async renderInstalledGrid() {
       const grid = document.getElementById("market-installed-grid");
       const empty = document.getElementById("market-installed-empty");
       if (!grid || !empty) return;
       
-      const installed = PackEngine.getInstalledPacks();
+      const installed = await PackEngine.getInstalledPacks();
       
       if (installed.length === 0) {
         grid.classList.add("hide");
@@ -207,10 +251,10 @@
           if (!proceed) return;
         }
         
-        const res = PackEngine.installPack(packJson);
+        const res = await PackEngine.installPack(packJson);
         if (res.success) {
           addLog(`Grimoire: Installed "${packJson.name}"`);
-          this.renderGrid();
+          await this.renderGrid();
         } else {
           alert("Installation failed:\\n" + res.errors.join('\\n'));
         }
@@ -219,11 +263,11 @@
       }
     },
 
-    uninstallPack(packId) {
+    async uninstallPack(packId) {
       if (confirm("Remove this pack? It will be disabled immediately.")) {
-        if (PackEngine.removePack(packId)) {
+        if (await PackEngine.removePack(packId)) {
           addLog("Grimoire: Pack uninstalled.");
-          this.renderGrid();
+          await this.renderGrid();
         }
       }
     }

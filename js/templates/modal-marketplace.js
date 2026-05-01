@@ -37,9 +37,16 @@ window.ViewTemplates["modal-marketplace"] = `
             Installed
           </button>
           <div class="flex-grow"></div>
-          <button onclick="PackMarketplace.openLocalFolder()" class="px-3 py-2 my-1 mr-1 rounded bg-emerald-900/30 text-emerald-400 hover:bg-emerald-800/50 hover:text-white border border-emerald-500/30 text-[10px] uppercase tracking-widest font-bold flex items-center gap-1 transition-colors">
-            📂 <span class="hidden sm:inline">Open Folder</span>
+          
+          <input type="file" id="market-import-file" class="hidden" accept=".json" onchange="PackMarketplace.importPack(event)">
+          <button onclick="document.getElementById('market-import-file').click()" class="px-3 py-2 my-1 mr-1 rounded bg-indigo-900/30 text-indigo-400 hover:bg-indigo-800/50 hover:text-white border border-indigo-500/30 text-[10px] uppercase tracking-widest font-bold flex items-center gap-1 transition-colors">
+            📥 <span class="hidden sm:inline">Import JSON</span>
           </button>
+
+          <button onclick="PackMarketplace.openLocalFolder()" class="px-3 py-2 my-1 mr-1 rounded bg-emerald-900/30 text-emerald-400 hover:bg-emerald-800/50 hover:text-white border border-emerald-500/30 text-[10px] uppercase tracking-widest font-bold flex items-center gap-1 transition-colors">
+            📂 <span class="hidden lg:inline">Open Folder</span>
+          </button>
+          
           <button onclick="PackMarketplace.refresh()" class="px-3 py-2 my-1 mr-1 rounded bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700 text-[10px] uppercase tracking-widest font-bold flex items-center gap-1 transition-colors">
             🔄 <span class="hidden sm:inline">Refresh</span>
           </button>

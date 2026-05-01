@@ -235,22 +235,39 @@
 
     // ── Apply all installed packs to game globals ─────────────────────────
     async applyActivePacks() {
-      // Reset ENCOUNTERS to base
+      // Reset game data to baseline snapshots
+      if (!_baseEncounters) _baseEncounters = ENCOUNTERS.map(e => ({ ...e }));
+      if (!_baseClassKeys)  _baseClassKeys  = Object.keys(CLASSES);
+
       ENCOUNTERS.splice(0, ENCOUNTERS.length, ..._baseEncounters.map(e => ({ ...e })));
-      // Reset CLASSES to base (remove any pack classes)
       Object.keys(CLASSES).forEach(k => { if (!_baseClassKeys.includes(k)) delete CLASSES[k]; });
-      // Reset overrides
+      
       _weaponOverrides = {};
       _customHazards   = {};
       _damageReduction = 0;
       _activeSkin      = null;
 
+      // Determine which packs to apply
+      // Use activePackIds if defined (e.g. specialized run), otherwise apply all installed (Expansion mode)
+      const activeIds = (window.state && state.runStats && state.runStats.activePackIds) || [];
       const installed = await PackStorage.listInstalled();
+      
+      const packsToApply = installed.filter(entry => {
+        if (activeIds.length > 0) return activeIds.includes(entry.id);
+        return true; 
+      });
 
-      for (const entry of installed) {
+      for (const entry of packsToApply) {
         const pack = await PackStorage.load(entry.id);
         if (!pack) continue;
-        if (pack.enemies)   _applyEnemies(pack.enemies);
+
+        // Apply Enemies: Mega packs replace the whole dungeon run
+        if (pack.type === 'mega' && pack.enemies && pack.enemies.length > 0) {
+          ENCOUNTERS.splice(0, ENCOUNTERS.length, ...pack.enemies.map(e => ({...e})));
+        } else if (pack.enemies) {
+          _applyEnemies(pack.enemies);
+        }
+
         if (pack.classes)   _applyClasses(pack.classes);
         if (pack.weapons)   _applyWeapons(pack.weapons);
         if (pack.hazards)   _applyHazards(pack.hazards);
@@ -260,7 +277,7 @@
 
       if (_activeSkin) _applySkin(_activeSkin); else _resetSkin();
 
-      console.log(`PackEngine: Applied ${installed.length} pack(s). Encounters: ${ENCOUNTERS.length}`);
+      console.log(`PackEngine: Applied ${packsToApply.length} pack(s). Encounters: ${ENCOUNTERS.length}`);
     },
 
     // ── Install a pack ────────────────────────────────────────────────────
@@ -309,7 +326,9 @@
       (pack.hazards || []).forEach((h, i) => {
         if (h.tileValue >= -7) errors.push(`hazard[${i}]: tileValue must be ≤ -8`);
       });
-
+      (pack.artifacts || []).forEach((a, i) => {
+        if (!a.id || !a.name || !a.icon || !a.desc) errors.push(`artifact[${i}]: missing required field`);
+      });
       return { valid: errors.length === 0, errors };
     },
 
@@ -459,16 +478,27 @@
 
     /** Update runStats pack labels — call at start of each new run. */
     async refreshRunStats(stateRef) {
-      const packs = await PackStorage.listInstalled();
       if (!stateRef.runStats) return;
-      stateRef.runStats.activePackIds = packs.map(p => p.id);
-      if (packs.length === 1) {
-        const p = await PackStorage.load(packs[0].id);
-        stateRef.runStats.packRunLabel = p ? `${p.name} v${p.version}` : packs[0].name;
-      } else if (packs.length > 1) {
-        stateRef.runStats.packRunLabel = `Mixed Pack Run (${packs.length} packs)`;
+
+      // Use current selection if set, otherwise default to all installed (Expansion mode)
+      let activeIds = stateRef.runStats.activePackIds || [];
+      
+      if (activeIds.length === 0) {
+        const installed = await PackStorage.listInstalled();
+        activeIds = installed.map(p => p.id);
+        stateRef.runStats.activePackIds = activeIds;
+      }
+
+      if (activeIds.length === 0) {
+        stateRef.runStats.packRunLabel = "";
+        return;
+      }
+
+      if (activeIds.length === 1) {
+        const p = await PackStorage.load(activeIds[0]);
+        stateRef.runStats.packRunLabel = p ? `${p.name} v${p.version}` : activeIds[0];
       } else {
-        stateRef.runStats.packRunLabel = '';
+        stateRef.runStats.packRunLabel = `Mixed Run (${activeIds.length} packs)`;
       }
     }
   };

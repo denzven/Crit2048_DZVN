@@ -27,10 +27,20 @@ async function startGameFlow() {
   state.runStats.totalSpellsCast = 0;
   state.runStats.hazardsSpawned = 0;
   state.runStats.luckFactor = 10;
-  state.runStats.activePackIds = [];
-  state.runStats.packRunLabel = "";
+  // Preserve active packs if they were pre-selected (e.g. from the Forge)
+  const preselectedPacks = state.runStats?.activePackIds || [];
+  const preselectedLabel = state.runStats?.packRunLabel || "";
+
+  state.runStats.activePackIds = preselectedPacks;
+  state.runStats.packRunLabel = preselectedLabel;
   state.runStats.customEnemiesDefeated = 0;
-  if (window.PackEngine) await window.PackEngine.refreshRunStats(state);
+
+  // Sync game data with active packs before we start
+  if (window.PackEngine) {
+    await window.PackEngine.applyActivePacks();
+    await window.PackEngine.refreshRunStats(state);
+  }
+  
   clearSave();
 
   Object.keys(CLASSES).forEach((k) => {
