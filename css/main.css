@@ -74,6 +74,9 @@ header {
   scrollbar-color: rgba(51, 65, 85, 0.3) transparent;
 }
 
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* Mobile Touch Optimizations */
 @media (hover: none) {
   ::-webkit-scrollbar { width: 0px; height: 0px; } /* Hide scrollbars on touch devices */
@@ -395,6 +398,11 @@ header {
 }
 .fx-entrance-left { animation: slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
+/* Dynamic Particle Layering */
+.separate-page-active .skin-particle {
+  z-index: 121 !important;
+}
+
 @keyframes slideInRight {
   0% { transform: translateX(40px); opacity: 0; }
   100% { transform: translateX(0); opacity: 1; }
@@ -500,7 +508,7 @@ header {
   --pack-font: 'Cinzel', serif;
 }
 
-html, body { background-color: var(--pack-bg) !important; }
+html, body { background-color: var(--pack-bg) !important; background-image: var(--pack-bg-image, none) !important; background-size: cover; background-position: center; background-repeat: no-repeat; }
 header { background-color: var(--pack-surface) !important; border-bottom-color: var(--pack-border) !important; }
 .font-serif { font-family: var(--pack-font) !important; }
 
@@ -511,7 +519,19 @@ header { background-color: var(--pack-surface) !important; border-bottom-color: 
 .text-rose-500 { color: var(--pack-primary) !important; }
 .text-rose-400 { color: var(--pack-primary) !important; }
 .bg-rose-600 { background-color: var(--pack-accent) !important; }
+.bg-rose-500 { background-color: var(--pack-primary) !important; }
 .border-rose-500 { border-color: var(--pack-primary) !important; }
+
+/* Specific UI Overrides */
+#monster-hp-bar { background-color: var(--pack-hp-bar, var(--pack-primary)) !important; }
+.preloader-spin { border-top-color: var(--pack-loading-bar, var(--pack-primary)) !important; }
+.fx-class-selected { border-color: var(--pack-glow, var(--pack-primary)) !important; box-shadow: 0 0 30px var(--pack-glow, var(--pack-primary)) !important; }
+
+@keyframes classSelected {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.05); filter: brightness(1.5) drop-shadow(0 0 20px var(--pack-glow, var(--pack-primary))); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
 
 /* Tile shape */
 .tile { border-radius: var(--pack-tile-radius) !important; }

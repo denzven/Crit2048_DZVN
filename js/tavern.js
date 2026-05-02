@@ -135,7 +135,7 @@ function buyArtifact(id) {
         basePrice: artDef.basePrice,
         desc: artDef.desc,
       });
-    if (id === "GIANT_POTION") state.multiplier = 1.0 + 0.3 * (currentLvl + 1);
+    if (window.PackEngine) window.PackEngine.onPurchase(state, artDef.id);
     renderTavern(true);
   }
 }

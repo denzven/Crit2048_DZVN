@@ -22,6 +22,19 @@ window.ViewTemplates["screen-end"] = `
               <h2 id="end-title" class="text-3xl md:text-5xl font-black mb-1 font-serif text-white uppercase tracking-tight drop-shadow-lg">RUN OVER</h2>
               <p id="end-desc" class="text-slate-500 mb-6 text-[10px] md:text-xs italic px-4 leading-tight">The dungeon claims another soul.</p>
               
+              <!-- Victory Celebration Overlay -->
+              <div id="victory-celebration" class="hide mb-8 animate-bounce">
+                <div class="relative inline-block">
+                  <div class="absolute inset-0 bg-amber-400 blur-2xl opacity-20 rounded-full"></div>
+                  <span class="text-7xl relative z-10">🏆</span>
+                </div>
+                <div class="mt-4 flex justify-center gap-2">
+                  <span class="w-2 h-2 bg-amber-400 rounded-full animate-ping"></span>
+                  <span class="w-2 h-2 bg-amber-400 rounded-full animate-ping [animation-delay:0.2s]"></span>
+                  <span class="w-2 h-2 bg-amber-400 rounded-full animate-ping [animation-delay:0.4s]"></span>
+                </div>
+              </div>
+              
               <div class="grid grid-cols-2 gap-3 md:gap-4 mb-6 text-left">
                 <!-- General Run Info -->
                 <div class="bg-slate-950/60 rounded-2xl border border-white/5 p-3 md:p-4 space-y-2 shadow-xl backdrop-blur-sm">

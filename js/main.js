@@ -74,7 +74,7 @@ function resumeGame() {
   }
 }
 
-function changeState(newState, triggerEntrance = false) {
+function changeState(newState, shouldAnimate = false) {
   const oldState = state.gameState;
   const updateState = () => {
     state.gameState = newState;
@@ -90,10 +90,14 @@ function changeState(newState, triggerEntrance = false) {
       el.headerStats.classList.add("hide");
       el.headerAnte.classList.add("hide");
       el.btnHome.classList.add("hide");
+      if (el.btnGrimoire) el.btnGrimoire.classList.remove("hide");
+      if (el.btnForge) el.btnForge.classList.remove("hide");
     } else {
       el.headerStats.classList.remove("hide");
       el.headerAnte.classList.remove("hide");
       el.btnHome.classList.remove("hide");
+      if (el.btnGrimoire) el.btnGrimoire.classList.add("hide");
+      if (el.btnForge) el.btnForge.classList.add("hide");
     }
 
     // Update Discord Presence
@@ -173,10 +177,11 @@ function changeState(newState, triggerEntrance = false) {
         renderHUD();
         renderGrid();
         renderSidebar();
-        if (triggerEntrance) triggerSetupTransition();
+        if (shouldAnimate) triggerSetupTransition();
         break;
 
       case "TAVERN":
+        if (window.PackEngine) window.PackEngine.onTavern(state);
         renderTavern();
         el.screenTavern.classList.remove("hide");
         initTavernScroll();
@@ -191,6 +196,11 @@ function changeState(newState, triggerEntrance = false) {
           newState === "VICTORY"
             ? "You conquered the dungeon."
             : (state.runStats.endReason || "The dungeon claims another soul.");
+
+        if (el.victoryCelebration) {
+          if (newState === "VICTORY") el.victoryCelebration.classList.remove("hide");
+          else el.victoryCelebration.classList.add("hide");
+        }
 
         renderEndScreenStats();
         saveRunToLeaderboard(state.runStats, state.playerClass, state.encounterIdx);
@@ -243,7 +253,7 @@ function initEncounter(eIdx, maintainStats = false) {
   state.encounterIdx = eIdx;
   state.monsterMaxHp = enc.hp;
   state.monsterHp = enc.hp;
-  state.slidesLeft = enc.slides + 3 * getArtifactLevel("BOOTS_HASTE");
+  state.slidesLeft = enc.slides; // Extra slides from artifacts now handled in onEncounterStart hook
   if (enc.name === "The Lich") state.slidesLeft -= 10;
   state.slidesSinceRoll = 0;
   state.slidesTotalInEncounter = 0;
@@ -279,8 +289,7 @@ function checkGameState() {
         changeState("VICTORY");
       }
       else {
-        state.gold +=
-          20 + prngInt(0, 10) + 30 * getArtifactLevel("RING_WEALTH");
+        state.gold += 20 + prngInt(0, 10); // Tavern entry gold from artifacts now handled in onTavern hook
         generateShop();
         changeState("TAVERN");
       }
@@ -465,7 +474,13 @@ window.addEventListener("keydown", (e) => {
   if (state.gameState !== "PLAYING") return;
   
   // Prevent movement or spell casts if any interaction modal is open
-  if (!el.modalDice.classList.contains("hide") || !el.modalAttack.classList.contains("hide") || !el.modalSettings.classList.contains("hide") || !el.modalHelp.classList.contains("hide") || !el.modalConfirm.classList.contains("hide")) {
+  if (!el.modalDice.classList.contains("hide") || 
+      !el.modalAttack.classList.contains("hide") || 
+      !el.modalSettings.classList.contains("hide") || 
+      !el.modalHelp.classList.contains("hide") || 
+      !el.modalConfirm.classList.contains("hide") ||
+      (el.modalForge && !el.modalForge.classList.contains("hide")) ||
+      (el.modalMarketplace && !el.modalMarketplace.classList.contains("hide"))) {
     return;
   }
   

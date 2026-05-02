@@ -111,6 +111,11 @@ const el = {
   shareToggleSeed: document.getElementById("share-toggle-seed"),
   shareToggleArtifacts: document.getElementById("share-toggle-artifacts"),
   shareToggleExtra: document.getElementById("share-toggle-extra"),
+  btnGrimoire: document.getElementById("btn-grimoire"),
+  btnForge: document.getElementById("btn-forge"),
+  modalForge: document.getElementById("modal-forge"),
+  modalMarketplace: document.getElementById("modal-marketplace"),
+  victoryCelebration: document.getElementById("victory-celebration"),
 };
 
 // --- UI HELPERS ---
@@ -145,7 +150,7 @@ function renderHUD() {
   const enc = ENCOUNTERS[state.encounterIdx];
   el.hudIcon.innerText = enc.icon;
   el.hudName.innerText = enc.name;
-  el.hudPower.innerText = enc.power;
+  el.hudPower.innerText = enc.lore || enc.power || "";
   el.hudSlides.innerText = state.slidesLeft;
   el.hudSlides.className = `text-3xl md:text-4xl font-black font-mono drop-shadow-md ${state.slidesLeft < 5 ? "text-red-500 animate-pulse" : "text-white"}`;
   el.statGold.innerText = state.gold;

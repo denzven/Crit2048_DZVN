@@ -7,11 +7,13 @@ window.ViewTemplates = window.ViewTemplates || {};
 
 window.ViewTemplates["modal-forge"] = `
     <!-- FORGE MODAL -->
-    <div id="modal-forge" class="hide absolute inset-0 bg-slate-950/95 z-[120] flex items-center justify-center p-2 md:p-4">
-      <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col h-full max-h-[95vh] overflow-hidden">
+    <div id="modal-forge" class="hide absolute inset-0 bg-slate-950 z-[120] flex items-center justify-center p-2 md:p-4">
+      <div class="bg-slate-900/95 border border-slate-700 rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col h-full max-h-[95vh] overflow-hidden backdrop-blur-3xl relative z-[122]">
+        <!-- Subtle Glow Background -->
+        <div class="absolute inset-0 bg-gradient-to-b from-rose-500/5 to-transparent pointer-events-none"></div>
         
         <!-- Header -->
-        <div class="p-4 border-b border-slate-800 flex justify-between items-center shrink-0 bg-slate-900/50">
+        <div class="p-4 border-b border-slate-800 flex justify-between items-center shrink-0 bg-slate-900/80 backdrop-blur-md z-10">
           <div class="flex items-center gap-3">
             <span class="text-2xl">⚒️</span>
             <div>
@@ -20,6 +22,9 @@ window.ViewTemplates["modal-forge"] = `
             </div>
           </div>
           <div class="flex gap-2">
+            <button onclick="PackForge.openLoadDialog()" class="px-3 py-1.5 md:px-4 md:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[10px] md:text-xs uppercase tracking-widest rounded-lg transition-colors border border-slate-700">
+              📂 Load
+            </button>
             <button onclick="PackForge.installAndPlay()" class="px-3 py-1.5 md:px-4 md:py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-lg transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)]">
               ▶️ <span class="hidden sm:inline">Play Pack</span>
             </button>
@@ -57,6 +62,9 @@ window.ViewTemplates["modal-forge"] = `
 
             <!-- Form Area -->
             <div class="flex-grow p-4 md:p-6 overflow-y-auto custom-scrollbar relative" id="forge-form-area">
+              <!-- Summary Section -->
+              <div id="forge-section-summary" class="space-y-6"></div>
+
               <!-- Meta Section -->
               <div id="forge-section-meta" class="space-y-6 max-w-3xl mx-auto">
                 <div class="flex items-center gap-3 mb-6">
@@ -91,14 +99,24 @@ window.ViewTemplates["modal-forge"] = `
                       <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Pack Category <span class="text-rose-500">*</span></label>
                       <select id="forge-meta-type" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:border-rose-500 outline-none transition-all cursor-pointer" onchange="PackForge.updateMeta()">
                         <option value="mega">Mega Pack (Everything)</option>
-                        <option value="dungeon">Dungeon (Enemies Only)</option>
-                        <option value="class">Class (Heroes Only)</option>
-                        <option value="skin">Skin (Visual Only)</option>
+                        <option value="dungeon">Enemies (Monster Pack)</option>
+                        <option value="class">Class (Hero Pack)</option>
+                        <option value="weapon">Weapon (Arsenal Pack)</option>
+                        <option value="artifacts">Artifacts (Item Pack)</option>
+                        <option value="hazard">Hazard (Obstacle Pack)</option>
+                        <option value="skin">Skin (Visual Theme)</option>
                       </select>
                     </div>
                     <div class="space-y-1.5">
                       <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Icon Emoji <span class="text-rose-500">*</span></label>
                       <input type="text" id="forge-meta-icon" placeholder="📦" maxlength="2" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all text-center" oninput="PackForge.updateMeta()">
+                    </div>
+                    <div id="forge-meta-strategy-container" class="space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Load Strategy <span class="text-indigo-400">?</span></label>
+                      <select id="forge-meta-strategy" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:border-rose-500 outline-none transition-all cursor-pointer" onchange="PackForge.updateMeta()">
+                        <option value="replace">Replace (Total Conversion)</option>
+                        <option value="append">Merge (Add to Pool)</option>
+                      </select>
                     </div>
                     <div class="md:col-span-2 space-y-1.5">
                       <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Description <span class="text-rose-500">*</span></label>
@@ -198,7 +216,7 @@ window.ViewTemplates["modal-forge"] = `
                   <div class="pt-4 border-t border-slate-800/50">
                     <div class="flex items-center gap-2 mb-4">
                       <span class="w-1 h-3 bg-indigo-500 rounded-full"></span>
-                      <h4 class="text-indigo-400 font-black uppercase tracking-widest text-[10px]">CSS Tokens</h4>
+                      <h4 class="text-indigo-400 font-black uppercase tracking-widest text-[10px]">Theme Colors</h4>
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div class="space-y-1.5">
@@ -218,6 +236,42 @@ window.ViewTemplates["modal-forge"] = `
                         <input type="text" id="forge-skin-radius" placeholder="4px" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-[10px] text-white text-center focus:border-indigo-500 outline-none transition-all" oninput="PackForge.updateSkin()">
                       </div>
                     </div>
+
+                    <div class="grid grid-cols-3 gap-4 mt-4">
+                      <div class="space-y-1.5">
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">HP Bar</label>
+                        <input type="text" id="forge-skin-hpBar" placeholder="#f43f5e" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-[10px] text-white text-center focus:border-indigo-500 outline-none transition-all" oninput="PackForge.updateSkin()">
+                      </div>
+                      <div class="space-y-1.5">
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Loading</label>
+                        <input type="text" id="forge-skin-loading" placeholder="#f43f5e" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-[10px] text-white text-center focus:border-indigo-500 outline-none transition-all" oninput="PackForge.updateSkin()">
+                      </div>
+                      <div class="space-y-1.5">
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Selection Glow</label>
+                        <input type="text" id="forge-skin-glow" placeholder="#f43f5e" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-[10px] text-white text-center focus:border-indigo-500 outline-none transition-all" oninput="PackForge.updateSkin()">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="pt-4 border-t border-slate-800/50 space-y-4">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="w-1 h-3 bg-rose-500 rounded-full"></span>
+                      <h4 class="text-rose-400 font-black uppercase tracking-widest text-[10px]">Advanced Theme</h4>
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Background Image URL</label>
+                      <input type="text" id="forge-skin-bgImage" placeholder="https://example.com/wallpaper.jpg" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-white text-[10px] font-mono focus:border-rose-500 outline-none transition-all placeholder:text-slate-700" oninput="PackForge.updateSkin()">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div class="space-y-1.5">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Custom CSS</label>
+                        <textarea id="forge-skin-customCss" placeholder=".tile { border: 2px solid gold; }" class="w-full h-24 bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-white text-[10px] font-mono focus:border-rose-500 outline-none transition-all placeholder:text-slate-700 resize-none" oninput="PackForge.updateSkin()"></textarea>
+                      </div>
+                      <div class="space-y-1.5">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">OnLoad Script (JS)</label>
+                        <textarea id="forge-skin-onLoad" placeholder="G.log('Skin loaded!');" class="w-full h-24 bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-white text-[10px] font-mono focus:border-rose-500 outline-none transition-all placeholder:text-slate-700 resize-none" oninput="PackForge.updateSkin()"></textarea>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -225,7 +279,7 @@ window.ViewTemplates["modal-forge"] = `
             </div>
 
             <!-- Wizard Footer -->
-            <div class="p-3 border-t border-slate-800 bg-slate-950/90 shrink-0 flex justify-between items-center z-10">
+            <div class="p-3 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md shrink-0 flex justify-between items-center z-10">
               <button id="forge-btn-prev" onclick="PackForge.prevSection()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors hide">◀ Prev Step</button>
               <div class="flex-grow"></div>
               <button id="forge-btn-next" onclick="PackForge.nextSection()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors shadow-lg shadow-indigo-900/50">Next Step ▶</button>
@@ -233,11 +287,15 @@ window.ViewTemplates["modal-forge"] = `
           </div>
           
           <!-- ADVANCED MODE WRAPPER -->
-          <div id="forge-advanced-view" class="hide flex-grow flex flex-col w-full h-full bg-slate-950 relative">
-            <textarea id="forge-json-editor" class="w-full h-full bg-slate-950 text-emerald-400 font-mono text-[10px] md:text-xs p-4 outline-none resize-none custom-scrollbar" spellcheck="false" oninput="PackForge.onJsonInput()"></textarea>
+          <div id="forge-advanced-view" class="hide flex-grow flex flex-col w-full h-full bg-slate-950/40 relative">
+            <textarea id="forge-json-editor" class="w-full h-full bg-slate-950/60 text-emerald-400 font-mono text-[10px] md:text-xs p-6 outline-none resize-none custom-scrollbar backdrop-blur-xl" spellcheck="false" oninput="PackForge.onJsonInput()" placeholder="Paste your pack JSON here..."></textarea>
             
-            <div id="forge-json-error" class="absolute bottom-0 left-0 right-0 bg-rose-900/90 text-white text-[10px] p-2 border-t border-rose-500 hide backdrop-blur-sm font-mono overflow-x-auto whitespace-pre">
-              Error message here
+            <!-- Floating Error Panel -->
+            <div id="forge-json-error" class="absolute bottom-4 right-4 max-w-sm bg-rose-950/90 text-rose-200 text-[9px] p-4 border border-rose-500/50 rounded-2xl hide backdrop-blur-xl shadow-2xl font-mono overflow-x-auto whitespace-pre z-20">
+              <div class="flex items-center gap-2 mb-2 border-b border-rose-500/30 pb-1">
+                <span class="text-rose-500 font-black">⚠️ JSON ERROR</span>
+              </div>
+              <div id="forge-json-error-msg"></div>
             </div>
           </div>
         </div>

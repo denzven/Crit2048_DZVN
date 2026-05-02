@@ -23,9 +23,11 @@ function processD20Result(roll) {
   }
   let mod = state.playerClass.d20Mod || 0;
   roll += mod;
+  if (window.PackEngine) roll = window.PackEngine.onD20(state, roll);
+  
   let rawRoll = roll - mod;
-  const weightLvl = getArtifactLevel("WEIGHTED_DICE");
-  if (weightLvl > 0 && roll < 4 + weightLvl) roll = 4 + weightLvl;
+  // Hardcoded artifact check removed - now handled via PackEngine.onD20 scripts
+
 
   let msg = "";
   let color = "#fff";
@@ -52,11 +54,8 @@ function processD20Result(roll) {
     color = "#4ade80";
     spawnRandomTile(-1);
     SFX.fail();
-    const necroLvl = getArtifactLevel("NECRONOMICON");
-    if (necroLvl > 0) {
-      applyDamage(50 * necroLvl);
-      addLog(`Necronomicon burned boss for ${50 * necroLvl}!`);
-    }
+    // Hardcoded Necronomicon removed - now handled via PackEngine.onD20 or onDamage scripts
+
   } else {
     msg = "Critical Failure! Highest weapon broken.";
     color = "#e11d48";

@@ -47,17 +47,11 @@ function processMove(direction) {
           baseDmg += 10;
         if (state.playerClass.id === "Fighter" && newVal >= 8) baseDmg += 15;
 
-        let dirMult = 1;
-        const bootsLvl = getArtifactLevel("GRAVITY_BOOTS");
-        if (bootsLvl > 0) {
-          if (direction === "DOWN") dirMult = 1 + 0.5 * bootsLvl;
-          else if (direction === "UP") dirMult = 0.5;
+        let dmgForThisMerge = baseDmg * state.multiplier;
+        if (window.PackEngine) {
+          dmgForThisMerge = window.PackEngine.calculateMergeDamage(state, dmgForThisMerge, direction, newVal);
         }
 
-        let dmgForThisMerge = baseDmg * state.multiplier * dirMult;
-        if (state.playerClass.id === "Ranger" && ENCOUNTERS[state.encounterIdx].power.toLowerCase().includes("spawn")) {
-          dmgForThisMerge *= 1.25;
-        }
         if (state.hunterMarkLeft > 0) {
           dmgForThisMerge *= 2;
           state.hunterMarkLeft--;
@@ -128,8 +122,8 @@ function processMove(direction) {
     damageThisTurn += 200 * vorpalLvl;
     addLog("⚔️ VORPAL STRIKE!");
   }
-  if (ENCOUNTERS[state.encounterIdx].name === "Orc Brute")
-    damageThisTurn *= 0.9;
+  // Removed hardcoded Orc Brute reduction - now handled via PackEngine passiveAbility
+
 
   if (damageThisTurn > 0) {
     SFX.merge();
@@ -207,16 +201,24 @@ function processMove(direction) {
   state.slidesLeft -= 1;
   state.slidesSinceRoll += 1;
   state.slidesTotalInEncounter += 1;
-  applyBossPowersPostMove();
+  applyBossPowersPostMove(direction);
   checkGameState();
 }
 
 function applyDamage(dmg) {
-  if (dmg > state.runStats.maxDamage) state.runStats.maxDamage = dmg;
-  state.runStats.totalDamageDealt += dmg;
+  let finalDmg = dmg;
+  if (window.PackEngine) {
+    const red = window.PackEngine.getDamageReduction();
+    if (red > 0) {
+      finalDmg *= (1 - red / 100);
+    }
+  }
+
+  if (finalDmg > state.runStats.maxDamage) state.runStats.maxDamage = finalDmg;
+  state.runStats.totalDamageDealt += finalDmg;
   if (state.multiplier > state.runStats.maxMultiplier) state.runStats.maxMultiplier = state.multiplier;
-  state.monsterHp = Math.max(0, state.monsterHp - dmg);
-  addLog(`Dealt ${Math.floor(dmg)} dmg!`);
+  state.monsterHp = Math.max(0, state.monsterHp - finalDmg);
+  addLog(`Dealt ${Math.floor(finalDmg)} dmg!`);
   // If damage is huge, show a special total text
   if (dmg > 500) {
     playCombatText(`TOTAL: ${Math.floor(dmg)}`, "text-amber-400 text-2xl md:text-4xl", "50%", "30%");
@@ -226,10 +228,10 @@ function applyDamage(dmg) {
   if (window.PackEngine) window.PackEngine.onDamage(state, dmg);
 }
 
-function applyBossPowersPostMove() {
+function applyBossPowersPostMove(direction) {
   const enc = ENCOUNTERS[state.encounterIdx];
   if (enc.mode && enc.mode !== "builtin") {
-    if (window.PackEngine) window.PackEngine.onSlide(state);
+    if (window.PackEngine) window.PackEngine.onSlide(state, direction);
     return;
   }
 

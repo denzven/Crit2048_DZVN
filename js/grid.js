@@ -33,9 +33,7 @@ function renderGrid() {
     tileEl.style.transform = "scale(1)";
     tileEl.innerHTML =
       `<span class="text-2xl md:text-3xl">${stats.icon}</span>` +
-      (stats.val !== -1 && stats.val !== -2 && stats.val !== -3
-        ? `<span class="font-bold text-sm mt-1">${tile.val}</span>`
-        : "");
+      `<span class="font-bold text-sm mt-1">${tile.val}</span>`;
     if (tile.pop) {
       tileEl.classList.remove("pop-in");
       void tileEl.offsetWidth;

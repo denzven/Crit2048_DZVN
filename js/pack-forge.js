@@ -32,14 +32,21 @@
     { id: 'weapons', label: 'Weapons' },
     { id: 'hazards', label: 'Hazards' },
     { id: 'artifacts', label: 'Artifacts' },
-    { id: 'skin', label: 'Skin' }
+    { id: 'skin', label: 'Skin' },
+    { id: 'summary', label: 'Bundle Overview' }
   ];
   let currentSectionIdx = 0;
+  let forgeTouchStartX = 0;
+  let forgeTouchStartY = 0;
 
   const PackForge = {
 
-    open() {
-      currentPack = JSON.parse(JSON.stringify(defaultPack));
+    open(existingPack = null) {
+      if (existingPack) {
+        currentPack = JSON.parse(JSON.stringify(existingPack));
+      } else {
+        currentPack = JSON.parse(JSON.stringify(defaultPack));
+      }
       currentMode = "simple";
       this.render();
       
@@ -47,16 +54,62 @@
       const backdrop = document.getElementById("modal-backdrop");
       if (forgeModal) forgeModal.classList.remove("hide");
       if (backdrop) backdrop.classList.remove("hide");
+      document.body.classList.add("separate-page-active");
       
       currentSectionIdx = 0;
       this.setSection(FORGE_SECTIONS[currentSectionIdx].id);
+      this.initTouch();
     },
 
-    close() {
+    initTouch() {
+      const area = document.getElementById("forge-form-area");
+      if (!area || area.dataset.touchInit === "true") return;
+      
+      area.addEventListener("touchstart", (e) => {
+        forgeTouchStartX = e.touches[0].clientX;
+        forgeTouchStartY = e.touches[0].clientY;
+      }, { passive: true });
+
+      area.addEventListener("touchend", (e) => {
+        if (currentMode === "advanced") return;
+        
+        const dx = e.changedTouches[0].clientX - forgeTouchStartX;
+        const dy = e.changedTouches[0].clientY - forgeTouchStartY;
+        
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
+          if (dx > 0) {
+            this.prevSection();
+          } else {
+            this.nextSection();
+          }
+        }
+      }, { passive: true });
+      
+      area.dataset.touchInit = "true";
+    },
+
+    async editInstalledPack(packId) {
+      const pack = await window.PackStorage.load(packId);
+      if (pack) {
+        window.PackMarketplace.close();
+        this.open(pack);
+      } else {
+        alert("Could not load pack for editing.");
+      }
+    },
+
+    async close() {
       const forgeModal = document.getElementById("modal-forge");
       const backdrop = document.getElementById("modal-backdrop");
       if (forgeModal) forgeModal.classList.add("hide");
       if (backdrop) backdrop.classList.add("hide");
+      document.body.classList.remove("separate-page-active");
+
+      // Restore installed pack skins
+      if (window.PackEngine) {
+        window.PackEngine.resetSkin();
+        await window.PackEngine.applyActivePacks();
+      }
     },
 
     changePage(listName, delta) {
@@ -137,11 +190,13 @@
     getAvailableSections() {
       const type = currentPack.type || 'mega';
       return FORGE_SECTIONS.filter(s => {
-        if (s.id === 'meta') return true;
+        if (s.id === 'summary' || s.id === 'meta') return true;
         if (type === 'mega') return true;
         if (type === 'dungeon') return ['enemies', 'hazards', 'artifacts'].includes(s.id);
         if (type === 'class') return ['classes'].includes(s.id);
         if (type === 'skin') return ['skin'].includes(s.id);
+        if (type === 'weapon') return ['weapons'].includes(s.id);
+        if (type === 'hazard') return ['hazards'].includes(s.id);
         return false;
       });
     },
@@ -157,6 +212,17 @@
       document.getElementById("forge-meta-type").value = currentPack.type || "mega";
       document.getElementById("forge-meta-icon").value = currentPack.icon || "📦";
       document.getElementById("forge-meta-desc").value = currentPack.description || "";
+      
+      const strategyContainer = document.getElementById("forge-meta-strategy-container");
+      if (strategyContainer) {
+        const stratTypes = ['mega', 'dungeon', 'weapon', 'class', 'artifacts', 'hazard'];
+        if (stratTypes.includes(currentPack.type)) {
+          strategyContainer.classList.remove("hide");
+          document.getElementById("forge-meta-strategy").value = currentPack.loadStrategy || "replace";
+        } else {
+          strategyContainer.classList.add("hide");
+        }
+      }
       
       // Update wizard state
       const section = avail[currentSectionIdx] || avail[0];
@@ -223,6 +289,7 @@
       currentPack.type = document.getElementById("forge-meta-type").value;
       currentPack.icon = document.getElementById("forge-meta-icon").value;
       currentPack.description = document.getElementById("forge-meta-desc").value;
+      currentPack.loadStrategy = document.getElementById("forge-meta-strategy").value;
       
       // Clear highlights on input
       const fields = ['id', 'name', 'author', 'version', 'icon', 'desc'];
@@ -231,8 +298,34 @@
         if (el) el.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
       });
 
-      // Real-time sync to advanced editor
       this.syncSimpleToJson();
+    },
+
+    updateSkin() {
+      if (!currentPack.skin) currentPack.skin = {};
+      currentPack.skin.themeName = document.getElementById("forge-skin-theme").value;
+      currentPack.skin.logoOverride = document.getElementById("forge-skin-logo").value;
+      currentPack.skin.fontFamily = document.getElementById("forge-skin-fontFamily").value;
+      currentPack.skin.fontUrl = document.getElementById("forge-skin-fontUrl").value;
+      currentPack.skin.primaryColor = document.getElementById("forge-skin-primary").value;
+      currentPack.skin.accentColor = document.getElementById("forge-skin-accent").value;
+      currentPack.skin.bgColor = document.getElementById("forge-skin-bg").value;
+      currentPack.skin.borderRadius = document.getElementById("forge-skin-radius").value;
+      currentPack.skin.bgImage = document.getElementById("forge-skin-bgImage").value;
+      currentPack.skin.customCss = document.getElementById("forge-skin-customCss").value;
+      currentPack.skin.hpBarColor = document.getElementById("forge-skin-hpBar").value;
+      currentPack.skin.loadingColor = document.getElementById("forge-skin-loading").value;
+      currentPack.skin.glowColor = document.getElementById("forge-skin-glow").value;
+      
+      if (!currentPack.skin.script) currentPack.skin.script = {};
+      currentPack.skin.script.onLoad = document.getElementById("forge-skin-onLoad").value;
+      
+      this.syncSimpleToJson();
+
+      // Live preview while editing
+      if (window.PackEngine) {
+        window.PackEngine.applySkin(currentPack.skin);
+      }
     },
 
     render() {
@@ -272,6 +365,175 @@
       this.renderWeapons();
       this.renderHazards();
       this.renderArtifacts();
+      this.renderSkinFields();
+      this.renderSummary();
+    },
+
+    renderSummary() {
+      const container = document.getElementById("forge-section-summary");
+      if (!container) return;
+      
+      const p = currentPack;
+      const counts = [
+        { label: 'Enemies', count: p.enemies?.length || 0, icon: '👹' },
+        { label: 'Classes', count: p.classes?.length || 0, icon: '👤' },
+        { label: 'Weapons', count: p.weapons?.length || 0, icon: '🗡️' },
+        { label: 'Hazards', count: p.hazards?.length || 0, icon: '🔥' },
+        { label: 'Artifacts', count: p.artifacts?.length || 0, icon: '🏺' }
+      ];
+
+      let html = `
+        <div class="max-w-4xl mx-auto space-y-8">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="w-16 h-16 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center text-4xl shadow-2xl">${p.icon || '📦'}</div>
+            <div>
+              <h3 class="text-2xl font-black text-white">${p.name || 'Untitled Pack'}</h3>
+              <p class="text-slate-500 text-xs font-mono">${p.id || 'no-id-set'} • v${p.version || '1.0.0'}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            ${counts.map(c => `
+              <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:border-slate-700 transition-colors cursor-pointer" onclick="PackForge.setSection('${c.label.toLowerCase()}')">
+                <span class="text-2xl mb-1">${c.icon}</span>
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">${c.label}</span>
+                <span class="text-lg font-black text-white">${c.count}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-6">
+            <h4 class="text-indigo-400 font-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1]"></span>
+              Mega Bundle Manifest
+            </h4>
+            <p class="text-slate-400 text-xs leading-relaxed mb-4">
+              This Mega Pack is a collection of all content types. You can edit each section using the wizard steps or the summary cards above.
+            </p>
+            <div class="flex gap-3">
+              <button onclick="PackForge.exportPack()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Download Bundle JSON</button>
+              <button onclick="PackForge.openLoadDialog(true)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Merge with Existing</button>
+              <button onclick="PackForge.setSection('meta')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Edit Metadata</button>
+            </div>
+          </div>
+        </div>
+      `;
+      container.innerHTML = html;
+    },
+
+    async openLoadDialog(isMerge = false) {
+      let installed = await window.PackStorage.listInstalled();
+      
+      // Add specialized default packs
+      if (typeof CRIT2048_DEFAULT_PACK !== 'undefined') {
+        const defaults = [];
+        if (typeof CRIT2048_DEFAULT_ENEMIES_PACK !== 'undefined') defaults.push(CRIT2048_DEFAULT_ENEMIES_PACK);
+        if (typeof CRIT2048_DEFAULT_CLASSES_PACK !== 'undefined') defaults.push(CRIT2048_DEFAULT_CLASSES_PACK);
+        if (typeof CRIT2048_DEFAULT_ARTIFACTS_PACK !== 'undefined') defaults.push(CRIT2048_DEFAULT_ARTIFACTS_PACK);
+        if (typeof CRIT2048_DEFAULT_SKIN_PACK !== 'undefined') defaults.push(CRIT2048_DEFAULT_SKIN_PACK);
+        if (typeof CRIT2048_DEFAULT_WEAPONS_PACK !== 'undefined') defaults.push(CRIT2048_DEFAULT_WEAPONS_PACK);
+        if (typeof CRIT2048_DEFAULT_HAZARDS_PACK !== 'undefined') defaults.push(CRIT2048_DEFAULT_HAZARDS_PACK);
+        defaults.push(CRIT2048_DEFAULT_PACK);
+        
+        installed = [...defaults.map(p => ({ ...p, isBuiltIn: true })), ...installed];
+      }
+
+      const overlay = document.createElement('div');
+      overlay.id = 'forge-load-overlay';
+      overlay.className = 'fixed inset-0 bg-slate-950/90 z-[200] flex items-center justify-center p-4 backdrop-blur-sm';
+      overlay.innerHTML = `
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+          <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+            <h3 class="text-white font-black uppercase tracking-widest text-sm">${isMerge ? 'Merge with Pack' : 'Load Existing Pack'}</h3>
+            <button onclick="document.getElementById('forge-load-overlay').remove()" class="text-slate-500 hover:text-white">✕</button>
+          </div>
+          <div class="p-4 overflow-y-auto custom-scrollbar space-y-2">
+            ${installed.map(p => `
+              <div onclick="PackForge.loadAndClose('${p.id}', ${isMerge})" class="bg-slate-950 border border-slate-800 hover:border-indigo-500 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-all group">
+                <div class="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">${p.icon || '📦'}</div>
+                <div class="flex-grow">
+                  <h4 class="text-white text-xs font-bold">${p.name}</h4>
+                  <p class="text-[9px] text-slate-500 font-mono uppercase">${p.id} • v${p.version}</p>
+                </div>
+                ${p.isBuiltIn ? '<span class="text-[8px] bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded font-black uppercase">Default</span>' : ''}
+              </div>
+            `).join('')}
+          </div>
+          <div class="p-4 bg-slate-950 border-t border-slate-800 text-center">
+            <p class="text-[9px] text-slate-600 uppercase tracking-widest font-bold">${isMerge ? 'This will ADD all content from the selected pack to your current one.' : 'Selecting a pack will overwrite your current forge progress.'}</p>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    },
+
+    async loadAndClose(id, isMerge = false) {
+      let pack = await window.PackStorage.load(id);
+      
+      // Check for built-in default packs
+      if (!pack) {
+        if (id === 'crit2048-default') pack = CRIT2048_DEFAULT_PACK;
+        else if (id === 'crit2048-default-enemies') pack = CRIT2048_DEFAULT_ENEMIES_PACK;
+        else if (id === 'crit2048-default-classes') pack = CRIT2048_DEFAULT_CLASSES_PACK;
+        else if (id === 'crit2048-default-artifacts') pack = CRIT2048_DEFAULT_ARTIFACTS_PACK;
+        else if (id === 'crit2048-default-weapons') pack = CRIT2048_DEFAULT_WEAPONS_PACK;
+        else if (id === 'crit2048-default-hazards') pack = CRIT2048_DEFAULT_HAZARDS_PACK;
+        else if (id === 'crit2048-default-skin') pack = CRIT2048_DEFAULT_SKIN_PACK;
+      }
+      
+      if (pack) {
+        if (isMerge) {
+          this.mergePack(pack);
+        } else {
+          this.open(pack);
+        }
+        const overlay = document.getElementById('forge-load-overlay');
+        if (overlay) overlay.remove();
+      }
+    },
+
+    mergePack(other) {
+      const types = ['enemies', 'classes', 'weapons', 'hazards', 'artifacts'];
+      types.forEach(type => {
+        if (other[type]) {
+          if (!currentPack[type]) currentPack[type] = [];
+          // Avoid duplicates by ID
+          other[type].forEach(item => {
+            const exists = currentPack[type].some(x => x.id === item.id || (type === 'weapons' && x.value === item.value));
+            if (!exists) currentPack[type].push(JSON.parse(JSON.stringify(item)));
+          });
+        }
+      });
+      // Also skin if current has none
+      if (other.skin && (!currentPack.skin || Object.keys(currentPack.skin).length === 0)) {
+        currentPack.skin = JSON.parse(JSON.stringify(other.skin));
+      }
+      addLog(`Forge: Merged content from ${other.name}`);
+      this.render();
+    },
+
+    renderSkinFields() {
+      const s = currentPack.skin || {};
+      const fields = {
+        theme: s.themeName || "",
+        logo: s.logoOverride || "",
+        fontFamily: s.fontFamily || "",
+        fontUrl: s.fontUrl || "",
+        primary: s.primaryColor || "",
+        accent: s.accentColor || "",
+        bg: s.bgColor || "",
+        radius: s.borderRadius || "",
+        bgImage: s.bgImage || "",
+        customCss: s.customCss || "",
+        onLoad: (s.script && s.script.onLoad) ? s.script.onLoad : "",
+        hpBar: s.hpBarColor || "",
+        loading: s.loadingColor || "",
+        glow: s.glowColor || ""
+      };
+      for (const [id, val] of Object.entries(fields)) {
+        const el = document.getElementById(`forge-skin-${id}`);
+        if (el) el.value = val;
+      }
     },
 
     validateWizard() {
@@ -312,14 +574,15 @@
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
           // Required fields for items: usually just 'id' (and 'name' for enemies)
-          const itemReqs = [{ field: 'id', label: 'ID' }];
+          const itemReqs = [];
+          if (listName !== 'weapons') {
+            itemReqs.push({ field: 'id', label: 'ID' });
+          }
           if (['enemies', 'classes', 'hazards', 'artifacts'].includes(listName)) {
             itemReqs.push({ field: 'name', label: 'Name' });
           }
           if (listName === 'classes' || listName === 'artifacts') {
             itemReqs.push({ field: 'desc', label: 'Description' });
-          }
-          if (listName === 'classes' || listName === 'artifacts') {
             itemReqs.push({ field: 'icon', label: 'Icon' });
           }
 
@@ -738,9 +1001,12 @@
 
     addWeapon() {
       this.addItem('weapons', {
-        value: 2,
+        tileValue: 2,
         name: "New Weapon",
         icon: "🗡️",
+        dmg: 2,
+        bg: "bg-slate-700",
+        text: "text-white",
         mode: "simple"
       });
     },
@@ -775,7 +1041,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Merge Value</label>
-                <input type="number" id="forge-weapons-${idx}-value" value="${item.value || ''}" oninput="PackForge.updateItem('weapons', ${idx}, 'value', parseInt(this.value))" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-rose-400 font-mono focus:border-rose-500 outline-none transition-all">
+                <input type="number" id="forge-weapons-${idx}-tileValue" value="${item.tileValue || ''}" oninput="PackForge.updateItem('weapons', ${idx}, 'tileValue', parseInt(this.value))" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-rose-400 font-mono focus:border-rose-500 outline-none transition-all">
               </div>
               <div class="col-span-2">
                 <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Name Override</label>
@@ -784,6 +1050,32 @@
               <div>
                 <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Icon</label>
                 <input type="text" id="forge-weapons-${idx}-icon" value="${item.icon || ''}" oninput="PackForge.updateItem('weapons', ${idx}, 'icon', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white text-center focus:border-rose-500 outline-none transition-all">
+              </div>
+              
+              <!-- New Fields -->
+              <div>
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Base Damage</label>
+                <input type="number" id="forge-weapons-${idx}-dmg" value="${item.dmg || 0}" oninput="PackForge.updateItem('weapons', ${idx}, 'dmg', parseInt(this.value))" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-emerald-400 font-mono focus:border-rose-500 outline-none transition-all">
+              </div>
+              <div class="col-span-2">
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Background Style</label>
+                <select id="forge-weapons-${idx}-bg" onchange="PackForge.updateItem('weapons', ${idx}, 'bg', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-rose-500 outline-none transition-all cursor-pointer">
+                  <option value="bg-slate-800" ${item.bg === 'bg-slate-800' ? 'selected' : ''}>Standard (Slate)</option>
+                  <option value="bg-slate-300" ${item.bg === 'bg-slate-300' ? 'selected' : ''}>Light (Iron)</option>
+                  <option value="bg-slate-500" ${item.bg === 'bg-slate-500' ? 'selected' : ''}>Medium (Steel)</option>
+                  <option value="bg-rose-600" ${item.bg === 'bg-rose-600' ? 'selected' : ''}>Danger (Rose)</option>
+                  <option value="bg-amber-600" ${item.bg === 'bg-amber-600' ? 'selected' : ''}>Gold (Amber)</option>
+                  <option value="bg-emerald-600" ${item.bg === 'bg-emerald-600' ? 'selected' : ''}>Forest (Emerald)</option>
+                  <option value="bg-indigo-600" ${item.bg === 'bg-indigo-600' ? 'selected' : ''}>Magic (Indigo)</option>
+                  <option value="bg-sky-600" ${item.bg === 'bg-sky-600' ? 'selected' : ''}>Sky (Blue)</option>
+                  <option value="bg-violet-800" ${item.bg === 'bg-violet-800' ? 'selected' : ''}>Shadow (Violet)</option>
+                  <option value="bg-orange-600" ${item.bg === 'bg-orange-600' ? 'selected' : ''}>Flame (Orange)</option>
+                  <option value="bg-neutral-900" ${item.bg === 'bg-neutral-900' ? 'selected' : ''}>Obsidian (Black)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Text CSS</label>
+                <input type="text" id="forge-weapons-${idx}-text" value="${item.text || ''}" oninput="PackForge.updateItem('weapons', ${idx}, 'text', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-rose-500 outline-none transition-all">
               </div>
             </div>
           </div>
@@ -884,9 +1176,15 @@
         id: "",
         name: "",
         icon: "🏺",
-        desc: "",
-        rarity: "common",
-        price: 50
+        desc: "Artifact effect description",
+        rarity: "Common",
+        basePrice: 20,
+        classReq: null,
+        mode: "simple",
+        passiveTrigger: "",
+        passiveEffect: "",
+        passiveParam: 0,
+        scripts: {}
       });
     },
 
@@ -927,16 +1225,84 @@
                 <input type="text" id="forge-artifacts-${idx}-name" value="${item.name || ''}" placeholder="e.g. Golden Goblet" oninput="PackForge.updateItem('artifacts', ${idx}, 'name', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:border-rose-500 outline-none transition-all">
               </div>
               <div>
-                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Icon</label>
-                <input type="text" id="forge-artifacts-${idx}-icon" value="${item.icon || ''}" oninput="PackForge.updateItem('artifacts', ${idx}, 'icon', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white text-center focus:border-rose-500 outline-none transition-all">
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Rarity</label>
+                <select id="forge-artifacts-${idx}-rarity" onchange="PackForge.updateItem('artifacts', ${idx}, 'rarity', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-rose-500 outline-none transition-all">
+                  <option value="Common" ${item.rarity === 'Common' ? 'selected' : ''}>Common</option>
+                  <option value="Rare" ${item.rarity === 'Rare' ? 'selected' : ''}>Rare</option>
+                  <option value="Epic" ${item.rarity === 'Epic' ? 'selected' : ''}>Epic</option>
+                  <option value="Legendary" ${item.rarity === 'Legendary' ? 'selected' : ''}>Legendary</option>
+                  <option value="Artifact" ${item.rarity === 'Artifact' ? 'selected' : ''}>Artifact</option>
+                </select>
               </div>
               <div>
-                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Purchase Price</label>
-                <input type="number" id="forge-artifacts-${idx}-price" value="${item.price || 0}" oninput="PackForge.updateItem('artifacts', ${idx}, 'price', parseInt(this.value))" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-amber-500 font-mono focus:border-rose-500 outline-none transition-all">
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Class Req</label>
+                <select id="forge-artifacts-${idx}-classReq" onchange="PackForge.updateItem('artifacts', ${idx}, 'classReq', this.value === 'null' ? null : this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-rose-500 outline-none transition-all">
+                  <option value="null" ${item.classReq === null ? 'selected' : ''}>None</option>
+                  ${Object.keys(CLASSES || {}).map(cid => `<option value="${cid}" ${item.classReq === cid ? 'selected' : ''}>${cid}</option>`).join('')}
+                </select>
               </div>
-              <div class="col-span-2">
-                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Description</label>
-                <input type="text" id="forge-artifacts-${idx}-desc" value="${item.desc || ''}" placeholder="Artifact effect description" oninput="PackForge.updateItem('artifacts', ${idx}, 'desc', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-rose-500 outline-none transition-all">
+              <div>
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Base Price</label>
+                <input type="number" id="forge-artifacts-${idx}-basePrice" value="${item.basePrice || item.price || 0}" oninput="PackForge.updateItem('artifacts', ${idx}, 'basePrice', parseInt(this.value))" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-amber-500 font-mono focus:border-rose-500 outline-none transition-all">
+              </div>
+              <div class="col-span-4">
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Description (supports \${lvl} variable)</label>
+                <input type="text" id="forge-artifacts-${idx}-desc" value="${item.desc || ''}" placeholder="e.g. Deals \${10 * lvl} damage" oninput="PackForge.updateItem('artifacts', ${idx}, 'desc', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-rose-500 outline-none transition-all">
+              </div>
+              
+              <div class="col-span-4 mt-4 border-t border-slate-800/50 pt-4">
+                <div class="flex items-center justify-between mb-4">
+                  <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Effect Logic</label>
+                  <div class="flex bg-slate-950 rounded-lg p-1 border border-slate-800">
+                    <button onclick="PackForge.updateItem('artifacts', ${idx}, 'mode', 'simple')" class="px-3 py-1 text-[9px] font-black uppercase rounded ${item.mode !== 'advanced' ? 'bg-rose-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'} transition-all">Simple</button>
+                    <button onclick="PackForge.updateItem('artifacts', ${idx}, 'mode', 'advanced')" class="px-3 py-1 text-[9px] font-black uppercase rounded ${item.mode === 'advanced' ? 'bg-rose-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'} transition-all ml-1">Advanced</button>
+                  </div>
+                </div>
+
+                ${item.mode === 'advanced' ? `
+                  <!-- Advanced Scripting -->
+                  <div class="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    ${['onD20', 'onSlide', 'onMerge', 'onTavern', 'onEncounterStart', 'onPurchase'].map(hook => `
+                      <div class="flex flex-col gap-1.5">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">${hook} Script</span>
+                        <textarea id="forge-artifacts-${idx}-scripts-${hook}" 
+                          oninput="PackForge.updateItem('artifacts', ${idx}, 'scripts.${hook}', this.value)" 
+                          class="w-full h-16 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-[10px] font-mono text-emerald-400 focus:border-emerald-500 outline-none transition-all"
+                          placeholder="// Enter custom logic for ${hook}...">${item.scripts?.[hook] || ''}</textarea>
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : `
+                  <!-- Simple Mode -->
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div>
+                      <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Trigger</label>
+                      <select oninput="PackForge.updateItem('artifacts', ${idx}, 'passiveTrigger', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-[10px] text-white outline-none focus:border-rose-500">
+                        <option value="">None</option>
+                        <option value="on_merge" ${item.passiveTrigger === 'on_merge' ? 'selected' : ''}>On Merge</option>
+                        <option value="on_slide" ${item.passiveTrigger === 'on_slide' ? 'selected' : ''}>On Slide</option>
+                        <option value="on_d20" ${item.passiveTrigger === 'on_d20' ? 'selected' : ''}>On D20 Roll</option>
+                        <option value="on_crit" ${item.passiveTrigger === 'on_crit' ? 'selected' : ''}>On Crit (D20=20)</option>
+                        <option value="on_encounter_start" ${item.passiveTrigger === 'on_encounter_start' ? 'selected' : ''}>On Encounter Start</option>
+                        <option value="on_purchase" ${item.passiveTrigger === 'on_purchase' ? 'selected' : ''}>On Purchase</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Effect</label>
+                      <select oninput="PackForge.updateItem('artifacts', ${idx}, 'passiveEffect', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-[10px] text-white outline-none focus:border-rose-500">
+                        <option value="">None</option>
+                        <option value="restore_slides" ${item.passiveEffect === 'restore_slides' ? 'selected' : ''}>Restore Slides</option>
+                        <option value="add_gold" ${item.passiveEffect === 'add_gold' ? 'selected' : ''}>Add Gold</option>
+                        <option value="add_multiplier" ${item.passiveEffect === 'add_multiplier' ? 'selected' : ''}>Add Multiplier</option>
+                        <option value="deal_damage" ${item.passiveEffect === 'deal_damage' ? 'selected' : ''}>Deal Damage</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Power Value (Scales with Level)</label>
+                      <input type="number" value="${item.passiveParam || 0}" oninput="PackForge.updateItem('artifacts', ${idx}, 'passiveParam', parseFloat(this.value))" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-[10px] text-amber-400 font-mono outline-none focus:border-rose-500">
+                    </div>
+                  </div>
+                `}
               </div>
             </div>
           </div>
@@ -983,28 +1349,43 @@
     validateJson() {
       const editor = document.getElementById("forge-json-editor");
       const errBox = document.getElementById("forge-json-error");
-      
+      const errMsg = document.getElementById("forge-json-error-msg");
+      if (!errBox || !errMsg) return;
+
       try {
         const parsed = JSON.parse(editor.value);
         if (window.PackEngine) {
           const res = window.PackEngine.validatePack(parsed);
           if (!res.valid) {
-            errBox.innerText = res.errors.join('\n');
+            errMsg.innerText = res.errors.join('\n');
             errBox.classList.remove('hide');
-            errBox.classList.replace('bg-emerald-900/90', 'bg-rose-900/90');
-            errBox.classList.replace('border-emerald-500', 'border-rose-500');
+            // Swap colors to Red for error
+            errBox.classList.add('bg-rose-950/90', 'border-rose-500/50', 'text-rose-200');
+            errBox.classList.remove('bg-emerald-950/90', 'border-emerald-500/50', 'text-emerald-200');
+            errBox.querySelector('.text-rose-500').innerText = "⚠️ JSON ERROR";
           } else {
-            errBox.innerText = "JSON is valid.";
+            errMsg.innerText = "All fields valid and pack structure is correct.";
             errBox.classList.remove('hide');
-            errBox.classList.replace('bg-rose-900/90', 'bg-emerald-900/90');
-            errBox.classList.replace('border-rose-500', 'border-emerald-500');
+            // Swap colors to Emerald for success
+            errBox.classList.add('bg-emerald-950/90', 'border-emerald-500/50', 'text-emerald-200');
+            errBox.classList.remove('bg-rose-950/90', 'border-rose-500/50', 'text-rose-200');
+            const indicator = errBox.querySelector('.text-rose-500');
+            if(indicator) {
+              indicator.innerText = "✅ VALID JSON";
+              indicator.className = "text-emerald-500 font-black";
+            }
           }
         }
       } catch (e) {
-        errBox.innerText = `JSON Syntax Error: ${e.message}`;
+        errMsg.innerText = `JSON Syntax Error: ${e.message}`;
         errBox.classList.remove('hide');
-        errBox.classList.replace('bg-emerald-900/90', 'bg-rose-900/90');
-        errBox.classList.replace('border-emerald-500', 'border-rose-500');
+        errBox.classList.add('bg-rose-950/90', 'border-rose-500/50', 'text-rose-200');
+        errBox.classList.remove('bg-emerald-950/90', 'border-emerald-500/50', 'text-emerald-200');
+        const indicator = errBox.querySelector('.text-emerald-500') || errBox.querySelector('.text-rose-500');
+        if(indicator) {
+          indicator.innerText = "⚠️ SYNTAX ERROR";
+          indicator.className = "text-rose-500 font-black";
+        }
       }
     },
 

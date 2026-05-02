@@ -74,6 +74,15 @@
 
     /** Load a full pack by id. Returns null if not found. */
     async load(id) {
+      // Check for built-in memory packs FIRST (shared across Web and Tauri)
+      if (id === 'crit2048-default' && typeof CRIT2048_DEFAULT_PACK !== 'undefined') return CRIT2048_DEFAULT_PACK;
+      if (id === 'crit2048-default-enemies' && typeof CRIT2048_DEFAULT_ENEMIES_PACK !== 'undefined') return CRIT2048_DEFAULT_ENEMIES_PACK;
+      if (id === 'crit2048-default-classes' && typeof CRIT2048_DEFAULT_CLASSES_PACK !== 'undefined') return CRIT2048_DEFAULT_CLASSES_PACK;
+      if (id === 'crit2048-default-artifacts' && typeof CRIT2048_DEFAULT_ARTIFACTS_PACK !== 'undefined') return CRIT2048_DEFAULT_ARTIFACTS_PACK;
+      if (id === 'crit2048-default-weapons' && typeof CRIT2048_DEFAULT_WEAPONS_PACK !== 'undefined') return CRIT2048_DEFAULT_WEAPONS_PACK;
+      if (id === 'crit2048-default-hazards' && typeof CRIT2048_DEFAULT_HAZARDS_PACK !== 'undefined') return CRIT2048_DEFAULT_HAZARDS_PACK;
+      if (id === 'crit2048-default-skin' && typeof CRIT2048_DEFAULT_SKIN_PACK !== 'undefined') return CRIT2048_DEFAULT_SKIN_PACK;
+
       if (isTauri()) {
         try {
           const invoke = window.__TAURI__.core.invoke;
@@ -148,6 +157,18 @@
     async isInstalled(id) {
       const idx = await this.listInstalled();
       return idx.some(e => e.id === id);
+    },
+
+    /** Duplicate an existing pack (including built-ins). */
+    async duplicate(id) {
+      let pack = await this.load(id);
+      if (!pack) return false;
+
+      const newPack = JSON.parse(JSON.stringify(pack));
+      newPack.id = `${pack.id.replace('crit2048-', '')}-copy-${Date.now()}`;
+      newPack.name = `${pack.name} (Copy)`;
+      newPack.isBuiltIn = false;
+      return await this.save(newPack);
     }
   };
 

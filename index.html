@@ -19,7 +19,7 @@
   <!-- PRELOADER -->
   <div id="preloader" class="fixed inset-0 bg-slate-950 z-[200] flex flex-col items-center justify-center transition-opacity duration-300">
     <div class="relative w-16 h-16">
-      <div class="w-full h-full border-2 border-rose-500/10 border-t-rose-500 rounded-full animate-spin shadow-[0_0_15px_rgba(244,63,94,0.3)]"></div>
+      <div class="w-full h-full border-2 border-rose-500/10 border-t-rose-500 rounded-full animate-spin preloader-spin shadow-[0_0_15px_rgba(244,63,94,0.3)]"></div>
     </div>
   </div>
 
@@ -36,8 +36,8 @@
         <span class="flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm text-rose-400">⚔️ <span id="stat-mult" class="font-mono">1.0</span></span>
       </div>
       <button id="btn-home" onclick="confirmHome()" class="hide text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Home">🏠</button>
-      <button onclick="PackMarketplace.open()" class="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Grimoire">📜</button>
-      <button onclick="PackForge.open()" class="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Forge">⚒️</button>
+      <button id="btn-grimoire" onclick="PackMarketplace.open()" class="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Grimoire">📜</button>
+      <button id="btn-forge" onclick="PackForge.open()" class="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Forge">⚒️</button>
       <button onclick="openHelp()" class="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Help">❓</button>
       <button onclick="openSettings()" class="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl" title="Settings">⚙️</button>
     </div>
@@ -88,6 +88,7 @@
   <script src="js/state.js"></script>
   <script src="js/data.js"></script>
   <script src="js/pack-storage.js"></script>
+  <script src="js/pack-default.js"></script>
   <script src="js/pack-engine.js"></script>
   <script src="js/pack-forge.js"></script>
   <script src="js/pack-marketplace.js"></script>
@@ -105,7 +106,6 @@
   <script src="js/api.js"></script>
   <script src="js/modals.js"></script>
   <script src="js/plugins.js"></script>
-  <script src="js/atmosphere.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
