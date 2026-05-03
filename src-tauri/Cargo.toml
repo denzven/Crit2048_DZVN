@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "1.3.0"
+version = "1.3.2"
 description = "Crit 2048 — A roguelike dungeon crawler powered by 2048 mechanics and D&D dice"
 authors = ["denzven"]
 license = "GPL-3.0"
