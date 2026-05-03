@@ -12,6 +12,20 @@ const DiceModal: React.FC = () => {
     rollD20();
   };
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        if (!showThreeDice) {
+          handleRoll();
+        } else if (lastRoll) {
+          closeDiceModal();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showThreeDice, lastRoll]);
+
   const getResultColor = () => {
     if (!lastRoll) return 'text-white';
     if (lastRoll.type === 'crit') return 'text-amber-400';

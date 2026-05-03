@@ -44,8 +44,25 @@ function App() {
 
   useEffect(() => {
     Native.requestWakeLock()
-    return () => Native.releaseWakeLock()
-  }, [])
+    
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && gameState === 'START') {
+        handleStart();
+      }
+      if (gameState === 'PLAYING') {
+        if (e.key.toLowerCase() === 'c') castSpell();
+      }
+      if (e.key.toLowerCase() === 's') setShowSettings(prev => !prev);
+      if (e.key.toLowerCase() === 'g') setShowGrimoire(prev => !prev);
+      if (e.key.toLowerCase() === 'f') setShowForge(prev => !prev);
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      Native.releaseWakeLock();
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    }
+  }, [gameState, seedInput]);
 
   const handleStart = () => {
     Native.vibrate(50)
@@ -56,7 +73,7 @@ function App() {
   }
 
   return (
-    <div className="bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 flex flex-col h-screen w-screen overflow-hidden select-none">
+    <div className="bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 flex flex-col h-screen w-screen overflow-hidden select-none safe-top safe-bottom">
       <BackgroundParticles />
       {/* HEADER */}
       <header className="bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 relative z-40 px-4 h-14 md:h-16">
@@ -71,38 +88,60 @@ function App() {
           )}
         </div>
         
-        <div className="flex items-center gap-3 md:gap-4">
           {gameState !== 'START' && (
-            <div className="flex gap-2 md:gap-4 text-xs md:text-base font-black text-amber-400">
-              <span className="flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm">
-                💰 <span className="font-mono">{gold}</span>
-              </span>
-              <span className="flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm text-rose-400">
-                ⚔️ <span className="font-mono">{multiplier.toFixed(1)}</span>
-              </span>
-            </div>
+            <button 
+              onClick={() => {
+                if (confirm("Return to main menu? Current run progress will be saved.")) {
+                  setGameState('START');
+                }
+              }}
+              className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
+              title="Home"
+            >
+              🏠
+            </button>
           )}
-          <button 
-            onClick={() => setShowGrimoire(true)}
-            className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
-            title="Grimoire"
-          >
-            📜
-          </button>
-          <button 
-            onClick={() => setShowForge(true)}
-            className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
-            title="Forge"
-          >
-            ⚒️
-          </button>
-          <button 
-            onClick={() => setShowSettings(true)}
-            className="text-slate-400 hover:text-white transition-colors text-xl active:scale-95"
-          >
-            ⚙️
-          </button>
-        </div>
+          
+          <div className="flex items-center gap-3 md:gap-4">
+            {gameState !== 'START' && (
+              <div className="flex gap-2 md:gap-4 text-xs md:text-base font-black text-amber-400">
+                <span className="flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm">
+                  💰 <span className="font-mono">{gold}</span>
+                </span>
+                <span className="flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm text-rose-400">
+                  ⚔️ <span className="font-mono">{multiplier.toFixed(1)}</span>
+                </span>
+              </div>
+            )}
+
+            {/* Only show Grimoire and Forge when NOT in the middle of a dungeon (PLAYING) */}
+            {gameState !== 'PLAYING' && (
+              <>
+                <button 
+                  onClick={() => setShowGrimoire(true)}
+                  className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
+                  title="Grimoire"
+                >
+                  📜
+                </button>
+                <button 
+                  onClick={() => setShowForge(true)}
+                  className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
+                  title="Forge"
+                >
+                  ⚒️
+                </button>
+              </>
+            )}
+            
+            <button 
+              onClick={() => setShowSettings(true)}
+              className="text-slate-400 hover:text-white transition-colors text-xl active:scale-95"
+              title="Settings"
+            >
+              ⚙️
+            </button>
+          </div>
       </header>
 
       {/* MAIN CONTAINER */}
@@ -126,7 +165,7 @@ function App() {
               </ul>
             </div>
 
-            <div className="flex flex-col gap-3 w-full max-w-md mx-auto">
+            <div className="flex flex-col gap-3 w-full max-w-sm mx-auto">
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-[10px] font-black uppercase tracking-widest pointer-events-none">Seed</span>
                 <input 
@@ -134,18 +173,18 @@ function App() {
                   placeholder="RANDOM" 
                   value={seedInput}
                   onChange={(e) => setSeedInput(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 text-white text-center font-mono rounded-2xl p-5 pl-16 focus:border-rose-500 outline-none uppercase shadow-2xl transition-all" 
+                  className="w-full bg-slate-900 border border-slate-700 text-white text-center font-mono rounded-2xl p-4 md:p-5 pl-16 focus:border-rose-500 outline-none uppercase shadow-2xl transition-all text-sm md:text-base" 
                 />
               </div>
               <button 
                 onClick={handleStart}
-                className="w-full px-8 py-5 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-2xl shadow-2xl shadow-rose-950/40 transition-all text-xl uppercase tracking-[0.2em] border border-rose-500/50 active:scale-95"
+                className="w-full px-6 py-4 md:px-8 md:py-5 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-2xl shadow-2xl shadow-rose-950/40 transition-all text-lg md:text-xl uppercase tracking-[0.2em] border border-rose-500/50 active:scale-95"
               >
                 Enter the Dungeon
               </button>
               <button 
                 onClick={() => setShowLeaderboard(true)}
-                className="w-full py-3 text-slate-500 hover:text-slate-300 transition-colors text-[10px] font-black uppercase tracking-[0.3em] mt-2"
+                className="w-full py-2 text-slate-500 hover:text-slate-300 transition-colors text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] mt-1"
               >
                 🏆 Hall of Heroes
               </button>
@@ -160,7 +199,7 @@ function App() {
 
         {/* PLAYING SCREEN */}
         {gameState === 'PLAYING' && (
-          <div className="flex flex-col items-center w-full max-w-4xl relative z-10 h-full justify-center px-4 py-2">
+          <div className="flex flex-col items-center w-full max-w-4xl relative z-10 flex-1 min-h-0 justify-evenly px-4 py-2">
             
             {/* HUD */}
             <div id="playing-hud" className="w-full bg-slate-900 border border-slate-700 rounded-2xl p-2 md:p-3 mb-2 md:mb-4 relative overflow-hidden flex flex-col gap-1 shrink-0 shadow-lg">
@@ -178,11 +217,15 @@ function App() {
                      encounterIdx === 2 ? '🟢' : '🐉'}
                   </span>
                   <div>
-                    <h3 className="font-black text-sm md:text-lg text-white tracking-wider">
-                      {encounterIdx === 0 ? 'Goblin Scout' : 
-                       encounterIdx === 1 ? 'Orc Brute' : 
-                       encounterIdx === 2 ? 'Slime King' : 'The Boss'}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-black text-sm md:text-lg text-white tracking-wider">
+                        {encounterIdx === 0 ? 'Goblin Scout' : 
+                         encounterIdx === 1 ? 'Orc Brute' : 
+                         encounterIdx === 2 ? 'Slime King' : 'The Boss'}
+                      </h3>
+                      {useGameStore.getState().grid.some(t => t?.val === 4) && <span className="text-[10px] bg-slate-800 text-slate-400 px-1 rounded animate-pulse" title="Skeleton blocking merges">💀</span>}
+                      {useGameStore.getState().grid.some(t => t?.val === 8) && <span className="text-[10px] bg-amber-900/50 text-amber-500 px-1 rounded animate-pulse" title="Goblin stealing gold">💰</span>}
+                    </div>
                     <p className="text-[9px] md:text-xs font-mono text-rose-200 leading-none">HP: {Math.ceil(monsterHp)} / {monsterMaxHp}</p>
                   </div>
                 </div>

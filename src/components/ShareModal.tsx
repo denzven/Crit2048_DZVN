@@ -42,6 +42,29 @@ const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     link.click();
   };
 
+  const handleShare = async () => {
+    if (!preview) return;
+    try {
+      const response = await fetch(preview);
+      const blob = await response.blob();
+      const file = new File([blob], `crit2048_run_${runStats.seedUsed}.png`, { type: 'image/png' });
+      
+      const success = await Native.share({
+        title: 'Crit 2048 Run Summary',
+        text: `Check out my Ante ${encounterIdx + 1} run in Crit 2048! Seed: ${runStats.seedUsed}`,
+        files: [file]
+      });
+
+      if (!success) {
+        // Fallback to download
+        handleDownload();
+      }
+    } catch (e) {
+      console.error("Share failed", e);
+      handleDownload();
+    }
+  };
+
   return (
     <div className="absolute inset-0 bg-slate-950/95 z-[150] flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
       <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl flex flex-col h-full max-h-[90vh] overflow-hidden">
@@ -72,16 +95,17 @@ const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="p-6 border-t border-slate-800 bg-slate-900 flex flex-col gap-3">
           <button 
             disabled={loading}
-            onClick={handleDownload}
-            className="w-full py-4 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95"
+            onClick={handleShare}
+            className="w-full py-4 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
           >
-            💾 Save to Device
+            <span>🚀</span> <span>Share to Apps</span>
           </button>
           <button 
-            onClick={onClose}
-            className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black rounded-xl text-[10px] uppercase tracking-widest transition-all"
+            disabled={loading}
+            onClick={handleDownload}
+            className="w-full py-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-400 font-black rounded-xl text-[10px] uppercase tracking-widest transition-all"
           >
-            Close
+            💾 Download Image
           </button>
         </div>
       </div>

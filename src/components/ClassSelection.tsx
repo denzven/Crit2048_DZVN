@@ -5,6 +5,7 @@ import { clsx } from 'clsx';
 
 const ClassSelection: React.FC = () => {
   const { initEncounter, spawnRandomTile, addLog } = useGameStore();
+  const [focusedIndex, setFocusedIndex] = React.useState(0);
 
   const selectClass = (heroClass: any) => {
     useGameStore.setState({ playerClass: heroClass, usesLeft: heroClass.ability.maxUses });
@@ -14,6 +15,24 @@ const ClassSelection: React.FC = () => {
     addLog(`Dungeon entered as ${heroClass.name}.`);
   };
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        setFocusedIndex(prev => (prev + 1) % CLASSES.length);
+      } else if (e.key === 'ArrowLeft') {
+        setFocusedIndex(prev => (prev - 1 + CLASSES.length) % CLASSES.length);
+      } else if (e.key === 'ArrowDown') {
+        setFocusedIndex(prev => (prev + 3) % CLASSES.length);
+      } else if (e.key === 'ArrowUp') {
+        setFocusedIndex(prev => (prev - 3 + CLASSES.length) % CLASSES.length);
+      } else if (e.key === 'Enter') {
+        selectClass(CLASSES[focusedIndex]);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedIndex]);
+
   return (
     <div className="w-full max-w-4xl mx-auto px-6 py-8 flex flex-col h-full animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className="text-center mb-8 shrink-0">
@@ -22,11 +41,17 @@ const ClassSelection: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 custom-scrollbar pb-8">
-        {CLASSES.map((hero) => (
+        {CLASSES.map((hero, idx) => (
           <button
             key={hero.id}
             onClick={() => selectClass(hero)}
-            className="group relative bg-slate-900 border border-slate-800 rounded-3xl p-6 text-left transition-all hover:border-rose-500 hover:shadow-[0_0_30px_rgba(244,63,94,0.15)] active:scale-95 flex flex-col justify-between h-48 md:h-56 overflow-hidden"
+            onMouseEnter={() => setFocusedIndex(idx)}
+            className={clsx(
+              "group relative bg-slate-900 border rounded-3xl p-6 text-left transition-all active:scale-95 flex flex-col justify-between h-48 md:h-56 overflow-hidden outline-none",
+              focusedIndex === idx 
+                ? "border-rose-500 shadow-[0_0_30px_rgba(244,63,94,0.15)] ring-2 ring-rose-500/20" 
+                : "border-slate-800 hover:border-slate-600"
+            )}
           >
             <div className="absolute -top-4 -right-4 text-7xl opacity-5 group-hover:opacity-20 transition-opacity grayscale group-hover:grayscale-0 rotate-12">
               {hero.icon}

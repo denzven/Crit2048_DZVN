@@ -15,6 +15,20 @@ const SpellModal: React.FC = () => {
     executeSpellRoll();
   };
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        if (!hasStartedRoll) {
+          handleRoll();
+        } else if (spellRoll) {
+          resolveSpell();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasStartedRoll, spellRoll]);
+
   return (
     <div id="modal-attack" className="absolute inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
       <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md pointer-events-auto" />

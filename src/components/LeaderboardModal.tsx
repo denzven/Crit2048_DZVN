@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { LeaderboardLogic, LeaderboardEntry } from '../engine/leaderboard';
+import { LeaderboardLogic } from '../engine/leaderboard';
+import type { LeaderboardEntry } from '../engine/leaderboard';
 import { clsx } from 'clsx';
 
 const LeaderboardModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {

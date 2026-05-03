@@ -75,7 +75,7 @@ const Grid: React.FC = () => {
   return (
     <div 
       id="grid-container" 
-      className="relative bg-slate-800 p-2 md:p-3 rounded-2xl border border-slate-700 w-72 h-72 md:w-96 md:h-96 shrink-0 self-center shadow-xl overflow-hidden"
+      className="relative bg-slate-800 p-2 md:p-3 rounded-2xl border border-slate-700 w-full max-w-[min(80vw,80vh,384px)] aspect-square shrink-0 self-center shadow-xl overflow-hidden"
     >
       <div className="relative w-full h-full">
         {/* Background Grid Cells */}
