@@ -24,6 +24,8 @@ export interface RunStats {
   totalSpellsCast: number;
   hazardsSpawned: number;
   luckFactor: number;
+  curseClears: number;
+  webClears: number;
   startTime: number;
   endTime: number;
   seedUsed: string;
@@ -88,4 +90,7 @@ export interface GameStoreState {
   settings: Settings;
   floatingTexts: FloatingText[];
   confirmation: ConfirmationState | null;
+  activeEncounters: any[];
+  activeClasses: any[];
+  activeArtifacts: any[];
 }

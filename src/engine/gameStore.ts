@@ -102,13 +102,14 @@ export interface GameActions {
   showConfirm: (title: string, message: string, onConfirm: () => void, onCancel?: () => void) => void;
   showAlert: (title: string, message: string) => void;
   triggerScreenShake: (intensity?: number) => void;
-  triggerScreenShake: (intensity?: number) => void;
   closeConfirmation: () => void;
   initializeRegistry: () => Promise<void>;
   restoreSlides: (n: number) => void;
   addMultiplier: (n: number) => void;
   applyDamage: (n: number) => void;
   setMonsterHp: (hp: number) => void;
+  checkHazards: (newGrid: (Tile | null)[], damage: number) => (Tile | null)[];
+  setState: (partial: any) => void;
 }
 
 export interface ExtendedGameStoreState extends GameStoreState {
@@ -126,9 +127,6 @@ export interface ExtendedGameStoreState extends GameStoreState {
   } | null;
   lastDirection: 'LEFT' | 'RIGHT' | 'UP' | 'DOWN' | null;
   hunterMarkLeft: number;
-  activeEncounters: any[];
-  activeClasses: any[];
-  activeArtifacts: any[];
 }
 
 export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, get) => ({

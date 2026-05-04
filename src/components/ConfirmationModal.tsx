@@ -1,4 +1,5 @@
 import React from 'react';
+import { clsx } from 'clsx';
 import { useGameStore } from '../engine/gameStore';
 import type { ConfirmationState } from '../types/game';
 

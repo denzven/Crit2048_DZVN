@@ -186,12 +186,12 @@ const GrimoireModal: React.FC<GrimoireProps> = ({ onClose, onEditPack }) => {
     { id: 'skin', label: 'Skin' },
   ];
 
-  const mergedPacks = Array.from(new Map([
+  const mergedPacks = Array.from(new Map<string, any>([
     ...remotePacks.map(p => [p.id, { ...p, isRemote: true }]),
     ...localPacks.map(p => [p.id, { ...p, isInstalled: true }])
-  ]).values());
+  ] as [string, any][]).values());
 
-  const filteredPacks = mergedPacks.filter(p => 
+  const filteredPacks = (mergedPacks as any[]).filter(p => 
     (activeTab === 'all' || p.type === activeTab) && 
     (p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.description || '').toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -248,7 +248,7 @@ const GrimoireModal: React.FC<GrimoireProps> = ({ onClose, onEditPack }) => {
         {/* Content */}
         <div className="flex-grow overflow-y-auto custom-scrollbar p-6 bg-slate-950 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPacks.map(pack => {
+            {filteredPacks.map((pack: any) => {
               const isInstalled = (pack as any).isInstalled;
               const isActive = (pack as any).isTemplate || runStats.activePackIds?.includes(pack.id);
               

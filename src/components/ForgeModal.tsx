@@ -226,7 +226,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                         activeSubTab === t ? "bg-rose-600 border-rose-400 text-white" : "bg-slate-800 border-slate-700 text-slate-400"
                       )}
                     >
-                      {t.charAt(0).toUpperCase() + t.slice(1)} ({pack[t as keyof PackData]?.length || 0})
+                      {t.charAt(0).toUpperCase() + t.slice(1)} ({Array.isArray(pack[t as keyof PackData]) ? (pack[t as keyof PackData] as any[]).length : 0})
                     </button>
                   ))}
                 </div>
@@ -338,7 +338,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs"
                                 value={(pack.artifacts as any[])[editingIndex].rarity}
                                 onChange={e => {
-                                  const list = [...pack.artifacts];
+                                  const list = [...(pack.artifacts || [])];
                                   list[editingIndex] = { ...list[editingIndex], rarity: e.target.value };
                                   updatePack({ artifacts: list });
                                 }}
@@ -357,7 +357,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs"
                                 value={(pack.artifacts as any[])[editingIndex].basePrice}
                                 onChange={e => {
-                                  const list = [...pack.artifacts];
+                                  const list = [...(pack.artifacts || [])];
                                   list[editingIndex] = { ...list[editingIndex], basePrice: parseInt(e.target.value) };
                                   updatePack({ artifacts: list });
                                 }}
@@ -375,7 +375,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs"
                                 value={(pack.classes as any[])[editingIndex].d20Mod}
                                 onChange={e => {
-                                  const list = [...pack.classes];
+                                  const list = [...(pack.classes || [])];
                                   list[editingIndex] = { ...list[editingIndex], d20Mod: parseInt(e.target.value) };
                                   updatePack({ classes: list });
                                 }}
@@ -390,7 +390,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                     className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white text-[10px]"
                                     value={(pack.classes as any[])[editingIndex].ability?.name || ''}
                                     onChange={e => {
-                                      const list = [...pack.classes];
+                                      const list = [...(pack.classes || [])];
                                       list[editingIndex] = { ...list[editingIndex], ability: { ...list[editingIndex].ability, name: e.target.value } };
                                       updatePack({ classes: list });
                                     }}
@@ -403,7 +403,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                     className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white text-[10px]"
                                     value={(pack.classes as any[])[editingIndex].ability?.sides || 6}
                                     onChange={e => {
-                                      const list = [...pack.classes];
+                                      const list = [...(pack.classes || [])];
                                       list[editingIndex] = { ...list[editingIndex], ability: { ...list[editingIndex].ability, sides: parseInt(e.target.value) } };
                                       updatePack({ classes: list });
                                     }}
@@ -416,7 +416,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                     className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white text-[10px]"
                                     value={(pack.classes as any[])[editingIndex].ability?.maxUses || 1}
                                     onChange={e => {
-                                      const list = [...pack.classes];
+                                      const list = [...(pack.classes || [])];
                                       list[editingIndex] = { ...list[editingIndex], ability: { ...list[editingIndex].ability, maxUses: parseInt(e.target.value) } };
                                       updatePack({ classes: list });
                                     }}
@@ -428,7 +428,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                     className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white text-[10px]"
                                     value={(pack.classes as any[])[editingIndex].ability?.type || 'damage'}
                                     onChange={e => {
-                                      const list = [...pack.classes];
+                                      const list = [...(pack.classes || [])];
                                       list[editingIndex] = { ...list[editingIndex], ability: { ...list[editingIndex].ability, type: e.target.value } };
                                       updatePack({ classes: list });
                                     }}
@@ -450,7 +450,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs"
                               value={(pack.weapons as any[])[editingIndex].dmg}
                               onChange={e => {
-                                const list = [...pack.weapons];
+                                const list = [...(pack.weapons || [])];
                                 list[editingIndex] = { ...list[editingIndex], dmg: parseInt(e.target.value) };
                                 updatePack({ weapons: list });
                               }}
@@ -466,8 +466,8 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                 className="bg-slate-950 border border-slate-800 text-white text-[10px] rounded-lg px-2 py-1 outline-none focus:border-rose-500"
                                 value={(pack.enemies as any[])[editingIndex].mode}
                                 onChange={e => {
-                                  const list = [...pack.enemies];
-                                  list[editingIndex] = { ...list[editingIndex], mode: e.target.value };
+                                  const list = [...(pack.enemies || [])];
+                                  list[editingIndex] = { ...list[editingIndex], mode: e.target.value as any };
                                   updatePack({ enemies: list });
                                 }}
                               >
@@ -484,7 +484,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                     className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white text-xs"
                                     value={(pack.enemies as any[])[editingIndex].passiveAbility?.effect || 'none'}
                                     onChange={e => {
-                                      const list = [...pack.enemies];
+                                      const list = [...(pack.enemies || [])];
                                       const effect = e.target.value;
                                       list[editingIndex] = { 
                                         ...list[editingIndex], 
@@ -507,7 +507,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                       className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white text-xs"
                                       value={(pack.enemies as any[])[editingIndex].passiveAbility?.effectParam || 0}
                                       onChange={e => {
-                                        const list = [...pack.enemies];
+                                        const list = [...(pack.enemies || [])];
                                         list[editingIndex] = { 
                                           ...list[editingIndex], 
                                           passiveAbility: { ...list[editingIndex].passiveAbility, effectParam: parseInt(e.target.value) } 
@@ -531,7 +531,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                   onChange={e => {
                                     try {
                                       const script = JSON.parse(e.target.value);
-                                      const list = [...pack.enemies];
+                                      const list = [...(pack.enemies || [])];
                                       list[editingIndex] = { ...list[editingIndex], script };
                                       updatePack({ enemies: list });
                                     } catch (err) {}

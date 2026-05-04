@@ -22,8 +22,14 @@ export interface EnemyDef {
   primaryAbility?: {
     trigger: string;
     triggerParam?: any;
-    effect: string;
+    effect?: string;
     effectParam?: any;
+    logMessage?: string;
+  };
+  passiveAbility?: {
+    effect?: string;
+    effectParam?: any;
+    logMessage?: string;
   };
   script?: Record<string, string>;
   lore?: string;
@@ -40,6 +46,7 @@ export interface ClassDef {
   passiveParam?: any;
   scripts?: Record<string, string>;
   ability?: any;
+  mode?: 'simple' | 'advanced' | 'builtin';
 }
 
 export interface ArtifactDef {
@@ -70,6 +77,7 @@ export interface HazardDef {
 }
 
 export interface SkinDef {
+  themeName?: string;
   primaryColor?: string;
   accentColor?: string;
   bgColor?: string;
@@ -78,6 +86,12 @@ export interface SkinDef {
   bgImage?: string;
   fontFamily?: string;
   customCss?: string;
+  borderColor?: string;
+  logoOverride?: string;
+  hpBarColor?: string;
+  loadingColor?: string;
+  glowColor?: string;
+  script?: Record<string, string>;
   cssVars?: Record<string, string>;
 }
 

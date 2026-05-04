@@ -11,6 +11,7 @@ import {
   CRIT2048_DEFAULT_SKIN_PACK,
   CRIT2048_SHADOWFELL_SKIN_PACK
 } from './defaultPacks';
+import { SFX } from './audio';
 import type { PackData, PackEntry } from '../types/pack';
 
 /**
@@ -440,7 +441,7 @@ export class PackEngine {
     const storeObj = (window as any).useGameStore;
     if (!storeObj) {
         // Return dummy API to prevent crash
-        return { log: (m) => console.log(m), prng: () => Math.random() } as any;
+        return { log: (m: any) => console.log(m), prng: () => Math.random() } as any;
     }
     const store = storeObj.getState();
     return {
@@ -546,7 +547,7 @@ export class PackEngine {
       removeCss: (id) => {
         document.getElementById(`pack-css-${id}`)?.remove();
       },
-      sfx: (name) => SFX[name]?.(),
+      sfx: (name) => (SFX as any)[name]?.(),
       utils: {
         wait: (ms) => new Promise(r => setTimeout(r, ms)),
         onInterval: (cb, ms) => setInterval(cb, ms),
