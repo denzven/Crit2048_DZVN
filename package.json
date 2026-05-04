@@ -40,7 +40,7 @@
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.10",
     "vite-plugin-pwa": "^1.2.0",
-    "electron": "^33.0.0",
+    "electron": "^39.8.5",
     "electron-builder": "^25.1.8"
   }
 }
