@@ -1,4 +1,0 @@
-#Mon May 04 02:50:21 IST 2026
-base.0=D\:\\Crit2048_scale\\app\\build\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
-renamed.0=classes.dex
-path.0=classes.dex

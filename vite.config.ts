@@ -5,6 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/Crit2048_DZVN/',
   plugins: [
     react(),
     tailwindcss(),
@@ -19,9 +20,9 @@ export default defineConfig({
         background_color: '#020617',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        id: '/',
-        scope: '/',
+        start_url: '/Crit2048_DZVN/',
+        id: '/Crit2048_DZVN/',
+        scope: '/Crit2048_DZVN/',
         icons: [
           {
             src: 'pwa-192x192.png',

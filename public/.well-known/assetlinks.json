@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.denzven.crit2048",
+    "sha256_cert_fingerprints": ["76:CD:04:07:49:66:0D:94:97:9D:7C:D3:B9:2D:FE:8B:E5:CA:4B:59:9F:5F:82:4C:42:7B:BA:A7:EF:4E:45:C8"]
+  }
+}]

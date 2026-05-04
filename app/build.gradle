@@ -22,8 +22,8 @@ plugins {
 
 def twaManifest = [
     applicationId: 'com.denzven.crit2048',
-    hostName: 'localhost:8080', // The domain being opened in the TWA.
-    launchUrl: '/', // The start path for the TWA. Must be relative to the domain.
+    hostName: 'denzven.github.io', // The domain being opened in the TWA.
+    launchUrl: '/Crit2048_DZVN/', // The start path for the TWA. Must be relative to the domain.
     name: 'Crit 2048', // The application name.
     launcherName: 'Crit 2048', // The name shown on the Android Launcher.
     themeColor: '#020617', // The color used for the status bar.
@@ -57,7 +57,7 @@ android {
         applicationId "com.denzven.crit2048"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 2
+        versionCode 3
         versionName "1.0.0"
 
         // The name for the application
@@ -76,7 +76,7 @@ android {
             // The URL the Web Manifest for the Progressive Web App that the TWA points to. This
             // is used by Chrome OS and Meta Quest to open the Web version of the PWA instead of
             // the TWA, as it will probably give a better user experience for non-mobile devices.
-            resValue "string", "webManifestUrl", 'http://localhost:8080/manifest.webmanifest'
+            resValue "string", "webManifestUrl", 'https://denzven.github.io/Crit2048_DZVN/manifest.webmanifest'
         
 
         

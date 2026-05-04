@@ -1,6 +1,6 @@
 {
   "packageId": "com.denzven.crit2048",
-  "host": "localhost:8080",
+  "host": "denzven.github.io",
   "name": "Crit 2048",
   "launcherName": "Crit 2048",
   "display": "standalone",
@@ -12,9 +12,9 @@
   "navigationDividerColorDark": "#000000",
   "backgroundColor": "#020617",
   "enableNotifications": true,
-  "startUrl": "/",
-  "iconUrl": "http://localhost:8080/pwa-512x512.png",
-  "maskableIconUrl": "http://localhost:8080/pwa-512x512.png",
+  "startUrl": "/Crit2048_DZVN/",
+  "iconUrl": "https://denzven.github.io/Crit2048_DZVN/pwa-512x512.png",
+  "maskableIconUrl": "https://denzven.github.io/Crit2048_DZVN/pwa-512x512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./crit2048.keystore",
@@ -24,7 +24,7 @@
   "appVersionCode": 2,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "http://localhost:8080/manifest.webmanifest",
+  "webManifestUrl": "https://denzven.github.io/Crit2048_DZVN/manifest.webmanifest",
   "fallbackType": "customtabs",
   "features": {
     "locationDelegation": true,
@@ -38,7 +38,11 @@
   "isMetaQuest": false,
   "minSdkVersion": 21,
   "orientation": "portrait",
-  "fingerprints": [],
+  "fingerprints": [
+    {
+      "sha256": "76:CD:04:07:49:66:0D:94:97:9D:7C:D3:B9:2D:FE:8B:E5:CA:4B:59:9F:5F:82:4C:42:7B:BA:A7:EF:4E:45:C8"
+    }
+  ],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
   "displayOverride": [],
