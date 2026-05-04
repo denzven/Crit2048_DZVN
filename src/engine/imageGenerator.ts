@@ -146,7 +146,7 @@ export const ImageGenerator = {
 
       canvas.toBlob(async (blob) => {
         if (!blob) return reject('Blob creation failed');
-        const buffer = await blob.arrayBuffer();
+        const buffer = await blob.arrayBuffer() as ArrayBuffer;
         resolve(new Uint8Array(buffer));
       }, 'image/png');
     });

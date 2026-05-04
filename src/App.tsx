@@ -41,6 +41,25 @@ function App() {
   const [showMobileInventory, setShowMobileInventory] = React.useState(false)
   const [showMobileLogs, setShowMobileLogs] = React.useState(false)
   const [seedInput, setSeedInput] = React.useState('')
+  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null)
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   useEffect(() => {
     Native.requestWakeLock()
@@ -182,6 +201,16 @@ function App() {
               >
                 Enter the Dungeon
               </button>
+              
+              {deferredPrompt && (
+                <button 
+                  onClick={handleInstall}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span>📥</span> Install App for Offline Play
+                </button>
+              )}
+
               <button 
                 onClick={() => setShowLeaderboard(true)}
                 className="w-full py-2 text-slate-500 hover:text-slate-300 transition-colors text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] mt-1"

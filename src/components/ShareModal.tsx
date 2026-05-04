@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ImageGenerator } from '../engine/imageGenerator';
 import { useGameStore } from '../engine/gameStore';
+import { Native } from '../engine/native';
 
 const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { runStats, playerClass, encounterIdx, artifacts } = useGameStore();
@@ -23,7 +24,7 @@ const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           artifacts: artifacts
         };
         const bytes = await ImageGenerator.generate(data);
-        const blob = new Blob([bytes], { type: 'image/png' });
+        const blob = new Blob([bytes as any], { type: 'image/png' });
         setPreview(URL.createObjectURL(blob));
       } catch (e) {
         console.error(e);

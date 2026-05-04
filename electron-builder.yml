@@ -1,0 +1,37 @@
+appId: com.denzven.crit2048
+productName: Crit 2048
+directories:
+  output: dist/binaries
+  buildResources: public
+files:
+  - dist/**/*
+  - electron-main.cjs
+  - package.json
+  - public/**/*
+
+win:
+  target:
+    - msi
+    - nsis
+  icon: public/pwa-512x512.png
+
+mac:
+  target:
+    - dmg
+    - zip
+  icon: public/pwa-512x512.png
+  category: public.app-category.games
+
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: public/pwa-512x512.png
+  category: Game
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+
+msi:
+  oneClick: false
