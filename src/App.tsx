@@ -13,6 +13,7 @@ import LeaderboardModal from './components/LeaderboardModal'
 import ShareModal from './components/ShareModal'
 import { MobileInventoryModal, MobileLogsModal } from './components/MobileModals'
 import BackgroundParticles from './components/BackgroundParticles'
+import BrowserWarning from './components/BrowserWarning'
 import { Native } from './engine/native'
 import { clsx } from 'clsx'
 
@@ -94,6 +95,7 @@ function App() {
   return (
     <div className="bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 flex flex-col h-screen w-screen overflow-hidden select-none safe-top safe-bottom">
       <BackgroundParticles />
+      <BrowserWarning />
       {/* HEADER */}
       <header className="bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 relative z-40 px-4 h-14 md:h-16">
         <div className="flex items-center gap-2">

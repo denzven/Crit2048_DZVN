@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/Crit2048_DZVN/',
+  base: './', // Use relative paths for better compatibility (Electron + GitHub Pages)
   plugins: [
     react(),
     tailwindcss(),
@@ -21,9 +21,9 @@ export default defineConfig({
         background_color: '#020617',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/Crit2048_DZVN/',
-        id: '/Crit2048_DZVN/',
-        scope: '/Crit2048_DZVN/',
+        start_url: './',
+        id: './',
+        scope: './',
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -48,7 +48,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        navigateFallback: '/Crit2048_DZVN/index.html',
+        navigateFallback: 'index.html',
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
