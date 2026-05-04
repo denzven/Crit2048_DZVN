@@ -246,12 +246,14 @@ function App() {
 
         {/* CLASS SELECTION */}
         {gameState === 'CLASS_SELECT' && (
-          <ClassSelection />
+          <div className="w-full h-full animate-in fade-in duration-500">
+            <ClassSelection />
+          </div>
         )}
 
         {/* PLAYING SCREEN */}
         {gameState === 'PLAYING' && (
-          <div className="flex flex-col items-center w-full max-w-4xl relative z-10 flex-1 min-h-0 justify-evenly px-4 py-2">
+          <div className="flex flex-col items-center w-full max-w-4xl relative z-10 flex-1 min-h-0 justify-evenly px-4 py-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
             
             {/* HUD */}
             <div id="playing-hud" className="w-full bg-slate-900 border border-slate-700 rounded-2xl p-2 md:p-3 mb-2 md:mb-4 relative overflow-hidden flex flex-col gap-1 shrink-0 shadow-lg">
@@ -372,7 +374,9 @@ function App() {
         )}
 
         {gameState === 'TAVERN' && (
-          <Tavern />
+          <div className="w-full h-full animate-in fade-in slide-in-from-right-8 duration-500">
+            <Tavern />
+          </div>
         )}
 
         {gameState === 'DICE' && (
@@ -422,6 +426,22 @@ function App() {
             onShowLeaderboard={() => setShowLeaderboard(true)} 
             onShowShare={() => setShowShare(true)}
           />
+        )}
+
+        {/* ENEMY DEFEATED SPLASH */}
+        {useGameStore(s => s.isTransitioning && s.monsterHp <= 0) && (
+          <div className="absolute inset-0 z-[200] flex items-center justify-center pointer-events-none">
+            <div className="absolute inset-0 bg-rose-950/20 backdrop-blur-sm animate-in fade-in duration-500" />
+            <div className="relative animate-in zoom-in slide-in-from-top-8 duration-700 ease-out flex flex-col items-center">
+              <div className="text-6xl md:text-8xl font-black text-rose-600 font-serif tracking-tighter drop-shadow-[0_0_30px_rgba(225,29,72,0.8)] uppercase">
+                Defeated
+              </div>
+              <div className="h-1 w-64 bg-gradient-to-r from-transparent via-rose-500 to-transparent mt-2 shadow-[0_0_15px_rgba(225,29,72,0.5)]" />
+              <p className="text-rose-200 text-xs md:text-sm font-bold uppercase tracking-[0.5em] mt-4 opacity-80 animate-pulse">
+                The Dungeon Recedes...
+              </p>
+            </div>
+          </div>
         )}
       </main>
     </div>

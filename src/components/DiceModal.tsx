@@ -58,10 +58,10 @@ const DiceModal: React.FC = () => {
           <div id="d20-render-target" className="w-full h-full absolute inset-0 mx-auto z-10 flex items-center justify-center">
             {showThreeDice && (
               <ThreeDice 
-                key={`d20-${diceResults.join('-')}`}
                 sides={20} 
                 results={diceResults} 
                 onComplete={onDiceComplete} 
+                modifier={mod}
               />
             )}
           </div>

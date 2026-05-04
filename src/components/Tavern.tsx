@@ -164,8 +164,9 @@ const Tavern: React.FC = () => {
                 return (
                   <div key={item.id} 
                     onMouseEnter={() => setFocusedIndex(4 + idx)}
+                    style={{ animationDelay: `${idx * 100}ms` }}
                     className={clsx(
-                      "tavern-item relative bg-slate-900/40 border-2 rounded-[2rem] p-6 flex flex-col gap-5 overflow-hidden group backdrop-blur-md shadow-2xl transition-all duration-300",
+                      "tavern-item relative bg-slate-900/40 border-2 rounded-[2rem] p-6 flex flex-col gap-5 overflow-hidden group backdrop-blur-md shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-right-8",
                       focusedIndex === 4 + idx ? "border-white/20 scale-[1.02]" : "border-slate-800/80 hover:border-slate-700/50",
                       styles.glow
                     )}

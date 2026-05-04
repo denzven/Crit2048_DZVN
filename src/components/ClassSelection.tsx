@@ -46,8 +46,9 @@ const ClassSelection: React.FC = () => {
             key={hero.id}
             onClick={() => selectClass(hero)}
             onMouseEnter={() => setFocusedIndex(idx)}
+            style={{ animationDelay: `${idx * 100}ms` }}
             className={clsx(
-              "group relative bg-slate-900 border rounded-3xl p-6 text-left transition-all active:scale-95 flex flex-col justify-between h-48 md:h-56 overflow-hidden outline-none",
+              "group relative bg-slate-900 border rounded-3xl p-6 text-left transition-all active:scale-95 flex flex-col justify-between h-48 md:h-56 overflow-hidden outline-none animate-in fade-in slide-in-from-bottom-8",
               focusedIndex === idx 
                 ? "border-rose-500 shadow-[0_0_30px_rgba(244,63,94,0.15)] ring-2 ring-rose-500/20" 
                 : "border-slate-800 hover:border-slate-600"
