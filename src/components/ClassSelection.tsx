@@ -1,10 +1,9 @@
 import React from 'react';
 import { useGameStore } from '../engine/gameStore';
-import { CLASSES } from '../engine/data';
 import { clsx } from 'clsx';
 
 const ClassSelection: React.FC = () => {
-  const { initEncounter, spawnRandomTile, addLog } = useGameStore();
+  const { initEncounter, spawnRandomTile, addLog, activeClasses } = useGameStore();
   const [focusedIndex, setFocusedIndex] = React.useState(0);
 
   const selectClass = (heroClass: any) => {
@@ -18,15 +17,15 @@ const ClassSelection: React.FC = () => {
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') {
-        setFocusedIndex(prev => (prev + 1) % CLASSES.length);
+        setFocusedIndex(prev => (prev + 1) % activeClasses.length);
       } else if (e.key === 'ArrowLeft') {
-        setFocusedIndex(prev => (prev - 1 + CLASSES.length) % CLASSES.length);
+        setFocusedIndex(prev => (prev - 1 + activeClasses.length) % activeClasses.length);
       } else if (e.key === 'ArrowDown') {
-        setFocusedIndex(prev => (prev + 3) % CLASSES.length);
+        setFocusedIndex(prev => (prev + 3) % activeClasses.length);
       } else if (e.key === 'ArrowUp') {
-        setFocusedIndex(prev => (prev - 3 + CLASSES.length) % CLASSES.length);
+        setFocusedIndex(prev => (prev - 3 + activeClasses.length) % activeClasses.length);
       } else if (e.key === 'Enter') {
-        selectClass(CLASSES[focusedIndex]);
+        selectClass(activeClasses[focusedIndex]);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -35,13 +34,22 @@ const ClassSelection: React.FC = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto px-6 py-8 flex flex-col h-full animate-in fade-in slide-in-from-bottom-8 duration-700">
-      <div className="text-center mb-8 shrink-0">
-        <h2 className="text-4xl md:text-6xl font-black text-white mb-2 font-serif tracking-tighter uppercase">Choose Your Hero</h2>
-        <p className="text-slate-500 text-sm uppercase tracking-[0.2em] font-bold">select a class to begin your descent</p>
+      <div className="flex justify-between items-center mb-8 shrink-0">
+        <button 
+          onClick={() => useGameStore.setState({ gameState: 'START' })}
+          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl border border-slate-700 transition-all"
+        >
+          ◀ Menu
+        </button>
+        <div className="text-center flex-grow">
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-1 font-serif tracking-tighter uppercase">Choose Your Hero</h2>
+          <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold">select a class to begin your descent</p>
+        </div>
+        <div className="w-20"></div> {/* Spacer */}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 custom-scrollbar pb-8">
-        {CLASSES.map((hero, idx) => (
+        {activeClasses.map((hero, idx) => (
           <button
             key={hero.id}
             onClick={() => selectClass(hero)}

@@ -23,6 +23,14 @@ class PRNG {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
 
+  getSeed(): number {
+    return this.currentSeed;
+  }
+
+  setSeedState(seed: number) {
+    this.currentSeed = seed;
+  }
+
   randomInt(min: number, max: number): number {
     return Math.floor(this.random() * (max - min + 1)) + min;
   }

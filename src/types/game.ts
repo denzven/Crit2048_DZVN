@@ -74,6 +74,7 @@ export interface GameStoreState {
   slidesLeft: number;
   gold: number;
   multiplier: number;
+  score: number;
   playerClass: any | null;
   artifacts: any[];
   logs: string[];

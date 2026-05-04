@@ -7,6 +7,7 @@ import { MASTER_ARTIFACTS, ENEMIES, CLASSES } from './data';
 import { SFX } from './audio';
 import { LeaderboardLogic } from './leaderboard';
 import { SeededRNG } from './prng';
+import { PackEngine } from './packEngine';
 
 const DEFAULT_RUN_STATS: RunStats = {
   maxDamage: 0,
@@ -25,6 +26,8 @@ const DEFAULT_RUN_STATS: RunStats = {
   totalSpellsCast: 0,
   hazardsSpawned: 0,
   luckFactor: 10,
+  curseClears: 0,
+  webClears: 0,
   startTime: 0,
   endTime: 0,
   seedUsed: '',
@@ -43,6 +46,7 @@ const INITIAL_STATE: GameStoreState = {
   slidesLeft: 0,
   gold: 0,
   multiplier: 1.0,
+  score: 0,
   playerClass: null,
   artifacts: [],
   logs: [],
@@ -65,6 +69,9 @@ const INITIAL_STATE: GameStoreState = {
   },
   floatingTexts: [],
   confirmation: null,
+  activeEncounters: [],
+  activeClasses: [],
+  activeArtifacts: [],
 };
 
 export interface GameActions {
@@ -95,7 +102,13 @@ export interface GameActions {
   showConfirm: (title: string, message: string, onConfirm: () => void, onCancel?: () => void) => void;
   showAlert: (title: string, message: string) => void;
   triggerScreenShake: (intensity?: number) => void;
+  triggerScreenShake: (intensity?: number) => void;
   closeConfirmation: () => void;
+  initializeRegistry: () => Promise<void>;
+  restoreSlides: (n: number) => void;
+  addMultiplier: (n: number) => void;
+  applyDamage: (n: number) => void;
+  setMonsterHp: (hp: number) => void;
 }
 
 export interface ExtendedGameStoreState extends GameStoreState {
@@ -113,6 +126,9 @@ export interface ExtendedGameStoreState extends GameStoreState {
   } | null;
   lastDirection: 'LEFT' | 'RIGHT' | 'UP' | 'DOWN' | null;
   hunterMarkLeft: number;
+  activeEncounters: any[];
+  activeClasses: any[];
+  activeArtifacts: any[];
 }
 
 export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, get) => ({
@@ -126,7 +142,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   hunterMarkLeft: 0,
 
   addFloatingText: (text, type, x = 50, y = 50) => {
-    const id = Date.now() + Math.random();
+    const id = Date.now() + SeededRNG.random();
     set((state) => ({
       floatingTexts: [...state.floatingTexts, { id, text, type, x, y }]
     }));
@@ -136,6 +152,28 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       }));
     }, 850);
   },
+
+  initializeRegistry: async () => {
+    const { encounters, classes, artifacts } = await PackEngine.applyPacks(get().runStats.activePackIds);
+    set({ 
+      activeEncounters: encounters, 
+      activeClasses: classes, 
+      activeArtifacts: artifacts 
+    });
+
+    // Retention Notification
+    const lastPlayed = localStorage.getItem('crit2048_last_played');
+    const now = Date.now();
+    if (lastPlayed) {
+      const diff = now - parseInt(lastPlayed);
+      if (diff > 1000 * 60 * 60 * 20) { // More than 20 hours
+        Native.notify("Welcome Back, Hero!", "The dungeon has missed you. A new daily seed is waiting!", "🐉");
+      }
+    }
+    localStorage.setItem('crit2048_last_played', now.toString());
+  },
+
+  setState: (partial: any) => set(partial),
 
   updateSettings: (newSettings) => {
     set((state) => {
@@ -155,7 +193,10 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
   forfeitRun: () => {
     const state = get();
-    if (state.gameState === 'START' || state.isGameOver) return;
+    if (state.gameState === 'START' || state.gameState === 'CLASS_SELECT' || state.isGameOver) {
+      set({ gameState: 'START', playerClass: null, artifacts: [], logs: [], grid: Array(16).fill(null), monsterHp: 0, monsterMaxHp: 0 });
+      return;
+    }
     
     const stats = { ...state.runStats, endTime: Date.now(), endReason: 'FORFEIT' };
     set({ 
@@ -163,7 +204,11 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       isGameOver: true,
       runStats: stats
     });
-    LeaderboardLogic.saveRun(stats, state.playerClass, state.encounterIdx);
+    
+    // Only save to leaderboard if the player has actually engaged in combat
+    if (state.runStats.totalMoves > 0 || state.monsterHp < state.monsterMaxHp) {
+      LeaderboardLogic.saveRun(stats, state.playerClass, state.encounterIdx);
+    }
     get().saveGame();
   },
 
@@ -210,13 +255,46 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   }),
 
   addGold: (amount: number) => {
-    if (amount > 0) SFX.coin();
+    const val = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
+    if (val > 0) SFX.coin();
     set((state) => ({ 
-      gold: Math.max(0, state.gold + amount) 
+      gold: Math.max(0, (state.gold || 0) + val) 
     }));
   },
 
-  spawnRandomTile: (valOverride: number | null = null) => {
+  restoreSlides: (n: number) => {
+    const val = typeof n === 'number' && !isNaN(n) ? n : 0;
+    set((state) => ({ 
+      slidesLeft: Math.max(0, (state.slidesLeft || 0) + val) 
+    }));
+  },
+
+  addMultiplier: (n: number) => {
+    const val = typeof n === 'number' && !isNaN(n) ? n : 0;
+    set((state) => ({ 
+      multiplier: Math.max(0.1, (state.multiplier || 1) + val) 
+    }));
+  },
+
+  applyDamage: (n: number) => {
+    const val = typeof n === 'number' && !isNaN(n) ? n : 0;
+    set((state) => ({ 
+      monsterHp: Math.max(0, (state.monsterHp || 0) - val) 
+    }));
+  },
+
+  setMonsterHp: (hp: number) => {
+    const val = typeof hp === 'number' && !isNaN(hp) ? hp : 0;
+    set({ monsterHp: Math.max(0, val) });
+  },
+
+  spawnRandomTile: (valOverride: any = null) => {
+    let overrideVal: number | null = null;
+    if (valOverride !== null && valOverride !== undefined) {
+      overrideVal = typeof valOverride === 'string' ? parseInt(valOverride) : valOverride;
+      if (isNaN(overrideVal as number)) overrideVal = null;
+    }
+
     const { grid } = get();
     const emptyIndices = grid
       .map((v, i) => (v === null ? i : null))
@@ -224,11 +302,11 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
     if (emptyIndices.length > 0) {
       const rIdx = emptyIndices[Math.floor(SeededRNG.random() * emptyIndices.length)];
-      const val = valOverride !== null ? valOverride : SeededRNG.random() > 0.9 ? 4 : 2;
+      const val = overrideVal !== null ? overrideVal : SeededRNG.random() > 0.9 ? 4 : 2;
       
       const newGrid = [...grid];
       newGrid[rIdx] = { 
-        id: Date.now() + Math.random(), 
+        id: Date.now() + SeededRNG.random(), 
         val: val, 
         pop: true 
       };
@@ -240,106 +318,186 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     }
   },
 
+  checkHazards: (newGrid: (Tile | null)[], damage: number) => {
+    let clearedCount = 0;
+    let grid = [...newGrid];
+    
+    // Slime (100+)
+    if (damage >= 100) {
+      grid = grid.map(t => {
+        if (t && t.val === -1) { clearedCount++; return null; }
+        return t;
+      });
+    }
+    // Web (75+)
+    if (damage >= 75) {
+      grid = grid.map(t => {
+        if (t && t.val === -5) { clearedCount++; return null; }
+        return t;
+      });
+    }
+    // Goblin (50+)
+    if (damage >= 50) {
+      grid = grid.map(t => {
+        if (t && t.val === -2) { clearedCount++; return null; }
+        return t;
+      });
+    }
+
+    // Curse (-6) - Drain extra slide if it exists on board
+    const curseCount = grid.filter(t => t && t.val === -6).length;
+    if (curseCount > 0) {
+      get().restoreSlides(-curseCount);
+      get().addLog(`🔮 Curse drained ${curseCount} extra slide!`);
+    }
+
+    if (clearedCount > 0) {
+      set((s) => ({ runStats: { ...s.runStats, totalHazardsCleared: s.runStats.totalHazardsCleared + clearedCount } }));
+    }
+
+    return grid;
+  },
+
   move: (direction: 'LEFT' | 'RIGHT' | 'UP' | 'DOWN') => {
-    const state = get();
-    if (state.gameState !== 'PLAYING' || state.isTransitioning || state.isGameOver) return;
+    if (get().isGameOver || get().isTransitioning || get().isRolling) return;
 
-    const { newGrid, changed, damageDealt, goldEarned, merges, multIncrease, mergePositions } = CombatLogic.processMove(state, direction);
+    const { newGrid, changed, damageDealt, merges, goldEarned, multIncrease, mergeResults } = CombatLogic.processMove(get(), direction);
 
-    if (!changed) return;
-
-    if (merges > 0) {
-      get().triggerScreenShake(merges > 1 ? 1.5 : 0.8);
-    }
-
-    if (damageDealt > 0) {
-      get().addLog(`Combo: Dealt ${Math.ceil(damageDealt)} damage!`);
-      mergePositions.forEach(pos => {
-        const r = Math.floor(pos / 4);
-        const c = pos % 4;
-        get().addFloatingText(`-${Math.ceil(damageDealt / mergePositions.length)}`, 'damage', c * 25 + 12.5, r * 25 + 12.5);
-      });
-      SFX.hit();
-    } else if (merges > 0) {
-      SFX.merge();
-    } else {
-      SFX.slide();
-    }
-
-    if (goldEarned !== 0) {
-      get().addFloatingText(`${goldEarned > 0 ? '+' : ''}${goldEarned} Gold`, 'gold', 50, 60);
-    }
-
-    const highestVal = Math.max(...newGrid.map(t => t?.val || 0));
-
-    set((s) => ({
-      grid: [...newGrid],
-      monsterHp: Math.max(0, s.monsterHp - damageDealt),
-      slidesLeft: s.slidesLeft - 1,
-      slidesSinceRoll: s.slidesSinceRoll + 1,
-      gold: s.gold + goldEarned,
-      multiplier: s.multiplier + multIncrease,
-      lastDirection: direction,
-      runStats: {
-        ...s.runStats,
-        totalMoves: s.runStats.totalMoves + 1,
-        totalDamageDealt: s.runStats.totalDamageDealt + damageDealt,
-        maxDamage: Math.max(s.runStats.maxDamage, damageDealt),
-        lastRoundDamage: damageDealt,
-        totalMerges: s.runStats.totalMerges + merges,
-        highestTileValue: Math.max(s.runStats.highestTileValue, highestVal),
-        maxMultiplier: Math.max(s.runStats.maxMultiplier, s.multiplier + multIncrease),
-      }
-    }));
-
-    if (goldEarned < 0) {
-      get().addLog(`👺 Goblins stole ${Math.abs(goldEarned)} gold!`);
-    }
-
-    get().spawnRandomTile();
-    get().applyBossPowers();
-
-    const updatedState = get();
-    if (updatedState.monsterHp <= 0) {
-      get().triggerScreenShake(3.5);
-      get().addLog("BOSS DEFEATED! Gold +50.");
-      let tavernGold = updatedState.gold + 50;
-      
-      // Artifact: Ring of Wealth
-      if (updatedState.artifacts.some(a => a.id === 'RING_WEALTH')) {
-        tavernGold += 30;
-        get().addLog("💍 Ring of Wealth: +30 Gold!");
-      }
-
-      set({ isTransitioning: true, gold: tavernGold });
-      setTimeout(() => {
-        if (get().encounterIdx >= ENEMIES.length - 1) {
-          set({ 
-            gameState: 'VICTORY', 
-            isGameOver: true, 
-            isTransitioning: false,
-            runStats: { ...get().runStats, endTime: Date.now(), endReason: 'VICTORY' }
-          });
-        } else {
-          get().generateShop();
-          set({ gameState: 'TAVERN', isTransitioning: false });
+    if (changed) {
+      if (damageDealt > 0) {
+        SFX.hit();
+        get().triggerScreenShake(merges > 1 ? 1.2 : 0.6);
+        
+        // Calculate Board Power contribution for logging
+        const boardSum = newGrid.reduce((sum, t) => sum + (t && t.val > 0 ? t.val : 0), 0);
+        const boardPowerDmg = Math.floor(boardSum * 0.05);
+        
+        if (merges > 0) {
+          get().addLog(`Combo: Dealt ${Math.ceil(damageDealt)} damage!`);
+        } else if (boardPowerDmg > 0) {
+          get().addLog(`Board Power: Dealt ${boardPowerDmg} passive damage!`);
         }
-      }, 2000);
-    } else if (updatedState.monsterHp > 0 && (updatedState.slidesLeft <= 0 || CombatLogic.checkGridlock(updatedState.grid))) {
-      const stats = { ...get().runStats, endTime: Date.now(), endReason: 'GRIDLOCK' };
-      set({ 
-        gameState: 'GAME_OVER', 
-        isGameOver: true,
-        runStats: stats
-      });
-      LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
-    } else if (updatedState.slidesSinceRoll >= get().settings.movesPerRoll) {
-      setTimeout(() => {
-        if (get().gameState === 'PLAYING') set({ gameState: 'DICE' });
-      }, 600);
-    }
+        
+        // Individualized floating text
+        mergeResults.forEach(res => {
+          const r = Math.floor(res.pos / 4);
+          const c = res.pos % 4;
+          const xOff = (SeededRNG.random() - 0.5) * 5;
+          const yOff = (SeededRNG.random() - 0.5) * 5;
+          get().addFloatingText(`-${Math.ceil(res.damage)}`, 'damage', c * 25 + 12.5 + xOff, r * 25 + 12.5 + yOff);
+        });
+      } else if (merges > 0) {
+        SFX.merge();
+      } else {
+        SFX.slide();
+      }
 
-    get().saveGame();
+      if (goldEarned !== 0) {
+        get().addFloatingText(`${goldEarned > 0 ? '+' : ''}${goldEarned} Gold`, 'gold', 50, 60);
+        if (goldEarned < 0) get().addLog(`👺 Goblins stole ${Math.abs(goldEarned)} gold!`);
+      }
+
+      const highestVal = Math.max(...newGrid.map(t => t?.val || 0));
+
+      // Check Hazards and return updated grid
+      const finalGrid = get().checkHazards(newGrid, damageDealt);
+
+      const reduction = PackEngine.getDamageReduction(get());
+      const finalDamage = reduction > 0 ? damageDealt * (1 - reduction / 100) : damageDealt;
+
+      set((s) => {
+        const newMergeCounts = { ...s.runStats.mergeCounts };
+        mergeResults.forEach(res => {
+          const val = res.damage / s.multiplier; // Approximation of tile val for stats
+          newMergeCounts[val] = (newMergeCounts[val] || 0) + 1;
+        });
+
+        return {
+          grid: [...finalGrid],
+          monsterHp: Math.max(0, s.monsterHp - finalDamage),
+          slidesLeft: s.slidesLeft - 1,
+          slidesSinceRoll: s.slidesSinceRoll + 1,
+          gold: s.gold + goldEarned,
+          multiplier: s.multiplier + multIncrease,
+          lastDirection: direction,
+          score: s.score + Math.ceil(finalDamage),
+          runStats: {
+            ...s.runStats,
+            totalMoves: s.runStats.totalMoves + 1,
+            totalDamageDealt: s.runStats.totalDamageDealt + finalDamage,
+            maxDamage: Math.max(s.runStats.maxDamage, finalDamage),
+            lastRoundDamage: finalDamage,
+            totalMerges: s.runStats.totalMerges + merges,
+            highestTileValue: Math.max(s.runStats.highestTileValue, highestVal),
+            maxMultiplier: Math.max(s.runStats.maxMultiplier, s.multiplier + multIncrease),
+            mergeCounts: newMergeCounts
+          }
+        };
+      });
+
+      get().spawnRandomTile();
+      PackEngine.onSlide(get(), direction);
+      if (damageDealt > 0) PackEngine.onDamage(get(), damageDealt);
+
+      // Hazard Spreading: Every 10 moves, Slimes and Spores have a chance to spread
+      if (get().runStats.totalMoves % 10 === 0) {
+        const grid = [...get().grid];
+        let spreadOccurred = false;
+        grid.forEach((tile, idx) => {
+          if (tile && (tile.val === -1 || tile.val === -7) && SeededRNG.random() < 0.25) {
+            // Try to find adjacent empty spot
+            const neighbors = [idx - 4, idx + 4, idx - 1, idx + 1].filter(i => i >= 0 && i < 16 && grid[i] === null);
+            if (neighbors.length > 0) {
+              const targetIdx = neighbors[Math.floor(SeededRNG.random() * neighbors.length)];
+              grid[targetIdx] = { id: Date.now() + SeededRNG.random(), val: tile.val, pop: true };
+              spreadOccurred = true;
+            }
+          }
+        });
+        if (spreadOccurred) {
+          set({ grid });
+          get().addLog("⚠️ Hazards are spreading!");
+        }
+      }
+      // Post-move check
+      const updatedState = get();
+      if (updatedState.monsterHp <= 0) {
+        get().triggerScreenShake(3.5);
+        
+        set({ gold: (updatedState.gold || 0) + 50 });
+
+        set({ isTransitioning: true });
+        setTimeout(() => {
+          if (get().encounterIdx >= get().activeEncounters.length - 1) {
+            PackEngine.onGameOver(get(), 'VICTORY');
+            set({ 
+              gameState: 'VICTORY', 
+              isGameOver: true, 
+              isTransitioning: false,
+              runStats: { ...get().runStats, endTime: Date.now(), endReason: 'VICTORY' }
+            });
+          } else {
+            get().generateShop();
+            set({ gameState: 'TAVERN', isTransitioning: false });
+          }
+        }, 2000);
+      } else if (updatedState.monsterHp > 0 && (updatedState.slidesLeft <= 0 || CombatLogic.checkGridlock(updatedState.grid))) {
+        const stats = { ...get().runStats, endTime: Date.now(), endReason: 'GRIDLOCK' };
+        PackEngine.onGameOver(get(), 'GRIDLOCK');
+        set({ 
+          gameState: 'GAME_OVER', 
+          isGameOver: true,
+          runStats: stats
+        });
+        LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
+      } else if (updatedState.monsterHp > 0 && updatedState.slidesSinceRoll >= get().settings.movesPerRoll) {
+        setTimeout(() => {
+          if (get().gameState === 'PLAYING') set({ gameState: 'DICE' });
+        }, 600);
+      }
+
+      get().saveGame();
+    }
   },
 
   initEncounter: (hp, slides) => {
@@ -370,23 +528,29 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         seedUsed: seed
       }
     }));
+    
+    // Call PackEngine hook after state update
+    PackEngine.onEncounterStart(get());
   },
 
   generateShop: () => {
     const { artifacts } = get();
     // In legacy-style, we can still see owned artifacts to "enhance" them
-    const shuffled = [...MASTER_ARTIFACTS].sort(() => Math.random() - 0.5);
+    const shuffled = [...MASTER_ARTIFACTS].sort(() => SeededRNG.random() - 0.5);
     set({ shopItems: shuffled.slice(0, 4) });
   },
 
   nextEncounter: () => {
-    const { encounterIdx } = get();
-    const nextEnemy = ENEMIES[Math.min(encounterIdx + 1, ENEMIES.length - 1)];
+    const { encounterIdx, activeEncounters } = get();
+    const nextEnemy = activeEncounters[Math.min(encounterIdx + 1, activeEncounters.length - 1)];
     
+    PackEngine.onTavernLeave(get());
     set({ isTransitioning: true }); // Show loading screen
     
     setTimeout(() => {
-      get().initEncounter(nextEnemy.hp, nextEnemy.slides);
+      const hp = parseInt(nextEnemy.hp as any) || 100;
+      const slides = parseInt(nextEnemy.slides as any) || 20;
+      get().initEncounter(hp, slides);
       set({ encounterIdx: encounterIdx + 1, isTransitioning: false });
       get().spawnRandomTile();
       get().spawnRandomTile();
@@ -394,8 +558,8 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   },
 
   applyBossPowers: () => {
-    const { encounterIdx, monsterHp, monsterMaxHp, runStats, grid } = get();
-    const enemy = ENEMIES[encounterIdx];
+    const { encounterIdx, monsterHp, monsterMaxHp, runStats, grid, activeEncounters } = get();
+    const enemy = activeEncounters[encounterIdx];
     if (!enemy) return;
 
     const turn = runStats.totalMoves;
@@ -437,8 +601,8 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   },
 
   buyArtifact: (artifactId: string) => {
-    const { gold, shopItems, artifacts } = get();
-    const item = shopItems.find(i => i.id === artifactId);
+    const { gold, shopItems, artifacts, activeArtifacts } = get();
+    const item = shopItems.find(i => i.id === artifactId) || activeArtifacts.find(i => i.id === artifactId);
     if (!item) return;
 
     const existingIdx = artifacts.findIndex(a => a.id === artifactId);
@@ -481,7 +645,8 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       get().addLog("🎲 Weighted Dice: Roll bumped to 4!");
     }
 
-    const mod = playerClass?.d20Mod || 0;
+    let mod = playerClass?.d20Mod || 0;
+    if (typeof mod !== 'number' || isNaN(mod)) mod = 0;
     let roll = rawRoll + mod;
 
     // Artifact: Adamantine Armor
@@ -503,20 +668,29 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       set((s) => ({ multiplier: s.multiplier + 1.0, runStats: { ...s.runStats, maxMultiplier: Math.max(s.runStats.maxMultiplier, s.multiplier + 1.0) } }));
       const validIndices = get().grid.map((c, i) => (c && c.val > 0 ? i : null)).filter((c): c is number => c !== null);
       if (validIndices.length > 0) {
-        const idx = validIndices[Math.floor(Math.random() * validIndices.length)];
+        const idx = validIndices[Math.floor(SeededRNG.random() * validIndices.length)];
         const newGrid = [...get().grid];
         if (newGrid[idx]) newGrid[idx] = { ...newGrid[idx]!, val: newGrid[idx]!.val * 2, pop: true };
         set({ grid: newGrid });
       }
+    } else if (roll >= 15) {
+      result = { val: rawRoll, msg: 'GREAT SUCCESS! Magic Staff spawned.', type: 'success' };
+      get().spawnRandomTile(32);
     } else if (roll >= 10) {
-      result = { val: rawRoll, msg: 'SUCCESS! High-tier weapon spawned.', type: 'success' };
+      result = { val: rawRoll, msg: 'SUCCESS! Crossbow spawned.', type: 'success' };
       get().spawnRandomTile(8);
     } else if (roll > 1) {
       SFX.fail();
       result = { val: rawRoll, msg: 'MISS! A Slime blocked your path.', type: 'fail' };
       get().spawnRandomTile(-1);
     } else {
-      result = { val: rawRoll, msg: 'NATURAL 1! Critical Failure!', type: 'crit-fail' };
+      SFX.fail();
+      result = { val: rawRoll, msg: 'CRITICAL FAILURE! Necromancy rising.', type: 'fail' };
+      get().spawnRandomTile(-3);
+      get().spawnRandomTile(-3);
+      get().spawnRandomTile(-3);
+      
+      // Also burn highest weapon on crit fail for extra parity with some legacy variants
       let maxV = 0, maxI = -1;
       get().grid.forEach((c, i) => { if (c && c.val > maxV) { maxV = c.val; maxI = i; } });
       if (maxI !== -1) {
@@ -573,7 +747,10 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
     const ab = playerClass.ability;
     if (ab.type === 'damage') {
-      const dmg = spellRoll.sum * multiplier;
+      const dmgObj = { val: spellRoll.sum * multiplier };
+      PackEngine.onCast(get(), dmgObj);
+      const dmg = dmgObj.val;
+
       set({ 
         monsterHp: Math.max(0, monsterHp - dmg),
         runStats: {
@@ -594,19 +771,19 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     if (get().monsterHp <= 0) {
       get().addLog("BOSS DEFEATED! Gold +50.");
       set({ isTransitioning: true, gold: get().gold + 50 });
-      if (get().encounterIdx >= ENEMIES.length - 1) {
-        const stats = { ...get().runStats, endTime: Date.now(), endReason: 'VICTORY' };
-        set({ 
-          gameState: 'VICTORY', 
-          isGameOver: true, 
-          isTransitioning: false,
-          runStats: stats
-        });
-        LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
-      } else {
-        get().generateShop();
-        set({ gameState: 'TAVERN', isTransitioning: false });
-      }
+        if (get().encounterIdx >= get().activeEncounters.length - 1) {
+          const stats = { ...get().runStats, endTime: Date.now(), endReason: 'VICTORY' };
+          set({ 
+            gameState: 'VICTORY', 
+            isGameOver: true, 
+            isTransitioning: false,
+            runStats: stats
+          });
+          LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
+        } else {
+          get().generateShop();
+          set({ gameState: 'TAVERN', isTransitioning: false });
+        }
     }
 
     get().saveGame();
@@ -672,6 +849,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       lastDirection: state.lastDirection,
       hunterMarkLeft: state.hunterMarkLeft,
       settings: state.settings,
+      rngState: SeededRNG.getSeed(),
     };
     await GameStorage.saveGame(persistentData);
   },
@@ -679,9 +857,15 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   loadGame: async () => {
     const saved = await GameStorage.loadGame();
     if (saved) {
+      if (saved.rngState !== undefined) SeededRNG.setSeedState(saved.rngState);
       set({ ...saved, isTransitioning: false, isGameOver: false, isRolling: false, lastRoll: null, spellRoll: null });
+      await get().initializeRegistry();
       return true;
     }
     return false;
   },
 }));
+
+if (typeof window !== 'undefined') {
+  (window as any).useGameStore = useGameStore;
+}

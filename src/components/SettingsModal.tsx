@@ -187,11 +187,68 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           <button onClick={resetToFactory} className="w-full py-3 text-slate-500 hover:text-rose-400 transition-colors text-[9px] font-black uppercase tracking-widest border border-dashed border-slate-800 rounded-xl">
             Reset to Factory Defaults
           </button>
+          
+          <div className="pt-4 flex flex-col items-center gap-2">
+            <button 
+              onClick={async () => {
+                addLog("Updater: Contacting GitHub for latest build info...");
+                try {
+                  const res = await fetch('https://api.github.com/repos/denzven/Crit2048_DZVN/commits/main');
+                  const data = await res.json();
+                  const latestSha = data.sha.substring(0, 7);
+                  const lastSha = localStorage.getItem('crit2048_last_sha');
+                  
+                  if (lastSha && lastSha !== latestSha) {
+                    addLog(`Updater: New build detected (${latestSha}). Refreshing registry...`);
+                    if ('serviceWorker' in navigator) {
+                      const reg = await navigator.serviceWorker.getRegistration();
+                      if (reg) await reg.update();
+                    }
+                    showConfirm(
+                      "New Content Available",
+                      `A new version (${latestSha}) was found on GitHub. Would you like to update now?`,
+                      () => window.location.reload()
+                    );
+                  } else {
+                    addLog(`Updater: You are on the latest build (${latestSha}).`);
+                    localStorage.setItem('crit2048_last_sha', latestSha);
+                  }
+                } catch (err) {
+                  addLog("Updater: Failed to reach GitHub. Check your connection.");
+                  // Fallback to standard SW update
+                  if ('serviceWorker' in navigator) {
+                    const reg = await navigator.serviceWorker.getRegistration();
+                    if (reg) await reg.update();
+                  }
+                }
+              }}
+              className="text-[9px] text-slate-500 hover:text-indigo-400 uppercase font-black tracking-widest transition-colors"
+            >
+              Check Live GitHub Source
+            </button>
+            <p className="text-[8px] text-slate-700 font-mono">v1.0.0-pwa</p>
+          </div>
         </div>
 
-        <div className="p-6 border-t border-slate-800 flex gap-3 shrink-0">
-          <button onClick={onClose} className="flex-1 py-3 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-colors uppercase tracking-widest text-[10px] border border-slate-700">Cancel</button>
-          <button onClick={() => { addLog("Settings: Config saved."); onClose(); }} className="flex-1 py-3 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-500 transition-colors uppercase tracking-widest text-[10px] border border-rose-500/50 shadow-lg">Save Config</button>
+        <div className="p-6 border-t border-slate-800 flex flex-col gap-3 shrink-0">
+          {(useGameStore.getState().gameState !== 'START') && (
+            <button 
+              onClick={() => {
+                showConfirm(
+                  "Forfeit Run?", 
+                  "Abandon your current progress and return to the menu? This cannot be undone.", 
+                  () => { useGameStore.getState().forfeitRun(); onClose(); }
+                );
+              }}
+              className="w-full py-3 bg-rose-900/20 text-rose-500 font-black rounded-xl hover:bg-rose-900/40 transition-colors uppercase tracking-widest text-[10px] border border-rose-500/30 mb-2"
+            >
+              Forfeit Current Run
+            </button>
+          )}
+          <div className="flex gap-3">
+            <button onClick={onClose} className="flex-1 py-3 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-colors uppercase tracking-widest text-[10px] border border-slate-700">Cancel</button>
+            <button onClick={() => { addLog("Settings: Config saved."); onClose(); }} className="flex-1 py-3 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-500 transition-colors uppercase tracking-widest text-[10px] border border-rose-500/50 shadow-lg">Save Config</button>
+          </div>
         </div>
       </div>
     </div>

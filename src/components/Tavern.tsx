@@ -1,6 +1,8 @@
 import React from 'react';
 import { useGameStore } from '../engine/gameStore';
+import { SeededRNG } from '../engine/prng';
 import { clsx } from 'clsx';
+import { PackEngine } from '../engine/packEngine';
 
 const Tavern: React.FC = () => {
   const { gold, shopItems, buyArtifact, nextEncounter, restoreSpells, upgradeSpell, usesLeft, playerClass, addLog } = useGameStore();
@@ -22,11 +24,16 @@ const Tavern: React.FC = () => {
     else if (focusedIndex === 1) upgradeSpell();
     else if (focusedIndex === 2) {
       if (gold >= 50) {
-        useGameStore.setState({ gold: gold - 50 });
-        const legendaries = ['VORPAL_BLADE', 'HOLY_AVENGER', 'STAFF_POWER'];
-        const pick = legendaries[Math.floor(Math.random() * legendaries.length)];
-        buyArtifact(pick);
-        addLog("Oracle: A legendary gift has been bestowed!");
+        const { activeArtifacts } = useGameStore.getState();
+        const legendaries = activeArtifacts.filter(a => a.rarity?.toLowerCase() === 'legendary' || a.rarity?.toLowerCase() === 'artifact');
+        if (legendaries.length > 0) {
+          useGameStore.setState({ gold: gold - 50 });
+          const pick = legendaries[Math.floor(SeededRNG.random() * legendaries.length)];
+          buyArtifact(pick.id);
+          addLog(`Oracle: The legendary ${pick.name} has been bestowed!`);
+        } else {
+          addLog("Oracle: No legendary artifacts found in this realm...");
+        }
       }
     }
     else if (focusedIndex === 3) respinTavern();
@@ -110,11 +117,14 @@ const Tavern: React.FC = () => {
                   <button 
                     onClick={() => {
                       if (gold >= 50) {
-                        useGameStore.setState({ gold: gold - 50 });
-                        const legendaries = ['VORPAL_BLADE', 'HOLY_AVENGER', 'STAFF_POWER'];
-                        const pick = legendaries[Math.floor(Math.random() * legendaries.length)];
-                        buyArtifact(pick);
-                        addLog("Oracle: A legendary gift has been bestowed!");
+                        const { activeArtifacts } = useGameStore.getState();
+                        const legendaries = activeArtifacts.filter(a => a.rarity?.toLowerCase() === 'legendary' || a.rarity?.toLowerCase() === 'artifact');
+                        if (legendaries.length > 0) {
+                          useGameStore.setState({ gold: gold - 50 });
+                          const pick = legendaries[Math.floor(SeededRNG.random() * legendaries.length)];
+                          buyArtifact(pick.id);
+                          addLog(`Oracle: The legendary ${pick.name} has been bestowed!`);
+                        }
                       }
                     }}
                     onMouseEnter={() => setFocusedIndex(2)}
@@ -198,7 +208,7 @@ const Tavern: React.FC = () => {
                         {item.name}
                       </h3>
                       <p className="text-[11px] text-slate-400/80 leading-relaxed mb-6 flex-grow font-medium">
-                        {item.desc}
+                        {PackEngine.formatDesc(item.desc, item, owned ? level + 1 : 1)}
                       </p>
                       
                       <div className="flex flex-col gap-4 mt-auto">

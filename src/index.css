@@ -20,10 +20,24 @@
   --cell-size: 4.5rem;
   --gap: 0.5rem;
   font-size: calc(14px * var(--ui-scale));
+
+  /* Pack Engine Theme Variables */
+  --pack-primary: #f43f5e;
+  --pack-accent: #facc15;
+  --pack-bg: #020617;
+  --pack-surface: #0f172a;
+  --pack-bg-image: none;
+  --pack-font: 'Inter', system-ui, sans-serif;
 }
 
 body {
+  font-family: var(--pack-font);
   font-size: calc(1rem * var(--font-scale));
+  background-color: var(--pack-bg);
+  background-image: var(--pack-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 @media (min-width: 375px) {

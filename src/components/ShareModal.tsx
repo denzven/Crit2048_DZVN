@@ -68,45 +68,54 @@ const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   return (
     <div className="absolute inset-0 bg-slate-950/95 z-[150] flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl flex flex-col h-full max-h-[90vh] overflow-hidden">
+      <div className="bg-slate-900/95 border border-slate-700 rounded-[2.5rem] w-full max-w-lg shadow-2xl flex flex-col h-full max-h-[90vh] overflow-hidden backdrop-blur-3xl relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-rose-500/5 to-transparent pointer-events-none"></div>
+        
         {/* Header */}
-        <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-          <h2 className="text-white font-black uppercase tracking-widest text-sm">Share Run Summary</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center bg-slate-800 hover:bg-rose-900 text-white rounded-lg transition-colors">✕</button>
+        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 relative z-10">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">📸</span>
+            <h2 className="text-white font-black uppercase tracking-[0.2em] text-xs">Run Archive</h2>
+          </div>
+          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-rose-900 text-white rounded-xl transition-all border border-slate-700 active:scale-90">✕</button>
         </div>
 
         {/* Preview */}
-        <div className="flex-grow p-6 flex flex-col items-center justify-center gap-4 bg-slate-950/50 relative">
+        <div className="flex-grow p-8 flex flex-col items-center justify-center gap-6 bg-slate-950/50 relative z-10">
           {loading ? (
-            <div className="flex flex-col items-center gap-4 text-slate-500">
-              <div className="w-10 h-10 border-4 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-[10px] font-black uppercase tracking-widest">Generating Masterpiece...</p>
+            <div className="flex flex-col items-center gap-6 text-slate-500">
+              <div className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full animate-spin shadow-[0_0_20px_rgba(225,29,72,0.3)]"></div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Forging Visuals...</p>
             </div>
           ) : (
             <>
-              <div className="w-full max-w-[280px] aspect-[1080/1920] bg-slate-900 rounded-xl overflow-hidden shadow-2xl border border-slate-800 ring-4 ring-rose-500/10">
+              <div className="w-full max-w-[260px] aspect-[1080/1920] bg-slate-900 rounded-[2rem] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.5)] border border-slate-800 ring-1 ring-white/10 relative group">
                 {preview && <img src={preview} className="w-full h-full object-contain" alt="Run Summary" />}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
               </div>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center px-8">High-resolution stat card ready for sharing.</p>
+              <div className="text-center space-y-1">
+                <p className="text-[10px] text-slate-300 font-black uppercase tracking-widest">Masterpiece Ready</p>
+                <p className="text-[8px] text-slate-500 font-bold uppercase tracking-[0.2em]">High-resolution run summary generated</p>
+              </div>
             </>
           )}
         </div>
 
         {/* Actions */}
-        <div className="p-6 border-t border-slate-800 bg-slate-900 flex flex-col gap-3">
+        <div className="p-8 border-t border-slate-800 bg-slate-900/80 flex flex-col gap-3 relative z-10">
           <button 
             disabled={loading}
             onClick={handleShare}
-            className="w-full py-4 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+            className="w-full py-5 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-black rounded-2xl text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-rose-950/30 transition-all active:scale-95 flex items-center justify-center gap-3 border border-rose-400/30"
           >
-            <span>🚀</span> <span>Share to Apps</span>
+            <span className="text-lg">🚀</span> <span>Transmit to World</span>
           </button>
           <button 
             disabled={loading}
             onClick={handleDownload}
-            className="w-full py-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-400 font-black rounded-xl text-[10px] uppercase tracking-widest transition-all"
+            className="w-full py-4 bg-slate-800/50 hover:bg-slate-800 disabled:opacity-50 text-slate-400 hover:text-white font-black rounded-2xl text-[9px] uppercase tracking-widest transition-all border border-slate-700/50"
           >
-            💾 Download Image
+            Save to Local Archives
           </button>
         </div>
       </div>

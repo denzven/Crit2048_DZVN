@@ -51,6 +51,13 @@ export const GameStorage = {
     await del(`${KEYS.PACK_PREFIX}${id}`);
   },
 
+  async duplicatePack(id: string): Promise<void> {
+    const pack = await this.loadPack(id);
+    if (!pack) return;
+    const newPack = { ...pack, id: `${pack.id}-clone-${Date.now()}`, name: `${pack.name} (Clone)` };
+    await this.savePack(newPack);
+  },
+
   /**
    * Game State Storage
    */

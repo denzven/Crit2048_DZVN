@@ -8,6 +8,7 @@ import SpellModal from './components/SpellModal'
 import SettingsModal from './components/SettingsModal'
 import GrimoireModal from './components/GrimoireModal'
 import ForgeModal from './components/ForgeModal'
+import { PackEngine } from './engine/packEngine'
 import HelpModal from './components/HelpModal'
 import ConfirmationModal from './components/ConfirmationModal'
 import RunStatsModal from './components/RunStatsModal'
@@ -19,6 +20,7 @@ import BrowserWarning from './components/BrowserWarning'
 import Preloader from './components/Preloader'
 import { Native } from './engine/native'
 import { clsx } from 'clsx'
+import { useRegisterSW } from 'virtual:pwa-register/react'
 
 function App() {
   const { 
@@ -33,6 +35,7 @@ function App() {
     encounterIdx,
     usesLeft,
     playerClass,
+    score,
     setGameState,
     castSpell,
     forfeitRun,
@@ -42,6 +45,7 @@ function App() {
   const [showSettings, setShowSettings] = React.useState(false)
   const [showGrimoire, setShowGrimoire] = React.useState(false)
   const [showForge, setShowForge] = React.useState(false)
+  const [forgeData, setForgeData] = React.useState<any>(null)
   const [showLeaderboard, setShowLeaderboard] = React.useState(false)
   const [showShare, setShowShare] = React.useState(false)
   const [showMobileInventory, setShowMobileInventory] = React.useState(false)
@@ -50,6 +54,33 @@ function App() {
   const [seedInput, setSeedInput] = React.useState('')
   const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null)
   const [isLoading, setIsLoading] = React.useState(true)
+
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    onRegistered(r) {
+      console.log('SW Registered: ', r);
+    },
+    onRegisterError(error) {
+      console.error('SW registration error', error);
+    },
+  })
+
+  useEffect(() => {
+    if (needRefresh) {
+      showConfirm(
+        "Update Available", 
+        "A new version of Crit 2048 is ready. Refresh now to get the latest features and fixes?", 
+        () => updateServiceWorker(true),
+        () => setNeedRefresh(false)
+      );
+    }
+  }, [needRefresh]);
+
+  useEffect(() => {
+    useGameStore.getState().initializeRegistry();
+  }, []);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -100,12 +131,12 @@ function App() {
   }
 
   return (
-    <div className="bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 flex flex-col h-screen w-screen overflow-hidden select-none safe-top safe-bottom">
+    <div className="bg-[var(--pack-bg)] text-slate-100 font-sans selection:bg-[var(--pack-primary)] flex flex-col h-screen w-screen overflow-hidden select-none safe-top safe-bottom">
       {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
       {useGameStore.getState().settings.particles && <BackgroundParticles />}
       <BrowserWarning />
       {/* HEADER */}
-      <header className="bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 relative z-40 px-4 h-14 md:h-16">
+      <header className="bg-[var(--pack-surface)] border-b border-white/10 flex justify-between items-center shrink-0 relative z-40 px-4 h-14 md:h-16">
         <div className="flex items-center gap-2">
           <h1 
             onClick={() => {
@@ -113,7 +144,7 @@ function App() {
                 showConfirm("Abandon Run?", "Are you sure you want to end this run and view your progress?", forfeitRun);
               }
             }}
-            className="text-lg md:text-2xl font-black tracking-wider text-rose-500 flex items-center gap-2 font-serif cursor-pointer hover:text-rose-400 transition-colors"
+            className="text-lg md:text-2xl font-black tracking-wider text-[var(--pack-primary)] flex items-center gap-2 font-serif cursor-pointer hover:opacity-80 transition-all"
           >
             🐉 CRIT 2048
           </h1>
@@ -159,7 +190,10 @@ function App() {
                 📜
               </button>
               <button 
-                onClick={() => setShowForge(true)}
+                onClick={() => {
+                  setForgeData(null);
+                  setShowForge(true);
+                }}
                 className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
                 title="Forge"
               >
@@ -266,26 +300,40 @@ function App() {
               <div className="relative z-10 flex items-center justify-between">
                 <div className="flex items-center gap-2 md:gap-3">
                   <span className="text-xl md:text-2xl bg-slate-950 p-1.5 md:p-2 rounded-xl border border-slate-800">
-                    {encounterIdx === 0 ? '👺' : 
-                     encounterIdx === 1 ? '👹' : 
-                     encounterIdx === 2 ? '🟢' : '🐉'}
+                    {useGameStore.getState().activeEncounters?.[encounterIdx]?.icon || (
+                      encounterIdx === 0 ? '👺' : 
+                      encounterIdx === 1 ? '👹' : 
+                      encounterIdx === 2 ? '🟢' : '🐉'
+                    )}
                   </span>
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-black text-sm md:text-lg text-white tracking-wider">
-                        {encounterIdx === 0 ? 'Goblin Scout' : 
-                         encounterIdx === 1 ? 'Orc Brute' : 
-                         encounterIdx === 2 ? 'Slime King' : 'The Boss'}
+                        {useGameStore.getState().activeEncounters?.[encounterIdx]?.name || 'Unknown Entity'}
                       </h3>
-                      {useGameStore.getState().grid.some(t => t?.val === 4) && <span className="text-[10px] bg-slate-800 text-slate-400 px-1 rounded animate-pulse" title="Skeleton blocking merges">💀</span>}
-                      {useGameStore.getState().grid.some(t => t?.val === 8) && <span className="text-[10px] bg-amber-900/50 text-amber-500 px-1 rounded animate-pulse" title="Goblin stealing gold">💰</span>}
+                      {useGameStore.getState().grid.some(t => t?.val === -3) && <span className="text-[10px] bg-slate-800 text-slate-400 px-1 rounded animate-pulse" title="Skeleton blocking merges">💀</span>}
+                      {useGameStore.getState().grid.some(t => t?.val === -2) && <span className="text-[10px] bg-amber-900/50 text-amber-500 px-1 rounded animate-pulse" title="Goblin stealing gold">💰</span>}
                     </div>
                     <p className="text-[9px] md:text-xs font-mono text-rose-200 leading-none">HP: {Math.ceil(monsterHp)} / {monsterMaxHp}</p>
+                    <div className="mt-2 flex">
+                      <div className="bg-slate-950/80 border border-amber-500/30 rounded px-2 py-0.5 flex items-center gap-1.5 shadow-sm">
+                        <span className="text-[7px] font-black text-amber-500 uppercase tracking-tighter">Power:</span>
+                        <span className="text-[8px] md:text-[9px] font-bold text-amber-100 uppercase tracking-widest italic">
+                          {useGameStore.getState().activeEncounters?.[encounterIdx]?.lore || 'None'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-[8px] md:text-[10px] text-slate-400 uppercase tracking-widest font-bold">Slides</p>
-                  <p className="text-xl md:text-3xl font-black font-mono text-white leading-none">{slidesLeft}</p>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-[8px] md:text-[10px] text-slate-400 uppercase tracking-widest font-bold">Score</p>
+                    <p className="text-xl md:text-2xl font-black font-mono text-amber-500 leading-none">{score}</p>
+                  </div>
+                  <div className="text-right border-l border-slate-700 pl-4">
+                    <p className="text-[8px] md:text-[10px] text-slate-400 uppercase tracking-widest font-bold">Slides</p>
+                    <p className="text-xl md:text-3xl font-black font-mono text-white leading-none">{slidesLeft}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -305,6 +353,13 @@ function App() {
                         <div className="min-w-0">
                           <p className="text-[10px] font-black text-white truncate uppercase">{art.name}</p>
                           <p className="text-[8px] text-slate-500 font-mono">LVL {art.level}</p>
+                          <p className="text-[7px] text-slate-400 italic line-clamp-2 mt-0.5 leading-tight">
+                            {PackEngine.formatDesc(
+                              useGameStore.getState().activeArtifacts.find(a => a.id === art.id)?.desc || '',
+                              useGameStore.getState().activeArtifacts.find(a => a.id === art.id),
+                              art.level
+                            )}
+                          </p>
                         </div>
                       </div>
                     ))
@@ -392,11 +447,24 @@ function App() {
         )}
 
         {showGrimoire && (
-          <GrimoireModal onClose={() => setShowGrimoire(false)} />
+          <GrimoireModal 
+            onClose={() => setShowGrimoire(false)} 
+            onEditPack={(data: any) => {
+              setForgeData(data);
+              setShowGrimoire(false);
+              setShowForge(true);
+            }}
+          />
         )}
 
         {showForge && (
-          <ForgeModal onClose={() => setShowForge(false)} />
+          <ForgeModal 
+            initialData={forgeData}
+            onClose={() => {
+              setShowForge(false);
+              setForgeData(null);
+            }} 
+          />
         )}
 
         {showHelp && (

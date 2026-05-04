@@ -1,10 +1,180 @@
-import React, { useState } from 'react';
-import { useGameStore } from '../engine/gameStore';
+import React, { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
+import { useGameStore } from '../engine/gameStore';
+import { GameStorage } from '../engine/storage';
+import { PackEngine } from '../engine/packEngine';
+import { 
+  CRIT2048_DEFAULT_PACK, 
+  CRIT2048_DEFAULT_ENEMIES_PACK, 
+  CRIT2048_DEFAULT_CLASSES_PACK, 
+  CRIT2048_DEFAULT_ARTIFACTS_PACK, 
+  CRIT2048_DEFAULT_WEAPONS_PACK, 
+  CRIT2048_DEFAULT_HAZARDS_PACK,
+  CRIT2048_DEFAULT_SKIN_PACK,
+  CRIT2048_SHADOWFELL_SKIN_PACK
+} from '../engine/defaultPacks';
+import type { PackEntry, PackData } from '../types/pack';
 
-const GrimoireModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const REGISTRY_URL = "https://raw.githubusercontent.com/denzven/Crit2048-grimoire/main/registry.json";
+
+interface GrimoireProps {
+  onClose: () => void;
+  onEditPack: (pack: PackData) => void;
+}
+
+const GrimoireModal: React.FC<GrimoireProps> = ({ onClose, onEditPack }) => {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [localPacks, setLocalPacks] = useState<PackEntry[]>([]);
+  const [remotePacks, setRemotePacks] = useState<any[]>([]);
+  const [isOnline, setIsOnline] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const { runStats, setState, initializeRegistry } = useGameStore();
+
+  useEffect(() => {
+    loadAll();
+  }, []);
+
+  const loadAll = async () => {
+    await loadLocalPacks();
+    await fetchCommunityPacks();
+  };
+
+  const loadLocalPacks = async () => {
+    const installed = await GameStorage.getPackIndex();
+    
+    // Inject default packs as "Templates"
+    const templates: PackEntry[] = [
+      CRIT2048_DEFAULT_PACK,
+      CRIT2048_DEFAULT_ENEMIES_PACK,
+      CRIT2048_DEFAULT_CLASSES_PACK,
+      CRIT2048_DEFAULT_ARTIFACTS_PACK,
+      CRIT2048_DEFAULT_WEAPONS_PACK,
+      CRIT2048_DEFAULT_HAZARDS_PACK,
+      CRIT2048_DEFAULT_SKIN_PACK,
+      CRIT2048_SHADOWFELL_SKIN_PACK
+    ].map(p => ({
+      id: p.id,
+      name: p.name,
+      version: p.version,
+      author: p.author,
+      type: p.type,
+      icon: p.icon,
+      description: p.description,
+      isTemplate: true
+    } as any));
+
+    setLocalPacks([...templates, ...installed]);
+  };
+
+  const fetchCommunityPacks = async () => {
+    setIsFetching(true);
+    try {
+      const resp = await fetch(REGISTRY_URL, { cache: 'no-store' });
+      if (!resp.ok) throw new Error("Network error");
+      const data = await resp.json();
+      setRemotePacks(data.packs || []);
+      setIsOnline(true);
+    } catch (err) {
+      console.warn("Grimoire: Could not fetch community packs", err);
+      setIsOnline(false);
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  const installFromRemote = async (packUrl: string) => {
+    if (!packUrl) return;
+    try {
+      const resp = await fetch(packUrl);
+      if (!resp.ok) throw new Error("Failed to fetch pack JSON");
+      const packData = await resp.json();
+      
+      if (packData.hasAdvancedScripts) {
+        if (!confirm("⚠️ ADVANCED PACK WARNING ⚠️\n\nThis pack contains custom scripting. Install only if you trust the source.")) return;
+      }
+
+      await GameStorage.savePack(packData);
+      await loadLocalPacks();
+      alert(`Successfully installed: ${packData.name}`);
+    } catch (err) {
+      alert("Error installing pack.");
+    }
+  };
+
+  const togglePack = async (id: string) => {
+    const current = runStats.activePackIds || [];
+    let updated;
+    if (current.includes(id)) {
+      updated = current.filter(p => p !== id);
+    } else {
+      updated = [...current, id];
+    }
+    
+    setState({ runStats: { ...runStats, activePackIds: updated } });
+    await PackEngine.applyPacks(updated);
+    await initializeRegistry(); // Re-sync data.ts globals
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e: any) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      try {
+        const pack = JSON.parse(text);
+        await GameStorage.savePack(pack);
+        loadLocalPacks();
+        alert(`Successfully imported: ${pack.name}`);
+      } catch (err) {
+        alert("Failed to parse pack JSON.");
+      }
+    };
+    input.click();
+  };
+
+  const handleDuplicate = async (id: string) => {
+    let pack = await GameStorage.loadPack(id);
+    if (!pack) {
+      // Check templates
+      const templates = [
+        CRIT2048_DEFAULT_PACK, CRIT2048_DEFAULT_ENEMIES_PACK, CRIT2048_DEFAULT_CLASSES_PACK,
+        CRIT2048_DEFAULT_ARTIFACTS_PACK, CRIT2048_DEFAULT_WEAPONS_PACK, CRIT2048_DEFAULT_HAZARDS_PACK,
+        CRIT2048_DEFAULT_SKIN_PACK, CRIT2048_SHADOWFELL_SKIN_PACK
+      ];
+      pack = templates.find(t => t.id === id) || null;
+    }
+
+    if (pack) {
+      const cloned = { ...pack, id: `${pack.id}-copy-${Date.now()}`, name: `${pack.name} (Copy)` };
+      await GameStorage.savePack(cloned);
+      await loadLocalPacks();
+      onEditPack(cloned);
+    }
+  };
+
+  const handleUninstall = async (id: string) => {
+    if (!confirm("Are you sure you want to remove this pack?")) return;
+    await GameStorage.deletePack(id);
+    loadLocalPacks();
+  };
+
+  const handleEdit = async (id: string) => {
+    let pack = await GameStorage.loadPack(id);
+    if (!pack) {
+      // Check templates
+      const templates = [
+        CRIT2048_DEFAULT_PACK, CRIT2048_DEFAULT_ENEMIES_PACK, CRIT2048_DEFAULT_CLASSES_PACK,
+        CRIT2048_DEFAULT_ARTIFACTS_PACK, CRIT2048_DEFAULT_WEAPONS_PACK, CRIT2048_DEFAULT_HAZARDS_PACK,
+        CRIT2048_DEFAULT_SKIN_PACK, CRIT2048_SHADOWFELL_SKIN_PACK
+      ];
+      pack = templates.find(t => t.id === id) || null;
+    }
+    if (pack) onEditPack(pack);
+  };
 
   const tabs = [
     { id: 'all', label: 'All' },
@@ -16,15 +186,14 @@ const GrimoireModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     { id: 'skin', label: 'Skin' },
   ];
 
-  const dummyPacks = [
-    { id: 'default', name: 'Crit 2048 — Default Mega Pack', author: 'denzven', type: 'mega', icon: '🐉', desc: 'The complete built-in game content.', installed: true },
-    { id: 'shadowfell', name: 'Shadowfell Noir Skin', author: 'denzven', type: 'skin', icon: '🌌', desc: 'A dark, void-themed aesthetic with purple pulses.', installed: false },
-    { id: 'undead-legion', name: 'Undead Legion', author: 'denzven', type: 'dungeon', icon: '💀', desc: 'New skeleton variants and lich bosses.', installed: false },
-  ];
+  const mergedPacks = Array.from(new Map([
+    ...remotePacks.map(p => [p.id, { ...p, isRemote: true }]),
+    ...localPacks.map(p => [p.id, { ...p, isInstalled: true }])
+  ]).values());
 
-  const filteredPacks = dummyPacks.filter(p => 
+  const filteredPacks = mergedPacks.filter(p => 
     (activeTab === 'all' || p.type === activeTab) && 
-    (p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.desc.toLowerCase().includes(searchQuery.toLowerCase()))
+    (p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.description || '').toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
@@ -42,8 +211,20 @@ const GrimoireModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
           </div>
           <div className="flex gap-2">
-            <button className="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700">🔍</button>
-            <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-xs uppercase tracking-widest rounded-lg border border-slate-700">Import</button>
+            <button 
+              onClick={loadAll}
+              disabled={isFetching}
+              className="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700 disabled:opacity-50"
+              title="Refresh"
+            >
+              {isFetching ? '⏳' : '🔄'}
+            </button>
+            <button 
+              onClick={handleImport}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-xs uppercase tracking-widest rounded-lg border border-slate-700"
+            >
+              Import
+            </button>
             <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-rose-900 text-slate-300 rounded-lg transition-colors border border-slate-700">✕</button>
           </div>
         </div>
@@ -67,29 +248,79 @@ const GrimoireModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         {/* Content */}
         <div className="flex-grow overflow-y-auto custom-scrollbar p-6 bg-slate-950 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPacks.map(pack => (
-              <div key={pack.id} className="group bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-4 hover:border-rose-500/50 transition-all shadow-xl relative overflow-hidden">
-                <div className="absolute -top-4 -right-4 text-6xl opacity-5 group-hover:opacity-10 transition-opacity rotate-12">{pack.icon}</div>
-                <div className="flex gap-4 relative z-10">
-                  <div className="w-14 h-14 bg-slate-950 rounded-2xl flex items-center justify-center text-3xl border border-slate-800 shrink-0 shadow-inner">{pack.icon}</div>
-                  <div className="min-w-0">
-                    <h3 className="text-white font-black uppercase tracking-tight text-sm truncate">{pack.name}</h3>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">by {pack.author}</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="px-2 py-0.5 bg-slate-800 text-slate-400 text-[8px] font-black rounded uppercase tracking-tighter border border-slate-700">{pack.type}</span>
-                      {pack.installed && <span className="flex items-center gap-1 text-[8px] text-emerald-400 font-black uppercase tracking-tighter"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Installed</span>}
+            {filteredPacks.map(pack => {
+              const isInstalled = (pack as any).isInstalled;
+              const isActive = (pack as any).isTemplate || runStats.activePackIds?.includes(pack.id);
+              
+              return (
+                <div key={pack.id} className={clsx(
+                  "group bg-slate-900 border rounded-2xl p-5 flex flex-col gap-4 transition-all shadow-xl relative overflow-hidden",
+                  isActive ? "border-rose-500 shadow-rose-900/10" : "border-slate-800 hover:border-slate-700"
+                )}>
+                  <div className="absolute -top-4 -right-4 text-6xl opacity-5 group-hover:opacity-10 transition-opacity rotate-12">{pack.icon}</div>
+                  <div className="flex gap-4 relative z-10">
+                    <div className="w-14 h-14 bg-slate-950 rounded-2xl flex items-center justify-center text-3xl border border-slate-800 shrink-0 shadow-inner">{pack.icon}</div>
+                    <div className="min-w-0 pr-12">
+                      <h3 className="text-white font-black uppercase tracking-tight text-sm truncate">{pack.name}</h3>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">by {pack.author}</p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-slate-800 text-slate-400 text-[8px] font-black rounded uppercase tracking-tighter border border-slate-700">{pack.type}</span>
+                        {isActive && <span className="flex items-center gap-1 text-[8px] text-rose-400 font-black uppercase tracking-tighter"><span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span> Active</span>}
+                      </div>
                     </div>
                   </div>
+                  
+                  {isInstalled && (
+                    <div className={clsx(
+                      "absolute top-4 right-4 border rounded-md text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5",
+                      (pack as any).isTemplate ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                    )}>
+                      {(pack as any).isTemplate ? 'Template' : 'Local'}
+                    </div>
+                  )}
+
+                  <p className="text-[10px] text-slate-400 leading-relaxed font-medium line-clamp-2">{pack.description || 'No description provided.'}</p>
+                  
+                  <div className="mt-auto space-y-3">
+                    {isInstalled ? (
+                      <>
+                        {(pack as any).isTemplate ? (
+                          <div className="w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-center bg-slate-800/50 text-slate-500 border border-slate-700/50">
+                            Core Content
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => togglePack(pack.id)}
+                            className={clsx(
+                              "w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border",
+                              isActive ? "bg-rose-900/20 text-rose-500 border-rose-500/30 hover:bg-rose-900/40" : "bg-slate-800 hover:bg-slate-700 text-white border-slate-700 active:scale-95 shadow-lg shadow-slate-950"
+                            )}
+                          >
+                            {isActive ? 'Deactivate Pack' : 'Activate Pack'}
+                          </button>
+                        )}
+                        <div className={clsx("grid gap-2", (pack as any).isTemplate ? "grid-cols-1" : "grid-cols-3")}>
+                          {!(pack as any).isTemplate && (
+                            <button onClick={() => handleEdit(pack.id)} className="py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[8px] font-black uppercase tracking-widest border border-slate-700">Edit</button>
+                          )}
+                          <button onClick={() => handleDuplicate(pack.id)} className="py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[8px] font-black uppercase tracking-widest border border-slate-700">Clone & Customize</button>
+                          {!(pack as any).isTemplate && (
+                            <button onClick={() => handleUninstall(pack.id)} className="py-2 bg-slate-900 hover:bg-rose-900 text-slate-500 hover:text-rose-400 rounded-lg text-[8px] font-black uppercase tracking-widest border border-slate-800">Trash</button>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <button 
+                        onClick={() => installFromRemote((pack as any).packUrl)}
+                        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-900/50"
+                      >
+                        Install Pack
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <p className="text-[10px] text-slate-400 leading-relaxed font-medium line-clamp-2">{pack.desc}</p>
-                <button className={clsx(
-                  "w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border",
-                  pack.installed ? "bg-slate-800 text-slate-500 border-slate-700 cursor-default" : "bg-rose-600 hover:bg-rose-500 text-white border-rose-400/20 active:scale-95 shadow-lg shadow-rose-900/40"
-                )}>
-                  {pack.installed ? 'Already Installed' : 'Install Pack'}
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
           {filteredPacks.length === 0 && (
@@ -103,8 +334,14 @@ const GrimoireModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         {/* Footer */}
         <div className="px-4 py-2 bg-slate-900 border-t border-slate-800 shrink-0 flex items-center justify-between text-[8px] font-black uppercase tracking-widest text-slate-500 relative z-10">
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Installed</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-500"></span> Advanced</span>
+            <span className={clsx("flex items-center gap-1.5", isOnline ? "text-emerald-400" : "text-rose-400")}>
+              <span className={clsx("w-2 h-2 rounded-full", isOnline ? "bg-emerald-500 animate-pulse" : "bg-rose-500")}></span> 
+              {isOnline ? 'Online' : 'Offline'}
+            </span>
+            <span className="flex items-center gap-1.5 text-slate-500">
+              <span className="w-2 h-2 rounded-full bg-slate-700"></span> 
+              {localPacks.length} Packs Installed
+            </span>
           </div>
           <div className="opacity-40 font-mono">Grimoire Protocol v3.1</div>
         </div>

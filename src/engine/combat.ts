@@ -1,5 +1,7 @@
 import type { Tile, GameStoreState } from '../types/game';
 import { Native } from './native';
+import { PackEngine } from './packEngine';
+import { WEAPON_STATS } from './data';
 
 export const CombatLogic = {
   /**
@@ -12,7 +14,7 @@ export const CombatLogic = {
     merges: number,
     goldEarned: number,
     multIncrease: number,
-    mergePositions: number[]
+    mergeResults: { damage: number, gold: number, pos: number }[]
   } {
     let newGrid = [...state.grid];
     let changed = false;
@@ -20,7 +22,7 @@ export const CombatLogic = {
     let merges = 0;
     let goldEarned = 0;
     let multIncrease = 0;
-    let mergePositions: number[] = [];
+    let mergeResults: { damage: number, gold: number, pos: number }[] = [];
 
     const processLine = (lineIndices: number[]) => {
       // 1. Filter out nulls
@@ -46,39 +48,38 @@ export const CombatLogic = {
           });
 
           merges++;
-          mergePositions.push(lineIndices[i]); // Original merge position
+          // (mergeResults tracking handled below)
+          
+          // Pack Hook: onMerge
+          PackEngine.onMerge(state, newVal);
           
           // Calculate Damage
-          let baseDmg = newVal; 
+          let baseDmg = WEAPON_STATS[newVal]?.dmg || newVal; 
           
-          // Class Bonuses
-          if (state.playerClass?.id === 'Barbarian' && (newVal === 4 || newVal === 8)) {
-            baseDmg += 10;
-          }
-          if (state.playerClass?.id === 'Fighter' && newVal >= 8) {
-            baseDmg += 15;
-          }
-          if (state.playerClass?.id === 'Rogue') {
-            goldEarned += 1;
-          }
-
-          // Artifact Bonuses
-          const artifacts = state.artifacts || [];
-          if (artifacts.some(a => a.id === 'GRAVITY_BOOTS') && direction === 'DOWN') {
-            baseDmg *= 1.5;
-          }
-          if (artifacts.some(a => a.id === 'ASSASSIN_MARK') && newVal === 4) {
-            multIncrease += 0.1;
-          }
+          // (Class and Artifact bonuses are now handled via PackEngine hooks)
 
           // Hunter's Mark logic
           let finalMergeDmg = baseDmg * state.multiplier;
+          
+          // Pack Hook: calculateMergeDamage
+          finalMergeDmg = PackEngine.calculateMergeDamage(state, finalMergeDmg, direction, newVal);
+
           if ((state as any).hunterMarkLeft > 0) {
             finalMergeDmg *= 2;
             (state as any).hunterMarkLeft--;
           }
 
           damageDealt += finalMergeDmg;
+          
+          // Baseline Gold: log2(val)
+          let baseGold = Math.floor(Math.log2(newVal));
+          goldEarned += baseGold;
+
+          mergeResults.push({ 
+            damage: finalMergeDmg, 
+            gold: baseGold, 
+            pos: lineIndices[i] 
+          });
           
           if (state.settings?.haptics) Native.vibrate(20); // Small pulse on merge
           i++; // Skip next tile since it merged
@@ -130,19 +131,18 @@ export const CombatLogic = {
         newGrid = newGrid.map(t => t && t.val === -2 ? null : t); // Goblin
       }
 
-      // Monk momentum
-      if (state.playerClass?.id === 'Monk' && (state as any).lastDirection && (state as any).lastDirection !== direction) {
-        multIncrease += 0.1;
+      // Board Power: 5% of total board value added as passive damage
+      const boardSum = newGrid.reduce((sum, t) => sum + (t && t.val > 0 ? t.val : 0), 0);
+      const boardPowerDmg = Math.floor(boardSum * 0.05);
+      if (boardPowerDmg > 0) {
+        damageDealt += boardPowerDmg;
+        // Optionally add to logs or HUD if needed, but for now we'll just include it in the total
       }
 
-      // Druid purification
-      if (state.playerClass?.id === 'Druid' && Math.random() < 0.2) {
-        const hIdx = newGrid.findIndex(t => t && t.val < 0);
-        if (hIdx !== -1) newGrid[hIdx] = null;
-      }
+      // (Monk and Druid passives are now handled via PackEngine hooks)
     }
 
-    return { newGrid, changed, damageDealt, merges, goldEarned, multIncrease, mergePositions };
+    return { newGrid, changed, damageDealt, merges, goldEarned, multIncrease, mergeResults };
   },
 
   /**
