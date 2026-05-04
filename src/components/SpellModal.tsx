@@ -45,6 +45,7 @@ const SpellModal: React.FC = () => {
           <div className="w-full h-full absolute inset-0 mx-auto z-10 flex items-center justify-center">
             {hasStartedRoll && (
               <ThreeDice 
+                key={`spell-${ab.id}-${spellRoll?.results.join('-') || 'init'}`}
                 sides={ab.sides} 
                 results={spellRoll?.results || Array(ab.count).fill(ab.sides)} 
                 onComplete={() => {}} 

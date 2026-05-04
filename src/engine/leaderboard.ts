@@ -25,8 +25,8 @@ export const LeaderboardLogic = {
     const entry: LeaderboardEntry = {
       id: Date.now(),
       date: new Date().toISOString(),
-      class: playerClass.name,
-      icon: playerClass.icon,
+      class: playerClass?.name || 'Unknown',
+      icon: playerClass?.icon || '❓',
       ante: encounterIdx + 1,
       maxDamage: runStats.maxDamage,
       totalMoves: runStats.totalMoves,

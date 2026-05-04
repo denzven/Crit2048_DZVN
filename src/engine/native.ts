@@ -7,10 +7,15 @@ export const Native = {
   /**
    * Haptics / Vibration
    */
-  vibrate(pattern: number | number[] = 50) {
+  vibrate(pattern: number | number[] = 50, intensity: number = 1.0) {
     if (!navigator.vibrate) return;
     try {
-      navigator.vibrate(pattern);
+      if (Array.isArray(pattern)) {
+        const scaled = pattern.map(p => p * intensity);
+        navigator.vibrate(scaled);
+      } else {
+        navigator.vibrate(pattern * intensity);
+      }
     } catch (e) {
       console.warn('Vibration failed', e);
     }

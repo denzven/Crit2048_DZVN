@@ -11,7 +11,8 @@ export const CombatLogic = {
     damageDealt: number,
     merges: number,
     goldEarned: number,
-    multIncrease: number
+    multIncrease: number,
+    mergePositions: number[]
   } {
     let newGrid = [...state.grid];
     let changed = false;
@@ -19,6 +20,7 @@ export const CombatLogic = {
     let merges = 0;
     let goldEarned = 0;
     let multIncrease = 0;
+    let mergePositions: number[] = [];
 
     const processLine = (lineIndices: number[]) => {
       // 1. Filter out nulls
@@ -44,6 +46,7 @@ export const CombatLogic = {
           });
 
           merges++;
+          mergePositions.push(lineIndices[i]); // Original merge position
           
           // Calculate Damage
           let baseDmg = newVal; 
@@ -77,7 +80,7 @@ export const CombatLogic = {
 
           damageDealt += finalMergeDmg;
           
-          Native.vibrate(20); // Small pulse on merge
+          if (state.settings?.haptics) Native.vibrate(20); // Small pulse on merge
           i++; // Skip next tile since it merged
         } else {
           combined.push(line[i]);
@@ -139,7 +142,7 @@ export const CombatLogic = {
       }
     }
 
-    return { newGrid, changed, damageDealt, merges, goldEarned, multIncrease };
+    return { newGrid, changed, damageDealt, merges, goldEarned, multIncrease, mergePositions };
   },
 
   /**

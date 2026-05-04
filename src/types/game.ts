@@ -35,6 +35,36 @@ export interface RunStats {
 
 export type GameState = 'START' | 'CLASS_SELECT' | 'PLAYING' | 'DICE' | 'SPELL' | 'TAVERN' | 'GAME_OVER' | 'VICTORY';
 
+export interface FloatingText {
+  id: number;
+  text: string;
+  x: number;
+  y: number;
+  type: 'damage' | 'gold' | 'mult';
+}
+
+export interface ConfirmationState {
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel?: () => void;
+  type: 'confirm' | 'alert';
+}
+
+export interface Settings {
+  haptics: boolean;
+  hapticIntensity: number;
+  screenshake: boolean;
+  shakeIntensity: number;
+  particles: boolean;
+  volume: number;
+  uiScale: number;
+  fontScale: number;
+  movesPerRoll: number;
+  startingGold: number;
+  diceTheme: 'default' | 'blood' | 'bone' | 'neon';
+}
+
 export interface GameStoreState {
   gameState: GameState;
   grid: (Tile | null)[];
@@ -54,4 +84,7 @@ export interface GameStoreState {
   isRolling: boolean;
   
   runStats: RunStats;
+  settings: Settings;
+  floatingTexts: FloatingText[];
+  confirmation: ConfirmationState | null;
 }

@@ -143,35 +143,94 @@ const Tavern: React.FC = () => {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0 pb-8">
-              {shopItems.map((item, idx) => (
-                <div key={item.id} 
-                  onMouseEnter={() => setFocusedIndex(4 + idx)}
-                  className={clsx(
-                    "bg-slate-900/80 border rounded-2xl p-4 flex flex-col justify-between gap-4 transition-colors shadow-lg animate-in fade-in zoom-in duration-300",
-                    focusedIndex === 4 + idx ? "border-amber-500 ring-2 ring-amber-500/20" : "border-slate-700 hover:border-slate-500"
-                  )}
-                >
-                  <div className="flex gap-4">
-                    <div className="w-12 h-12 bg-slate-950 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-slate-800">
-                      {item.icon}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 shrink-0 pb-8">
+              {shopItems.map((item, idx) => {
+                const owned = useGameStore.getState().artifacts.find(a => a.id === item.id);
+                const level = owned ? owned.level : 0;
+                const currentCost = item.basePrice * (level + 1);
+                const isLegendary = item.rarity === 'legendary' || item.rarity === 'artifact';
+                
+                const getRarityStyles = (rarity: string) => {
+                  const r = rarity?.toLowerCase();
+                  if (r === 'legendary') return { color: 'text-amber-400', border: 'border-amber-600/50', bg: 'bg-amber-950/30', glow: 'glow-legendary' };
+                  if (r === 'epic') return { color: 'text-purple-400', border: 'border-purple-600/50', bg: 'bg-purple-950/30', glow: 'glow-epic' };
+                  if (r === 'rare') return { color: 'text-blue-400', border: 'border-blue-600/50', bg: 'bg-blue-950/30', glow: 'glow-rare' };
+                  if (r === 'artifact') return { color: 'text-rose-400', border: 'border-rose-600/50', bg: 'bg-rose-950/30', glow: 'glow-artifact' };
+                  return { color: 'text-slate-400', border: 'border-slate-600/50', bg: 'bg-slate-950/30', glow: 'glow-common' };
+                };
+
+                const styles = getRarityStyles(item.rarity);
+
+                return (
+                  <div key={item.id} 
+                    onMouseEnter={() => setFocusedIndex(4 + idx)}
+                    className={clsx(
+                      "tavern-item relative bg-slate-900/40 border-2 rounded-[2rem] p-6 flex flex-col gap-5 overflow-hidden group backdrop-blur-md shadow-2xl transition-all duration-300",
+                      focusedIndex === 4 + idx ? "border-white/20 scale-[1.02]" : "border-slate-800/80 hover:border-slate-700/50",
+                      styles.glow
+                    )}
+                  >
+                    {isLegendary && (
+                      <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 -translate-x-full animate-shimmer pointer-events-none"></div>
+                    )}
+
+                    <div className="flex justify-between items-center z-10">
+                      <div className={clsx(
+                        "text-4xl p-5 rounded-3xl border-2 shadow-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 ease-out",
+                        styles.bg, styles.border
+                      )}>
+                        {item.icon}
+                      </div>
+                      <div className="flex flex-col items-end gap-1.5">
+                        <span className={clsx("text-[11px] uppercase font-black border-b-2 pb-0.5 tracking-widest", styles.color, styles.border)}>
+                          {item.rarity || 'RARE'}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono font-bold tracking-tight">Level {level}</span>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-black text-white uppercase tracking-wider">{item.name}</h4>
-                      <p className="text-[10px] text-slate-400 leading-tight mt-1">{item.desc}</p>
+
+                    <div className="flex-grow flex flex-col z-10">
+                      <h3 className="font-black text-sm text-white uppercase tracking-tight mb-2 group-hover:text-amber-400 transition-colors">
+                        {item.name}
+                      </h3>
+                      <p className="text-[11px] text-slate-400/80 leading-relaxed mb-6 flex-grow font-medium">
+                        {item.desc}
+                      </p>
+                      
+                      <div className="flex flex-col gap-4 mt-auto">
+                        <div className="flex justify-between items-center bg-slate-950/60 rounded-2xl px-4 py-3 border border-slate-800/50 shadow-inner">
+                          <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Cost</span>
+                          <span className={clsx("font-mono text-sm font-black flex items-center gap-1.5", gold >= currentCost ? "text-amber-400" : "text-rose-500")}>
+                            <span className="text-xs">💰</span> {currentCost}
+                          </span>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => addLog(`Item Info: ${item.name} - ${item.desc}`)}
+                            className="w-12 h-12 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl border border-slate-700 transition-all active:scale-95"
+                            title="Stats"
+                          >
+                            📈
+                          </button>
+                          <button 
+                            onClick={() => buyArtifact(item.id)}
+                            disabled={gold < currentCost}
+                            className={clsx(
+                              "flex-grow py-3 font-black rounded-xl transition-all uppercase tracking-widest text-[10px] border shadow-lg active:scale-95 disabled:opacity-40 disabled:grayscale disabled:cursor-not-allowed",
+                              gold >= currentCost 
+                                ? "bg-amber-600 hover:bg-amber-500 text-white border-amber-400/20 shadow-amber-950/20" 
+                                : "bg-slate-900 text-slate-600 border-slate-800"
+                            )}
+                          >
+                            {owned ? "Enhance Power" : "Acquire"}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => buyArtifact(item.id)}
-                    disabled={gold < item.basePrice}
-                    className="w-full py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-amber-400 font-black rounded-lg transition-all uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 border border-slate-700 active:scale-95"
-                  >
-                    <span>💰 {item.basePrice}</span>
-                    <span className="text-slate-500">|</span>
-                    <span>Purchase</span>
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

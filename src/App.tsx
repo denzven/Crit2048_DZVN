@@ -8,12 +8,15 @@ import SpellModal from './components/SpellModal'
 import SettingsModal from './components/SettingsModal'
 import GrimoireModal from './components/GrimoireModal'
 import ForgeModal from './components/ForgeModal'
+import HelpModal from './components/HelpModal'
+import ConfirmationModal from './components/ConfirmationModal'
 import RunStatsModal from './components/RunStatsModal'
 import LeaderboardModal from './components/LeaderboardModal'
 import ShareModal from './components/ShareModal'
 import { MobileInventoryModal, MobileLogsModal } from './components/MobileModals'
 import BackgroundParticles from './components/BackgroundParticles'
 import BrowserWarning from './components/BrowserWarning'
+import Preloader from './components/Preloader'
 import { Native } from './engine/native'
 import { clsx } from 'clsx'
 
@@ -32,6 +35,8 @@ function App() {
     playerClass,
     setGameState,
     castSpell,
+    forfeitRun,
+    showConfirm,
   } = useGameStore()
 
   const [showSettings, setShowSettings] = React.useState(false)
@@ -41,8 +46,10 @@ function App() {
   const [showShare, setShowShare] = React.useState(false)
   const [showMobileInventory, setShowMobileInventory] = React.useState(false)
   const [showMobileLogs, setShowMobileLogs] = React.useState(false)
+  const [showHelp, setShowHelp] = React.useState(false)
   const [seedInput, setSeedInput] = React.useState('')
   const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null)
+  const [isLoading, setIsLoading] = React.useState(true)
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -94,12 +101,20 @@ function App() {
 
   return (
     <div className="bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 flex flex-col h-screen w-screen overflow-hidden select-none safe-top safe-bottom">
-      <BackgroundParticles />
+      {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
+      {useGameStore.getState().settings.particles && <BackgroundParticles />}
       <BrowserWarning />
       {/* HEADER */}
       <header className="bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 relative z-40 px-4 h-14 md:h-16">
         <div className="flex items-center gap-2">
-          <h1 className="text-lg md:text-2xl font-black tracking-wider text-rose-500 flex items-center gap-2 font-serif cursor-pointer hover:text-rose-400 transition-colors">
+          <h1 
+            onClick={() => {
+              if (gameState !== 'START') {
+                showConfirm("Abandon Run?", "Are you sure you want to end this run and view your progress?", forfeitRun);
+              }
+            }}
+            className="text-lg md:text-2xl font-black tracking-wider text-rose-500 flex items-center gap-2 font-serif cursor-pointer hover:text-rose-400 transition-colors"
+          >
             🐉 CRIT 2048
           </h1>
           {gameState !== 'START' && (
@@ -109,22 +124,9 @@ function App() {
           )}
         </div>
         
+        <div className="flex items-center gap-3 md:gap-4">
           {gameState !== 'START' && (
-            <button 
-              onClick={() => {
-                if (confirm("Return to main menu? Current run progress will be saved.")) {
-                  setGameState('START');
-                }
-              }}
-              className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
-              title="Home"
-            >
-              🏠
-            </button>
-          )}
-          
-          <div className="flex items-center gap-3 md:gap-4">
-            {gameState !== 'START' && (
+            <>
               <div className="flex gap-2 md:gap-4 text-xs md:text-base font-black text-amber-400">
                 <span className="flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm">
                   💰 <span className="font-mono">{gold}</span>
@@ -133,36 +135,55 @@ function App() {
                   ⚔️ <span className="font-mono">{multiplier.toFixed(1)}</span>
                 </span>
               </div>
-            )}
+              
+              <button 
+                onClick={() => {
+                  showConfirm("Abandon Run?", "Are you sure you want to end this run and view your progress?", forfeitRun);
+                }}
+                className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
+                title="Forfeit"
+              >
+                🏠
+              </button>
+            </>
+          )}
 
-            {/* Only show Grimoire and Forge when NOT in the middle of a dungeon (PLAYING) */}
-            {gameState !== 'PLAYING' && (
-              <>
-                <button 
-                  onClick={() => setShowGrimoire(true)}
-                  className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
-                  title="Grimoire"
-                >
-                  📜
-                </button>
-                <button 
-                  onClick={() => setShowForge(true)}
-                  className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
-                  title="Forge"
-                >
-                  ⚒️
-                </button>
-              </>
-            )}
-            
-            <button 
-              onClick={() => setShowSettings(true)}
-              className="text-slate-400 hover:text-white transition-colors text-xl active:scale-95"
-              title="Settings"
-            >
-              ⚙️
-            </button>
-          </div>
+          {/* Grimoire and Forge: Only when NOT playing/rolling/etc. */}
+          {(gameState === 'START' || gameState === 'CLASS_SELECT') && (
+            <>
+              <button 
+                onClick={() => setShowGrimoire(true)}
+                className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
+                title="Grimoire"
+              >
+                📜
+              </button>
+              <button 
+                onClick={() => setShowForge(true)}
+                className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
+                title="Forge"
+              >
+                ⚒️
+              </button>
+            </>
+          )}
+          
+          <button 
+            onClick={() => setShowHelp(true)}
+            className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95"
+            title="Help"
+          >
+            ❓
+          </button>
+
+          <button 
+            onClick={() => setShowSettings(true)}
+            className="text-slate-400 hover:text-white transition-colors text-xl active:scale-95"
+            title="Settings"
+          >
+            ⚙️
+          </button>
+        </div>
       </header>
 
       {/* MAIN CONTAINER */}
@@ -374,6 +395,10 @@ function App() {
           <ForgeModal onClose={() => setShowForge(false)} />
         )}
 
+        {showHelp && (
+          <HelpModal onClose={() => setShowHelp(false)} />
+        )}
+
         {showLeaderboard && (
           <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
         )}
@@ -381,6 +406,8 @@ function App() {
         {showShare && (
           <ShareModal onClose={() => setShowShare(false)} />
         )}
+
+        <ConfirmationModal />
 
         {showMobileInventory && (
           <MobileInventoryModal onClose={() => setShowMobileInventory(false)} />

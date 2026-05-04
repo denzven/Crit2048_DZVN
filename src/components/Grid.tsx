@@ -117,6 +117,23 @@ const Grid: React.FC = () => {
             );
           })}
         </div>
+        {/* Floating Combat Text */}
+        {useGameStore.getState().floatingTexts.map((ft) => (
+          <div
+            key={ft.id}
+            className={cn(
+              "fx-combat-text text-xl md:text-3xl",
+              ft.type === 'damage' ? "text-damage" : ft.type === 'gold' ? "text-gold" : "text-mult"
+            )}
+            style={{
+              left: `${ft.x}%`,
+              top: `${ft.y}%`,
+              transform: 'translate(-50%, -50%)'
+            }}
+          >
+            {ft.text}
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -1,16 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useGameStore } from '../engine/gameStore';
 import ThreeDice from './ThreeDice';
 import { clsx } from 'clsx';
 
 const DiceModal: React.FC = () => {
+  const [hasLanded, setHasLanded] = useState(false);
   const { isRolling, lastRoll, rollD20, closeDiceModal, playerClass } = useGameStore();
   const [showThreeDice, setShowThreeDice] = useState(false);
 
   const handleRoll = () => {
     setShowThreeDice(true);
+    setHasLanded(false);
     rollD20();
   };
+
+  const onDiceComplete = useCallback(() => {
+    setHasLanded(true);
+  }, []);
+
+  const diceResults = useMemo(() => [lastRoll?.val || 20], [lastRoll?.val]);
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -50,9 +58,10 @@ const DiceModal: React.FC = () => {
           <div id="d20-render-target" className="w-full h-full absolute inset-0 mx-auto z-10 flex items-center justify-center">
             {showThreeDice && (
               <ThreeDice 
+                key={`d20-${diceResults.join('-')}`}
                 sides={20} 
-                results={[lastRoll?.val || 20]} 
-                onComplete={() => {}} 
+                results={diceResults} 
+                onComplete={onDiceComplete} 
               />
             )}
           </div>
@@ -69,7 +78,7 @@ const DiceModal: React.FC = () => {
           )}
         </div>
 
-        {lastRoll && (
+        {lastRoll && hasLanded && (
           <div id="dice-post-roll" className="flex flex-col items-center w-full z-20 mt-6 min-h-[80px] animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div id="dice-result-msg" className="flex flex-col items-center justify-center w-full text-center">
               <span className={clsx("block text-5xl font-black mb-2 font-mono", getResultColor())}>

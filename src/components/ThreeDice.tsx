@@ -23,25 +23,33 @@ const ThreeDice: React.FC<ThreeDiceProps> = ({ sides, results, onComplete }) => 
     camera.position.set(0, 15, 0);
     camera.lookAt(0, 0, 0);
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     containerRef.current.appendChild(renderer.domElement);
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+    const ambient = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambient);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(5, 20, 5);
+    
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    dirLight.position.set(10, 20, 10);
     dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
     scene.add(dirLight);
+
+    const pointLight = new THREE.PointLight(0xffffff, 0.8);
+    pointLight.position.set(-10, 5, -10);
+    scene.add(pointLight);
 
     const spreadX = Math.max(1, d * aspect - 1.5);
     const spreadZ = Math.max(1, d - 1.5);
 
-    const trayGeo = new THREE.BoxGeometry(spreadX * 2 + 2, 10, spreadZ * 2 + 2);
-    const trayMat = new THREE.MeshToonMaterial({ color: 0x050505, side: THREE.BackSide });
+    const trayGeo = new THREE.BoxGeometry(spreadX * 2 + 5, 10, spreadZ * 2 + 5);
+    const trayMat = new THREE.MeshToonMaterial({ color: 0x020617, side: THREE.BackSide });
     const tray = new THREE.Mesh(trayGeo, trayMat);
     tray.position.y = 4.5;
     tray.receiveShadow = true;
@@ -57,55 +65,120 @@ const ThreeDice: React.FC<ThreeDiceProps> = ({ sides, results, onComplete }) => 
       else if (s === 8) geo = new THREE.OctahedronGeometry(1.5);
       else if (s === 12) geo = new THREE.DodecahedronGeometry(1.5);
       else if (s === 20) geo = new THREE.IcosahedronGeometry(1.5);
-      else geo = new THREE.IcosahedronGeometry(1.5); // Proxy for D10/D100
+      else geo = new THREE.IcosahedronGeometry(1.5); 
       
       const uvs = geo.attributes.uv;
-      if (uvs) {
+      if (uvs && s !== 6) {
+        geo.clearGroups();
         for (let i = 0; i < uvs.count; i += 3) {
           geo.addGroup(i, 3, i / 3);
           uvs.setXY(i + 0, 0, 0);
           uvs.setXY(i + 1, 1, 0);
           uvs.setXY(i + 2, 0.5, 1);
         }
+      } else if (uvs && s === 6) {
       }
       return geo;
     };
 
     const geometry = createDiceGeometry(sides);
+    const numFaces = sides === 6 ? 6 : sides === 8 ? 8 : (sides === 4 ? 4 : (sides === 12 ? 12 : 20));
 
-    // Calculate target rotation for face 0
     const posAttr = geometry.attributes.position;
-    const v0 = new THREE.Vector3().fromBufferAttribute(posAttr, 0);
-    const v1 = new THREE.Vector3().fromBufferAttribute(posAttr, 1);
-    const v2 = new THREE.Vector3().fromBufferAttribute(posAttr, 2);
-    const faceNormal = new THREE.Vector3().crossVectors(
-      new THREE.Vector3().subVectors(v1, v0),
-      new THREE.Vector3().subVectors(v2, v0)
-    ).normalize();
+    const faceVertexCount = sides === 6 ? 6 : 3;
+
+    const getFaceNormal = (fIdx: number) => {
+      const offset = fIdx * faceVertexCount;
+      const vA = new THREE.Vector3().fromBufferAttribute(posAttr, offset + 0);
+      const vB = new THREE.Vector3().fromBufferAttribute(posAttr, offset + 1);
+      const vC = new THREE.Vector3().fromBufferAttribute(posAttr, offset + 2);
+      const cb = new THREE.Vector3(), ab = new THREE.Vector3();
+      cb.subVectors(vC, vB);
+      ab.subVectors(vA, vB);
+      cb.cross(ab);
+      return cb.normalize();
+    };
+    
+    const faceNormal = getFaceNormal(0);
     const targetQuat = new THREE.Quaternion().setFromUnitVectors(faceNormal, new THREE.Vector3(0, 1, 0));
 
     results.forEach((result, idx) => {
-      // Materials
-      const materials: THREE.Material[] = [];
       const diceColor = sides === 20 ? "#f43f5e" : sides === 8 ? "#3b82f6" : "#fbbf24";
       const diceBg = "#0f172a";
-      const numFaces = sides === 6 ? 6 : sides === 8 ? 8 : 20;
+      const faceValues = new Array(numFaces).fill(0);
+      const materials: THREE.Material[] = Array(numFaces).fill(null);
+
+      const centers: THREE.Vector3[] = [];
+      for (let i = 0; i < numFaces; i++) {
+        const offset = i * faceVertexCount;
+        const vA = new THREE.Vector3().fromBufferAttribute(posAttr, offset + 0);
+        const vB = new THREE.Vector3().fromBufferAttribute(posAttr, offset + 1);
+        const vC = new THREE.Vector3().fromBufferAttribute(posAttr, offset + 2);
+        centers.push(new THREE.Vector3().add(vA).add(vB).add(vC).divideScalar(3).normalize());
+      }
+
+      const getOpposite = (fIdx: number) => {
+        if (sides === 6) {
+          return fIdx % 2 === 0 ? fIdx + 1 : fIdx - 1;
+        }
+        let best = -1;
+        let minDot = 1.1;
+        const target = centers[fIdx];
+        centers.forEach((c, j) => {
+          if (fIdx === j) return;
+          const d = c.dot(target);
+          if (d < minDot) { minDot = d; best = j; }
+        });
+        return best;
+      };
+
+      faceValues[0] = result;
+      const opp0 = getOpposite(0);
+      if (opp0 !== -1) faceValues[opp0] = (sides + 1) - result;
+
+      const used = new Set([0, opp0]);
+      const pool = Array.from({ length: sides }, (_, i) => i + 1).filter(v => !faceValues.includes(v));
+
+      for (let i = 0; i < numFaces; i++) {
+        if (used.has(i)) continue;
+        const opp = getOpposite(i);
+        if (opp !== -1 && !used.has(opp)) {
+          const val = pool.pop() || 1;
+          faceValues[i] = val;
+          faceValues[opp] = (sides + 1) - val;
+          used.add(i);
+          used.add(opp);
+        }
+      }
+
+      for (let i = 0; i < numFaces; i++) {
+        if (faceValues[i] === 0) faceValues[i] = pool.pop() || 1;
+      }
 
       for (let i = 0; i < numFaces; i++) {
         const canvas = document.createElement("canvas");
-        canvas.width = 256; canvas.height = 256;
-        const ctx = canvas.getContext("2d")!;
-        ctx.fillStyle = diceBg; ctx.fillRect(0, 0, 256, 256);
-        ctx.strokeStyle = diceColor; ctx.lineWidth = 6;
+        canvas.width = 512; canvas.height = 512;
+        const ctx = canvas.getContext("2d", { alpha: false })!;
+        ctx.fillStyle = diceBg; ctx.fillRect(0, 0, 512, 512);
+        
+        ctx.strokeStyle = diceColor; ctx.lineWidth = 15;
         ctx.beginPath();
-        if (sides === 6) ctx.strokeRect(10, 10, 236, 236);
-        else { ctx.moveTo(128, 10); ctx.lineTo(246, 246); ctx.lineTo(10, 246); ctx.closePath(); ctx.stroke(); }
+        if (sides === 6) {
+          ctx.strokeRect(30, 30, 452, 452);
+        } else {
+          ctx.moveTo(256, 30); ctx.lineTo(482, 482); ctx.lineTo(30, 482); ctx.closePath(); ctx.stroke();
+        }
+        
         ctx.fillStyle = diceColor; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.font = `900 ${sides === 6 ? '160px' : '110px'} sans-serif`;
-        const val = (i === 0) ? result : Math.floor(Math.random() * sides) + 1;
-        ctx.fillText(val.toString(), 128, sides === 6 ? 130 : 165);
-        if (val === 6 || val === 9) ctx.fillRect(100, 220, 56, 8);
-        materials.push(new THREE.MeshToonMaterial({ map: new THREE.CanvasTexture(canvas), color: 0xffffff }));
+        ctx.font = `900 ${sides === 6 ? '340px' : '220px'} system-ui, sans-serif`;
+        
+        const val = faceValues[i];
+        ctx.fillText(val.toString(), 256, sides === 6 ? 260 : 330);
+        if (val === 6 || val === 9) ctx.fillRect(200, 440, 112, 18);
+        
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        materials[i] = new THREE.MeshToonMaterial({ map: tex, color: 0xffffff });
       }
 
       const mesh = new THREE.Mesh(geometry, materials);
@@ -131,8 +204,11 @@ const ThreeDice: React.FC<ThreeDiceProps> = ({ sides, results, onComplete }) => 
       mesh.rotation.x += avel.x;
       mesh.rotation.y += avel.y;
       mesh.rotation.z += avel.z;
+      
+      // Gravity
       vel.y -= 0.035;
 
+      // Floor
       if (mesh.position.y <= 1.2) {
         mesh.position.y = 1.2;
         vel.y *= -0.35;
@@ -141,10 +217,50 @@ const ThreeDice: React.FC<ThreeDiceProps> = ({ sides, results, onComplete }) => 
         avel.multiplyScalar(0.7);
       }
       
+      // Walls
       if (Math.abs(mesh.position.x) > spreadX) { mesh.position.x = Math.sign(mesh.position.x) * spreadX; vel.x *= -0.8; }
       if (Math.abs(mesh.position.z) > spreadZ) { mesh.position.z = Math.sign(mesh.position.z) * spreadZ; vel.z *= -0.8; }
 
       return vel.lengthSq() > 0.001 || avel.lengthSq() > 0.001;
+    };
+
+    const handleCollisions = () => {
+      const radius = 1.6;
+      for (let i = 0; i < diceObjects.length; i++) {
+        for (let j = i + 1; j < diceObjects.length; j++) {
+          const a = diceObjects[i];
+          const b = diceObjects[j];
+          const diff = new THREE.Vector3().subVectors(a.position, b.position);
+          const dist = diff.length();
+          
+          if (dist < radius * 2) {
+            // Collision!
+            const normal = diff.normalize();
+            const overlap = radius * 2 - dist;
+            
+            // Push apart
+            a.position.addScaledVector(normal, overlap * 0.5);
+            b.position.addScaledVector(normal, -overlap * 0.5);
+            
+            // Bounce velocities
+            const relativeVelocity = new THREE.Vector3().subVectors(a.userData.vel, b.userData.vel);
+            const velocityAlongNormal = relativeVelocity.dot(normal);
+            
+            if (velocityAlongNormal < 0) {
+              const restitution = 0.5;
+              const impulseScalar = -(1 + restitution) * velocityAlongNormal / 2;
+              const impulse = normal.multiplyScalar(impulseScalar);
+              
+              a.userData.vel.add(impulse);
+              b.userData.vel.sub(impulse);
+              
+              // Add a bit of spin change on impact
+              a.userData.avel.addScaledVector(new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5), 0.2);
+              b.userData.avel.addScaledVector(new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5), 0.2);
+            }
+          }
+        }
+      }
     };
 
     let active = true;
@@ -159,7 +275,9 @@ const ThreeDice: React.FC<ThreeDiceProps> = ({ sides, results, onComplete }) => 
       if (!ending) {
         let moving = false;
         diceObjects.forEach(m => { if (applyPhysics(m)) moving = true; });
-        if ((!moving && frames > 45) || frames > 180) {
+        handleCollisions();
+        
+        if ((!moving && frames > 60) || frames > 240) {
           ending = true;
           diceObjects.forEach(m => {
             m.userData.startPos = m.position.clone();
