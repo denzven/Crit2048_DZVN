@@ -61,7 +61,6 @@ const DiceModal: React.FC = () => {
                 sides={20} 
                 results={diceResults} 
                 onComplete={onDiceComplete} 
-                modifier={mod}
               />
             )}
           </div>
