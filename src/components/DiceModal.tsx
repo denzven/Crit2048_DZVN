@@ -48,7 +48,7 @@ const DiceModal: React.FC = () => {
     <div id="modal-dice" className="absolute inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
       <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm pointer-events-auto" />
       
-      <div id="d20-panel" className="pointer-events-auto bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full text-center flex flex-col items-center shadow-2xl relative animate-in fade-in zoom-in duration-300">
+      <div id="d20-panel" className="pointer-events-auto bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full text-center flex flex-col items-center shadow-2xl relative fx-modal-entrance">
         <h2 className="text-2xl font-black mb-1 text-rose-500 uppercase tracking-widest mt-2 font-serif">D20 Check</h2>
         <p className="text-slate-400 text-xs uppercase tracking-widest mb-6 font-bold">
           Mod: <span className="text-white bg-slate-800 px-2 py-0.5 rounded ml-1">{mod >= 0 ? `+${mod}` : mod}</span>

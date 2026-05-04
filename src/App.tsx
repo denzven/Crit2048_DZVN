@@ -374,7 +374,7 @@ function App() {
         )}
 
         {gameState === 'TAVERN' && (
-          <div className="w-full h-full animate-in fade-in slide-in-from-right-8 duration-500">
+          <div className="w-full h-full pull-up">
             <Tavern />
           </div>
         )}
@@ -428,19 +428,27 @@ function App() {
           />
         )}
 
-        {/* ENEMY DEFEATED SPLASH */}
-        {useGameStore(s => s.isTransitioning && s.monsterHp <= 0) && (
-          <div className="absolute inset-0 z-[200] flex items-center justify-center pointer-events-none">
-            <div className="absolute inset-0 bg-rose-950/20 backdrop-blur-sm animate-in fade-in duration-500" />
-            <div className="relative animate-in zoom-in slide-in-from-top-8 duration-700 ease-out flex flex-col items-center">
-              <div className="text-6xl md:text-8xl font-black text-rose-600 font-serif tracking-tighter drop-shadow-[0_0_30px_rgba(225,29,72,0.8)] uppercase">
-                Defeated
-              </div>
-              <div className="h-1 w-64 bg-gradient-to-r from-transparent via-rose-500 to-transparent mt-2 shadow-[0_0_15px_rgba(225,29,72,0.5)]" />
-              <p className="text-rose-200 text-xs md:text-sm font-bold uppercase tracking-[0.5em] mt-4 opacity-80 animate-pulse">
-                The Dungeon Recedes...
-              </p>
-            </div>
+        {/* ENEMY DEFEATED SPLASH (LEGACY RESTORED) */}
+        {useGameStore(s => s.isTransitioning && s.monsterHp <= 0 && s.gameState === 'PLAYING') && (
+          <div className="fx-announcement">
+            <h2 className="text-4xl md:text-7xl">
+              {encounterIdx === 0 ? 'Goblin Scout' : 
+               encounterIdx === 1 ? 'Orc Brute' : 
+               encounterIdx === 2 ? 'Slime King' : 'The Boss'}
+            </h2>
+            <p className="text-2xl md:text-4xl mt-2">Defeated!</p>
+          </div>
+        )}
+
+        {/* LOADING SCREEN (Ante Transition) */}
+        {useGameStore(s => s.isTransitioning && (s.monsterHp > 0 || s.gameState === 'TAVERN')) && (
+          <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-slate-950 animate-in fade-in duration-300">
+             <div className="w-16 h-16 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mb-6 shadow-[0_0_20px_rgba(225,29,72,0.3)]" />
+             <h2 className="text-2xl font-black text-white font-serif uppercase tracking-[0.5em] animate-pulse">Descending...</h2>
+             <div className="w-64 mt-6 bg-slate-900 h-1 rounded-full overflow-hidden border border-slate-800">
+               <div className="descend-bar" />
+             </div>
+             <p className="text-slate-500 text-[10px] uppercase font-bold mt-4">Ante {encounterIdx + 1}</p>
           </div>
         )}
       </main>

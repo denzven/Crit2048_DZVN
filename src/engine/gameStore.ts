@@ -94,6 +94,7 @@ export interface GameActions {
   forfeitRun: () => void;
   showConfirm: (title: string, message: string, onConfirm: () => void, onCancel?: () => void) => void;
   showAlert: (title: string, message: string) => void;
+  triggerScreenShake: (intensity?: number) => void;
   closeConfirmation: () => void;
 }
 
@@ -174,6 +175,21 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     set({ confirmation: { title, message, onConfirm: () => get().closeConfirmation(), type: 'alert' } });
   },
 
+  triggerScreenShake: (intensity = 1.0) => {
+    if (!get().settings.screenshake) return;
+    const container = document.getElementById('grid-container');
+    if (!container) return;
+    
+    container.style.setProperty('--shake-intensity', (intensity * get().settings.shakeIntensity).toString());
+    container.classList.remove('shake-active');
+    void container.offsetWidth;
+    container.classList.add('shake-active');
+    
+    setTimeout(() => {
+      container.classList.remove('shake-active');
+    }, 450);
+  },
+
   closeConfirmation: () => {
     set({ confirmation: null });
   },
@@ -232,10 +248,8 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
     if (!changed) return;
 
-    if (get().settings.screenshake && merges > 0) {
-      document.getElementById('grid-container')?.classList.remove('shake');
-      void document.getElementById('grid-container')?.offsetWidth;
-      document.getElementById('grid-container')?.classList.add('shake');
+    if (merges > 0) {
+      get().triggerScreenShake(merges > 1 ? 1.5 : 0.8);
     }
 
     if (damageDealt > 0) {
@@ -287,6 +301,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
     const updatedState = get();
     if (updatedState.monsterHp <= 0) {
+      get().triggerScreenShake(3.5);
       get().addLog("BOSS DEFEATED! Gold +50.");
       let tavernGold = updatedState.gold + 50;
       
@@ -309,7 +324,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
           get().generateShop();
           set({ gameState: 'TAVERN', isTransitioning: false });
         }
-      }, 1000);
+      }, 2000);
     } else if (updatedState.monsterHp > 0 && (updatedState.slidesLeft <= 0 || CombatLogic.checkGridlock(updatedState.grid))) {
       const stats = { ...get().runStats, endTime: Date.now(), endReason: 'GRIDLOCK' };
       set({ 
@@ -319,7 +334,9 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       });
       LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
     } else if (updatedState.slidesSinceRoll >= get().settings.movesPerRoll) {
-      set({ gameState: 'DICE' });
+      setTimeout(() => {
+        if (get().gameState === 'PLAYING') set({ gameState: 'DICE' });
+      }, 600);
     }
 
     get().saveGame();
@@ -366,10 +383,14 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     const { encounterIdx } = get();
     const nextEnemy = ENEMIES[Math.min(encounterIdx + 1, ENEMIES.length - 1)];
     
-    get().initEncounter(nextEnemy.hp, nextEnemy.slides);
-    set({ encounterIdx: encounterIdx + 1 });
-    get().spawnRandomTile();
-    get().spawnRandomTile();
+    set({ isTransitioning: true }); // Show loading screen
+    
+    setTimeout(() => {
+      get().initEncounter(nextEnemy.hp, nextEnemy.slides);
+      set({ encounterIdx: encounterIdx + 1, isTransitioning: false });
+      get().spawnRandomTile();
+      get().spawnRandomTile();
+    }, 2500);
   },
 
   applyBossPowers: () => {
@@ -561,6 +582,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         }
       });
       get().addLog(`Spell: ${ab.name} dealt ${Math.ceil(dmg)} damage!`);
+      get().triggerScreenShake(2.0);
     } else if (ab.type === 'heal') {
       const heal = spellRoll.sum;
       set({ slidesLeft: slidesLeft + heal });
@@ -572,21 +594,19 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     if (get().monsterHp <= 0) {
       get().addLog("BOSS DEFEATED! Gold +50.");
       set({ isTransitioning: true, gold: get().gold + 50 });
-      setTimeout(() => {
-        if (get().encounterIdx >= ENEMIES.length - 1) {
-          const stats = { ...get().runStats, endTime: Date.now(), endReason: 'VICTORY' };
-          set({ 
-            gameState: 'VICTORY', 
-            isGameOver: true, 
-            isTransitioning: false,
-            runStats: stats
-          });
-          LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
-        } else {
-          get().generateShop();
-          set({ gameState: 'TAVERN', isTransitioning: false });
-        }
-      }, 1000);
+      if (get().encounterIdx >= ENEMIES.length - 1) {
+        const stats = { ...get().runStats, endTime: Date.now(), endReason: 'VICTORY' };
+        set({ 
+          gameState: 'VICTORY', 
+          isGameOver: true, 
+          isTransitioning: false,
+          runStats: stats
+        });
+        LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
+      } else {
+        get().generateShop();
+        set({ gameState: 'TAVERN', isTransitioning: false });
+      }
     }
 
     get().saveGame();

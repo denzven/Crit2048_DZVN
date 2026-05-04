@@ -202,3 +202,78 @@ body {
 .glow-epic:hover { box-shadow: 0 0 35px rgba(168, 85, 247, 0.6); }
 .glow-legendary:hover { box-shadow: 0 0 45px rgba(245, 158, 11, 0.7); }
 .glow-artifact:hover { box-shadow: 0 0 45px rgba(244, 63, 94, 0.8); }
+
+/* LEGACY ANNOUNCEMENT STYLES */
+@keyframes announcement {
+  0% { transform: scale(0.5); opacity: 0; letter-spacing: 20px; }
+  20% { transform: scale(1.1); opacity: 1; letter-spacing: 2px; }
+  80% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+.fx-announcement {
+  position: fixed; inset: 0; z-index: 250;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  pointer-events: none; text-align: center;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: opacity 0.5s ease;
+}
+
+.fx-announcement h2 {
+  font-size: 4rem; font-weight: 900; color: #facc15; text-transform: uppercase;
+  font-family: 'Cinzel', serif; text-shadow: 0 0 20px rgba(250,204,21,0.5);
+  animation: announcement 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.fx-announcement p {
+  font-size: 1.8rem; color: white; font-weight: 900; text-transform: uppercase;
+  font-family: 'Cinzel', serif;
+  animation: announcement 1.5s 0.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalEntrance {
+  0% { transform: scale(0.95) translateY(10px); opacity: 0; filter: blur(4px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+}
+
+.fx-modal-entrance {
+  animation: modalEntrance 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pullUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.pull-up {
+  animation: pullUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* SCREEN SHAKE SYSTEM */
+@keyframes shake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  10%, 90% { transform: translate3d(calc(-2px * var(--shake-intensity, 1)), 0, 0); }
+  20%, 80% { transform: translate3d(calc(4px * var(--shake-intensity, 1)), 0, 0); }
+  30%, 50%, 70% { transform: translate3d(calc(-8px * var(--shake-intensity, 1)), 0, 0); }
+  40%, 60% { transform: translate3d(calc(8px * var(--shake-intensity, 1)), 0, 0); }
+}
+
+.shake-active {
+  animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+@keyframes descendBar {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.descend-bar { 
+  height: 4px; 
+  background: #f43f5e; 
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
+  animation: descendBar 2.5s linear forwards; 
+}
