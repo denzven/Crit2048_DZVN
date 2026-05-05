@@ -192,11 +192,27 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   forfeitRun: () => {
     const state = get();
     if (state.gameState === 'START' || state.gameState === 'CLASS_SELECT' || state.isGameOver) {
-      set({ gameState: 'START', playerClass: null, artifacts: [], logs: [], grid: Array(16).fill(null), monsterHp: 0, monsterMaxHp: 0 });
+      SFX.menuEnter();
+      set((s) => ({ 
+        gameState: 'START', 
+        playerClass: null, 
+        artifacts: [], 
+        logs: [], 
+        grid: Array(16).fill(null), 
+        monsterHp: 0, 
+        monsterMaxHp: 0,
+        encounterIdx: 0,
+        score: 0,
+        multiplier: 1.0,
+        slidesLeft: 0,
+        isGameOver: false,
+        runStats: { ...DEFAULT_RUN_STATS, activePackIds: s.runStats.activePackIds }
+      }));
       return;
     }
     
     const stats = { ...state.runStats, endTime: Date.now(), endReason: 'FORFEIT' };
+    SFX.gameOver();
     set({ 
       gameState: 'GAME_OVER', 
       isGameOver: true,
@@ -238,9 +254,17 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   },
 
   setGameState: (gameState: GameState) => {
+    const prevState = get().gameState;
     if (gameState === 'PLAYING' && get().runStats.startTime === 0) {
       set((s) => ({ runStats: { ...s.runStats, startTime: Date.now() } }));
     }
+
+    // Trigger SFX on State Change
+    if (gameState === 'CLASS_SELECT' && prevState !== 'CLASS_SELECT') SFX.classSelect();
+    if (gameState === 'START' && prevState !== 'START') SFX.menuEnter();
+    if (gameState === 'VICTORY' && prevState !== 'VICTORY') SFX.victory();
+    if (gameState === 'GAME_OVER' && prevState !== 'GAME_OVER') SFX.gameOver();
+
     set({ gameState });
   },
 
@@ -435,6 +459,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
       get().spawnRandomTile();
       PackEngine.onSlide(get(), direction);
+      get().applyBossPowers(); // Trigger boss powers after move
       if (damageDealt > 0) PackEngine.onDamage(get(), damageDealt);
 
       // Hazard Spreading: Every 10 moves, Slimes and Spores have a chance to spread
@@ -465,6 +490,14 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         set({ gold: (updatedState.gold || 0) + 50 });
 
         set({ isTransitioning: true });
+        
+        // Trigger SFX immediately with the UI splash
+        if (get().encounterIdx >= get().activeEncounters.length - 1) {
+          SFX.victory();
+        } else {
+          SFX.encounterWin();
+        }
+
         setTimeout(() => {
           if (get().encounterIdx >= get().activeEncounters.length - 1) {
             PackEngine.onGameOver(get(), 'VICTORY');
@@ -482,6 +515,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       } else if (updatedState.monsterHp > 0 && (updatedState.slidesLeft <= 0 || CombatLogic.checkGridlock(updatedState.grid))) {
         const stats = { ...get().runStats, endTime: Date.now(), endReason: 'GRIDLOCK' };
         PackEngine.onGameOver(get(), 'GRIDLOCK');
+        SFX.gameOver();
         set({ 
           gameState: 'GAME_OVER', 
           isGameOver: true,
@@ -543,6 +577,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     const nextEnemy = activeEncounters[Math.min(encounterIdx + 1, activeEncounters.length - 1)];
     
     PackEngine.onTavernLeave(get());
+    SFX.descend();
     set({ isTransitioning: true }); // Show loading screen
     
     setTimeout(() => {
@@ -563,30 +598,34 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     const turn = runStats.totalMoves;
     
     // Regeneration
-    if (enemy.name.includes("Troll") && monsterHp > 0) {
+    if (enemy.name.includes("Troll") && monsterHp > 0 && turn % 5 === 0) {
       set({ monsterHp: Math.min(monsterMaxHp, monsterHp + 30) });
+      SFX.enemyPower();
     }
 
     // Slime Spawning
-    if (enemy.name.includes("Slime") && turn % 8 === 0) {
+    if (enemy.name.includes("Slime") && turn > 0 && turn % 8 === 0) {
       get().addLog("Boss Power: Slime spawned!");
       get().spawnRandomTile(-1);
+      SFX.enemyPower();
     }
 
     // Goblin Ambush
-    if (enemy.name.includes("Goblin") && turn % 12 === 0) {
+    if (enemy.name.includes("Goblin") && turn > 0 && turn % 12 === 0) {
       get().addLog("Ambush: Goblin spawned!");
       get().spawnRandomTile(-2);
+      SFX.enemyPower();
     }
 
     // Lich Necromancy
-    if (enemy.name.includes("Lich") && turn % 12 === 0) {
+    if (enemy.name.includes("Lich") && turn > 0 && turn % 12 === 0) {
       get().addLog("Necromancy: Skeleton raised!");
       get().spawnRandomTile(-3);
+      SFX.enemyPower();
     }
 
     // Dragon Inferno
-    if (enemy.name.includes("Dragon") && turn % 10 === 0) {
+    if (enemy.name.includes("Dragon") && turn > 0 && turn % 10 === 0) {
       let maxV = 0, maxI = -1;
       grid.forEach((t, i) => { if (t && t.val > maxV) { maxV = t.val; maxI = i; } });
       if (maxI !== -1) {
@@ -594,6 +633,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         newGrid[maxI] = null;
         set({ grid: newGrid });
         get().addLog("Boss Power: Inferno burned highest weapon!");
+        SFX.enemyPower();
       }
     }
   },
@@ -769,19 +809,27 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     if (get().monsterHp <= 0) {
       get().addLog("BOSS DEFEATED! Gold +50.");
       set({ isTransitioning: true, gold: get().gold + 50 });
-        if (get().encounterIdx >= get().activeEncounters.length - 1) {
-          const stats = { ...get().runStats, endTime: Date.now(), endReason: 'VICTORY' };
-          set({ 
-            gameState: 'VICTORY', 
-            isGameOver: true, 
-            isTransitioning: false,
-            runStats: stats
-          });
-          LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
-        } else {
-          get().generateShop();
-          set({ gameState: 'TAVERN', isTransitioning: false });
-        }
+      
+      // Trigger SFX immediately with the UI splash
+      if (get().encounterIdx >= get().activeEncounters.length - 1) {
+        SFX.victory();
+      } else {
+        SFX.encounterWin();
+      }
+
+      if (get().encounterIdx >= get().activeEncounters.length - 1) {
+        const stats = { ...get().runStats, endTime: Date.now(), endReason: 'VICTORY' };
+        set({ 
+          gameState: 'VICTORY', 
+          isGameOver: true, 
+          isTransitioning: false,
+          runStats: stats
+        });
+        LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
+      } else {
+        get().generateShop();
+        set({ gameState: 'TAVERN', isTransitioning: false });
+      }
     }
 
     get().saveGame();
@@ -815,8 +863,11 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     get().addLog("Merchant: Spell uses restored.");
   },
 
-  resetGame: () => set({ 
+  resetGame: () => set((state) => ({ 
     ...INITIAL_STATE, 
+    activeEncounters: state.activeEncounters,
+    activeClasses: state.activeClasses,
+    activeArtifacts: state.activeArtifacts,
     shopItems: [], 
     slidesSinceRoll: 0, 
     lastRoll: null, 
@@ -824,8 +875,8 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     spellRoll: null, 
     lastDirection: null,
     hunterMarkLeft: 0,
-    runStats: { ...DEFAULT_RUN_STATS } 
-  }),
+    runStats: { ...DEFAULT_RUN_STATS, activePackIds: state.runStats.activePackIds } 
+  })),
 
   saveGame: async () => {
     const state = get();

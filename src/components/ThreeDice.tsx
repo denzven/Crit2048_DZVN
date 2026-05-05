@@ -7,7 +7,62 @@ interface ThreeDiceProps {
   onComplete: () => void;
 }
 
-const diceCache: Record<string, { geometry: THREE.BufferGeometry, materials: THREE.Material[] }> = {};
+// --- GLOBAL CACHE REGISTRY ---
+// These persist across component mounts to eliminate CPU spikes on new rolls
+const geometryCache: Record<number, THREE.BufferGeometry> = {};
+const textureCache: Record<string, THREE.Texture> = {};
+
+/**
+ * Generates or retrieves a cached texture for a specific dice face
+ */
+const getCachedTexture = (sides: number, value: number, color: string): THREE.Texture => {
+  const cacheKey = `${sides}-${value}-${color}`;
+  if (textureCache[cacheKey]) return textureCache[cacheKey];
+
+  const canvas = document.createElement("canvas");
+  // 256x256 is plenty for small dice and 4x lighter than 512x512
+  canvas.width = 256; canvas.height = 256;
+  const ctx = canvas.getContext("2d", { alpha: false })!;
+  
+  // Background
+  ctx.fillStyle = "#0a0a0a"; 
+  ctx.fillRect(0, 0, 256, 256);
+  
+  // Decorative Border
+  ctx.strokeStyle = color; 
+  ctx.lineWidth = 8; 
+  ctx.globalAlpha = 0.2;
+  if (sides === 6) {
+    ctx.strokeRect(20, 20, 216, 216);
+  } else {
+    ctx.beginPath(); 
+    ctx.moveTo(128, 30); 
+    ctx.lineTo(226, 226); 
+    ctx.lineTo(30, 226); 
+    ctx.closePath(); 
+    ctx.stroke();
+  }
+  
+  // Text
+  ctx.globalAlpha = 1.0;
+  ctx.fillStyle = color; 
+  ctx.textAlign = "center"; 
+  ctx.textBaseline = "middle";
+  ctx.font = `900 ${sides === 6 ? '170px' : '110px'} system-ui, sans-serif`;
+  
+  const diceY = sides === 6 ? 128 : 160;
+  ctx.fillText(value.toString(), 128, diceY);
+  
+  // Underline for 6 and 9
+  if (value === 6 || value === 9) {
+    ctx.fillRect(95, diceY + (sides === 6 ? 70 : 50), 66, 8);
+  }
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 4; // Keeps text sharp at angles
+  textureCache[cacheKey] = texture;
+  return texture;
+};
 
 const ThreeDice: React.FC<ThreeDiceProps> = ({ sides, results, onComplete }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -25,31 +80,33 @@ const ThreeDice: React.FC<ThreeDiceProps> = ({ sides, results, onComplete }) => 
     camera.position.set(0, 30, 0);
     camera.lookAt(0, 0, 0);
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    const renderer = new THREE.WebGLRenderer({ 
+      alpha: true, 
+      antialias: true,
+      powerPreference: "high-performance" // Hint for mobile/laptops
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // SOFTER SHADOWS
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     containerRef.current.appendChild(renderer.domElement);
 
-    // CLEAN WHITE/COOL LIGHTING
     scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x111122, 0.7)); // Slight cool tint for cleaner look
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x111122, 0.7));
     
+    // Optimized shadows: 512 is enough for small modal view
     const sun = new THREE.DirectionalLight(0xffffff, 1.5);
     sun.position.set(5, 20, 10);
     sun.castShadow = true;
-    sun.shadow.mapSize.width = 1024;
-    sun.shadow.mapSize.height = 1024;
-    sun.shadow.radius = 10; // Extra soft
+    sun.shadow.mapSize.set(512, 512); 
+    sun.shadow.radius = 8;
     scene.add(sun);
 
     const sun2 = new THREE.DirectionalLight(0xffffff, 0.5);
     sun2.position.set(-5, 20, 5);
     sun2.castShadow = true;
-    sun2.shadow.mapSize.width = 512;
-    sun2.shadow.mapSize.height = 512;
-    sun2.shadow.radius = 15; // Even softer penumbra
+    sun2.shadow.mapSize.set(256, 256);
+    sun2.shadow.radius = 12;
     scene.add(sun2);
 
     const padding = 1.4;
@@ -64,9 +121,8 @@ const ThreeDice: React.FC<ThreeDiceProps> = ({ sides, results, onComplete }) => 
     tray.receiveShadow = true;
     scene.add(tray);
 
-    const getDiceData = (s: number, targetValue: number) => {
-      const cacheKey = `${s}-${targetValue}`;
-      if (diceCache[cacheKey]) return diceCache[cacheKey];
+    const getDiceGeometry = (s: number) => {
+      if (geometryCache[s]) return geometryCache[s];
 
       let geo: THREE.BufferGeometry;
       if (s === 4) geo = new THREE.TetrahedronGeometry(1.5, 0);
@@ -90,35 +146,32 @@ const ThreeDice: React.FC<ThreeDiceProps> = ({ sides, results, onComplete }) => 
               uvs.setXY(i + 0, 0, 0); uvs.setXY(i + 1, 1, 0); uvs.setXY(i + 2, 0.5, 1);
           }
       }
+      
+      geometryCache[s] = nonIndexed;
+      return nonIndexed;
+    };
 
+    const getDiceMaterials = (s: number, targetValue: number) => {
       const mats: THREE.Material[] = [];
       const textCol = s === 20 ? "#D22B2B" : "#000080";
       const faceValues = [targetValue];
+      
+      const faceCount = s === 6 ? 6 : (s === 4 ? 4 : (s === 8 ? 8 : (s === 12 ? 12 : 20)));
       for(let i = 1; i < faceCount; i++) faceValues.push(((targetValue + i - 1) % s) + 1);
 
       for (let i = 0; i < faceCount; i++) {
-        const canvas = document.createElement("canvas");
-        canvas.width = 512; canvas.height = 512;
-        const ctx = canvas.getContext("2d")!;
-        ctx.fillStyle = "#0a0a0a"; ctx.fillRect(0, 0, 512, 512);
-        ctx.strokeStyle = textCol; ctx.lineWidth = 15; ctx.globalAlpha = 0.2;
-        if (s === 6) ctx.strokeRect(40, 40, 432, 432);
-        else { ctx.beginPath(); ctx.moveTo(256, 60); ctx.lineTo(452, 452); ctx.lineTo(60, 452); ctx.closePath(); ctx.stroke(); }
-        ctx.globalAlpha = 1.0;
-        ctx.fillStyle = textCol; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.font = `900 ${s === 6 ? '340px' : '220px'} system-ui, sans-serif`;
-        const val = faceValues[i];
-        const diceY = s === 6 ? 256 : 320;
-        ctx.fillText(val.toString(), 256, diceY);
-        if (val === 6 || val === 9) ctx.fillRect(190, diceY + (s === 6 ? 140 : 100), 132, 16);
-        const tex = new THREE.CanvasTexture(canvas);
-        mats.push(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.35, metalness: 0.1 }));
+        const tex = getCachedTexture(s, faceValues[i], textCol);
+        mats.push(new THREE.MeshStandardMaterial({ 
+          map: tex, 
+          roughness: 0.35, 
+          metalness: 0.1,
+          envMapIntensity: 0.5 
+        }));
       }
-      diceCache[cacheKey] = { geometry: nonIndexed, materials: mats };
-      return diceCache[cacheKey];
+      return mats;
     };
 
-    const geometry = getDiceData(sides, results[0]).geometry;
+    const geometry = getDiceGeometry(sides);
     const posAttr = geometry.attributes.position;
     const localNormal = (function() {
         const vA = new THREE.Vector3().fromBufferAttribute(posAttr, 0);
@@ -130,9 +183,10 @@ const ThreeDice: React.FC<ThreeDiceProps> = ({ sides, results, onComplete }) => 
 
     const diceObjects: THREE.Mesh[] = [];
     results.forEach((res, i) => {
-      const { materials } = getDiceData(sides, res);
+      const materials = getDiceMaterials(sides, res);
       const mesh = new THREE.Mesh(geometry, materials);
       mesh.castShadow = true;
+
       mesh.position.set((i - (results.length - 1) / 2) * 2.0, 12, (Math.random() - 0.5) * 1.5);
       mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
       mesh.userData = { 

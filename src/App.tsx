@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react'
 import { useGameStore } from './engine/gameStore'
+import { SFX } from './engine/audio'
+
 import Grid from './components/Grid'
 import Tavern from './components/Tavern'
 import ClassSelection from './components/ClassSelection'
@@ -40,7 +42,11 @@ function App() {
     castSpell,
     forfeitRun,
     showConfirm,
+    settings,
   } = useGameStore()
+
+  const settingsVolume = settings.volume;
+
 
   const [showSettings, setShowSettings] = React.useState(false)
   const [showGrimoire, setShowGrimoire] = React.useState(false)
@@ -77,6 +83,40 @@ function App() {
       );
     }
   }, [needRefresh]);
+
+  // Sync Audio Volume & Start on Interaction
+  useEffect(() => {
+    const startAudio = () => {
+      SFX.init();
+      SFX.startMusic();
+    };
+    
+    window.addEventListener('click', startAudio, { once: true });
+    window.addEventListener('keydown', startAudio, { once: true });
+    
+    SFX.setVolume(settingsVolume);
+    SFX.setMusicMode(gameState, encounterIdx);
+    SFX.updateTension(multiplier);
+
+
+    
+    return () => {
+      window.removeEventListener('click', startAudio);
+      window.removeEventListener('keydown', startAudio);
+    };
+  }, [settingsVolume, gameState, encounterIdx, multiplier]);
+
+
+  useEffect(() => {
+    const handleButtonClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'BUTTON' || target.closest('button')) {
+        SFX.btnClick();
+      }
+    };
+    window.addEventListener('click', handleButtonClick);
+    return () => window.removeEventListener('click', handleButtonClick);
+  }, []);
 
   useEffect(() => {
     useGameStore.getState().initializeRegistry();
@@ -122,8 +162,17 @@ function App() {
     }
   }, [gameState, seedInput]);
 
+  useEffect(() => {
+    if (showForge) SFX.forgeEnter();
+  }, [showForge]);
+
+  useEffect(() => {
+    if (showGrimoire) SFX.grimoireEnter();
+  }, [showGrimoire]);
+
   const handleStart = () => {
     Native.vibrate(50)
+    SFX.dungeonEnter();
     if (seedInput) {
       useGameStore.setState({ runStats: { ...useGameStore.getState().runStats, seedUsed: seedInput } });
     }
