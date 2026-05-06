@@ -4,7 +4,15 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      dependencies:
+        patterns:
+          - "*" # Group all npm dependencies into one PR
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*" # Group all action updates into one PR
