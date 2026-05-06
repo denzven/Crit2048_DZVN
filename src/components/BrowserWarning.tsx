@@ -13,9 +13,10 @@ const BrowserWarning: React.FC = () => {
     // 2. Check if it's NOT Chromium-based
     // Note: This is a simple check. Chrome, Edge, Opera, Brave are all Chromium.
     const isChromium = /Chrome|CriOS|Edg|OPR/i.test(navigator.userAgent) && !/Firefox|Safari/i.test(navigator.userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
     
-    // Specifically target Firefox or Safari users on Web
-    if (!isChromium) {
+    // Specifically target Firefox or Safari users on Web (unless on iOS where Safari is required)
+    if (!isChromium && !isIOS) {
       // Check if they've already dismissed it this session
       const dismissed = sessionStorage.getItem('browser-warning-dismissed');
       if (!dismissed) {

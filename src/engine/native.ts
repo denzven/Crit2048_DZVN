@@ -96,5 +96,26 @@ export const Native = {
     if ('clearAppBadge' in navigator) {
       (navigator as any).clearAppBadge().catch(console.error);
     }
+  },
+
+  /**
+   * Platform Detection
+   */
+  isIOS() {
+    return [
+      'iPad Simulator',
+      'iPhone Simulator',
+      'iPod Simulator',
+      'iPad',
+      'iPhone',
+      'iPod'
+    ].includes(navigator.platform)
+    // iPad on iOS 13 detection
+    || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+  },
+
+  isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches 
+      || (window.navigator as any).standalone === true;
   }
 };

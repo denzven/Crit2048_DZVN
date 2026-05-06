@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://denzven.github.io/Crit2048_DZVN/sitemap.xml

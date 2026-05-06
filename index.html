@@ -4,26 +4,32 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/app_icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="search" type="application/opensearchdescription+xml" title="Crit 2048 Search" href="/opensearch.xml" />
     
     <title>CRIT 2048 — The Ultimate Roguelike Modding Dungeon</title>
-    <meta name="description" content="A dark fantasy 2048 roguelike with deep modding support. Forge custom monsters, build hero classes, and survive the endless dungeon. 100% Data-Driven & Community Powered." />
-    <meta name="keywords" content="2048, roguelike, dungeon crawler, dnd, modding, game, pwa, denzven, crit2048, rpg, tactical" />
+    <meta name="description" content="CRIT 2048 is a dark fantasy 2048 roguelike with deep modding support. Forge custom monsters, build hero classes, and survive the endless dungeon. 100% Data-Driven & Community Powered roguelike deckbuilder." />
+    <meta name="keywords" content="2048, roguelike, dungeon crawler, dnd, modding, game, pwa, denzven, crit2048, rpg, tactical, deckbuilder, puzzle game, fantasy, dungeon, adventure, browser game, mobile game, free game, indie game, pixel art, dice roll, d20, crit, 2048 game, moddable, content packs, open source game, webgame, strategy, turned-based combat" />
     <meta name="author" content="denzven" />
+    <meta name="robots" content="max-image-preview:large" />
+    <link rel="canonical" href="https://denzven.github.io/Crit2048_DZVN/" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://denzven.github.io/Crit2048_DZVN/" />
     <meta property="og:title" content="CRIT 2048 — Merge. Forge. Survive." />
-    <meta property="og:description" content="The roguelike evolution of 2048. Deep modding, custom skins, and tactical combat. Can you survive the Ancient Dragon?" />
-    <meta property="og:image" content="https://denzven.github.io/Crit2048_DZVN/og-image.png" />
+    <meta property="og:description" content="The roguelike evolution of 2048. Deep modding, custom skins, and tactical combat. Can you survive the Ancient Dragon? Play for free on any device." />
+    <meta property="og:image" content="https://denzven.github.io/Crit2048_DZVN/app_icon.png" />
     <meta property="og:site_name" content="Crit 2048" />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://denzven.github.io/Crit2048_DZVN/" />
     <meta property="twitter:title" content="CRIT 2048 — The Ultimate Modding Dungeon" />
-    <meta property="twitter:description" content="Merge weapons, cast spells, and forge your own destiny. The most powerful 2048 roguelike ever built." />
-    <meta property="twitter:image" content="https://denzven.github.io/Crit2048_DZVN/og-image.png" />
+    <meta property="twitter:description" content="Merge weapons, cast spells, and forge your own destiny. The most powerful 2048 roguelike ever built. Play now in your browser." />
+    <meta property="twitter:image" content="https://denzven.github.io/Crit2048_DZVN/app_icon.png" />
 
     <!-- Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -35,10 +41,71 @@
     <meta name="apple-mobile-web-app-title" content="Crit2048" />
     <link rel="apple-touch-icon" href="/app_icon.png" />
     
+    <!-- iOS Splash Screens -->
+    <link rel="apple-touch-startup-image" href="/app_icon.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/app_icon.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/app_icon.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/app_icon.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/app_icon.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    
     <!-- Theme Color -->
     <meta name="theme-color" content="#020617" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Crit 2048",
+      "description": "A dark fantasy 2048 roguelike with deep modding support. Forge custom monsters and survive the dungeon. Fun for kids (math/puzzle) and adults (strategy/roguelike).",
+      "genre": ["Roguelike", "Puzzle", "Strategy", "Educational"],
+      "url": "https://denzven.github.io/Crit2048_DZVN/",
+      "image": "https://denzven.github.io/Crit2048_DZVN/app_icon.png",
+      "author": {
+        "@type": "Person",
+        "name": "denzven",
+        "url": "https://github.com/denzven"
+      },
+      "operatingSystem": "Web, Android, iOS, Windows, Linux, MacOS",
+      "applicationCategory": "GameApplication",
+      "playMode": "SinglePlayer",
+      "gamePlatform": "Web Browser",
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Everyone",
+        "suggestedMinAge": "6"
+      },
+      "contentRating": "Everyone",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "sameAs": [
+        "https://github.com/denzven/Crit2048_DZVN",
+        "https://twitter.com/denzven"
+      ]
+    }
+    </script>
   </head>
   <body class="bg-slate-950 text-slate-50 selection:bg-rose-500">
+    <!-- GHOST CONTENT BLOCK: Aggressive SEO Indexing (Off-screen) -->
+    <div style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;" aria-hidden="true">
+      <h1>Crit 2048: The Ultimate Math Roguelike & Dungeon Crawler</h1>
+      <p>Crit 2048 is an innovative puzzle game designed for all ages, from kids learning math through merging numbers to adults seeking deep roguelike tactical combat. It combines the addictive mechanics of 2048 with the intensity of a dungeon crawler.</p>
+      
+      <h2>Educational Fun for Kids</h2>
+      <p>Parents and teachers recommend Crit 2048 as a fun way to practice mental math and strategic thinking. The merging mechanics (2+2=4, 4+4=8) teach binary progression and resource management in a safe, ad-free fantasy environment. It is a family-friendly game with no microtransactions.</p>
+      
+      <h2>Deep Strategy for Adults</h2>
+      <p>For fans of Slay the Spire, Balatro, and traditional roguelikes, Crit 2048 offers a punishing and rewarding experience. Build your character class (Wizard, Barbarian, Rogue, etc.), roll a D20 to determine your fate, and forge custom content packs using the built-in Forge modding engine. Crit 2048 is 100% data-driven and community-powered.</p>
+      
+      <h2>Keywords & Tags</h2>
+      <p>roguelike, 2048, deckbuilder, dungeon crawler, math game for kids, educational games, dnd game, d20 dice, fantasy rpg, pwa game, browser game, mobile game, offline game, no ads game, indie game, pixel art, tactical combat, modding, creator suite.</p>
+      
+      <h2>Latest Updates & Patch Notes (v1.0.0-pwa)</h2>
+      <p>Updated on May 6, 2026: Added professional iOS PWA installation support, optimized viewport for iPhone 15/16 Pro Max, and enhanced SEO metadata for global discovery. Fixed a bug where class selection was unresponsive after a reset.</p>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

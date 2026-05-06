@@ -86,6 +86,7 @@ export interface GameStoreState {
   isGameOver: boolean;
   isRolling: boolean;
   
+  hasSave: boolean;
   runStats: RunStats;
   settings: Settings;
   floatingTexts: FloatingText[];

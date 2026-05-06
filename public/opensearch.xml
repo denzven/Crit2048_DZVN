@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/legend/osd/1.0">
+  <ShortName>Crit 2048</ShortName>
+  <Description>Search items, monsters, and mods in Crit 2048</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image width="16" height="16" type="image/x-icon">https://denzven.github.io/Crit2048_DZVN/favicon.svg</Image>
+  <Url type="text/html" method="get" template="https://denzven.github.io/Crit2048_DZVN/?q={searchTerms}"/>
+  <moz:SearchForm>https://denzven.github.io/Crit2048_DZVN/</moz:SearchForm>
+</OpenSearchDescription>

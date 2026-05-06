@@ -19,6 +19,7 @@ import ShareModal from './components/ShareModal'
 import { MobileInventoryModal, MobileLogsModal } from './components/MobileModals'
 import BackgroundParticles from './components/BackgroundParticles'
 import BrowserWarning from './components/BrowserWarning'
+import iOSInstallModal from './components/iOSInstallModal'
 import Preloader from './components/Preloader'
 import { Native } from './engine/native'
 import { clsx } from 'clsx'
@@ -43,6 +44,8 @@ function App() {
     forfeitRun,
     showConfirm,
     settings,
+    hasSave,
+    loadGame,
   } = useGameStore()
 
   const settingsVolume = settings.volume;
@@ -60,6 +63,9 @@ function App() {
   const [seedInput, setSeedInput] = React.useState('')
   const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null)
   const [isLoading, setIsLoading] = React.useState(true)
+  const [lastBackPress, setLastBackPress] = React.useState(0)
+  const [showExitToast, setShowExitToast] = React.useState(false)
+  const [showIOSInstall, setShowIOSInstall] = React.useState(false)
 
   const {
     needRefresh: [needRefresh, setNeedRefresh],
@@ -161,6 +167,50 @@ function App() {
       window.removeEventListener('keydown', handleGlobalKeyDown);
     }
   }, [gameState, seedInput]);
+
+  useEffect(() => {
+    // Intercept back button for PWAs/TWAs
+    window.history.pushState(null, '', window.location.pathname);
+    
+    const handlePopState = (e: PopStateEvent) => {
+      // Re-push state to keep intercepting
+      window.history.pushState(null, '', window.location.pathname);
+      
+      if (gameState !== 'START') {
+        // Abandon run
+        showConfirm(
+          "Abandon Run?", 
+          "Are you sure you want to end this run and view your progress?", 
+          forfeitRun
+        );
+      } else {
+        // Home screen exit logic
+        const now = Date.now();
+        if (now - lastBackPress < 2000) {
+          // Double press -> Exit Modal
+          showConfirm(
+            "Exit App?", 
+            "Are you sure you want to exit Crit 2048?", 
+            () => {
+              if ((window as any).AndroidNative) {
+                (window as any).AndroidNative.exitApp();
+              } else {
+                window.close();
+              }
+            }
+          );
+        } else {
+          // First press -> Toast
+          setLastBackPress(now);
+          setShowExitToast(true);
+          setTimeout(() => setShowExitToast(false), 2000);
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [gameState, lastBackPress]);
 
   useEffect(() => {
     if (showForge) SFX.forgeEnter();
@@ -307,6 +357,19 @@ function App() {
               >
                 Enter the Dungeon
               </button>
+
+              {hasSave && (
+                <button 
+                  onClick={() => {
+                    Native.vibrate(50);
+                    SFX.dungeonEnter();
+                    loadGame();
+                  }}
+                  className="w-full px-6 py-4 md:px-8 md:py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl shadow-2xl shadow-indigo-950/40 transition-all text-lg md:text-xl uppercase tracking-[0.2em] border border-indigo-500/50 active:scale-95"
+                >
+                  Resume Quest
+                </button>
+              )}
               
               {deferredPrompt && (
                 <button 
@@ -314,6 +377,15 @@ function App() {
                   className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
                 >
                   <span>📥</span> Install App for Offline Play
+                </button>
+              )}
+
+              {Native.isIOS() && !Native.isStandalone() && (
+                <button 
+                  onClick={() => setShowIOSInstall(true)}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span>📱</span> Install on iPhone / iPad
                 </button>
               )}
 
@@ -528,6 +600,10 @@ function App() {
           <ShareModal onClose={() => setShowShare(false)} />
         )}
 
+        {showIOSInstall && (
+          <iOSInstallModal onClose={() => setShowIOSInstall(false)} />
+        )}
+
         <ConfirmationModal />
 
         {showMobileInventory && (
@@ -566,6 +642,13 @@ function App() {
                <div className="descend-bar" />
              </div>
              <p className="text-slate-500 text-[10px] uppercase font-bold mt-4">Ante {encounterIdx + 1}</p>
+          </div>
+        )}
+
+        {/* Exit Toast */}
+        {showExitToast && (
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900/90 border border-slate-700 px-6 py-3 rounded-2xl text-xs font-black text-white uppercase tracking-widest animate-in slide-in-from-bottom-4 fade-in duration-300 z-[300] shadow-2xl backdrop-blur-md">
+            Press back again to exit
           </div>
         )}
       </main>

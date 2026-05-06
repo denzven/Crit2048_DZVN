@@ -1,0 +1,16 @@
+/* TEAM */
+  Developer: denzven
+  Twitter: @denzven
+  GitHub: github.com/denzven
+  Location: The Dungeon
+
+/* THANKS */
+  The open source community
+  Google DeepMind for the technical guidance
+  All the Modders forging new content
+
+/* SITE */
+  Last update: 2026-05-06
+  Standards: HTML5, CSS3, ESNext
+  Components: React, Vite, TailwindCSS, Zustand, Three.js
+  Software: PWA, Service Workers, WebGL

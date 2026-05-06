@@ -69,6 +69,7 @@ const INITIAL_STATE: GameStoreState = {
   },
   floatingTexts: [],
   confirmation: null,
+  hasSave: false,
   activeEncounters: [],
   activeClasses: [],
   activeArtifacts: [],
@@ -96,6 +97,7 @@ export interface GameActions {
   resetGame: () => void;
   saveGame: () => Promise<void>;
   loadGame: () => Promise<boolean>;
+  checkSave: () => Promise<void>;
   addFloatingText: (text: string, type: 'damage' | 'gold' | 'mult', x?: number, y?: number) => void;
   updateSettings: (settings: Partial<GameStoreState['settings']>) => void;
   forfeitRun: () => void;
@@ -169,6 +171,13 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       }
     }
     localStorage.setItem('crit2048_last_played', now.toString());
+    await get().checkSave();
+  },
+
+  checkSave: async () => {
+    const saved = await GameStorage.loadGame();
+    const resumable = saved && saved.gameState !== 'START' && !saved.isGameOver;
+    set({ hasSave: !!resumable });
   },
 
   setState: (partial: any) => set(partial),
@@ -510,6 +519,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
           } else {
             get().generateShop();
             set({ gameState: 'TAVERN', isTransitioning: false });
+            get().saveGame();
           }
         }, 2000);
       } else if (updatedState.monsterHp > 0 && (updatedState.slidesLeft <= 0 || CombatLogic.checkGridlock(updatedState.grid))) {
@@ -561,8 +571,13 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       }
     }));
     
+    // Spawn initial tiles
+    get().spawnRandomTile();
+    get().spawnRandomTile();
+
     // Call PackEngine hook after state update
     PackEngine.onEncounterStart(get());
+    get().saveGame();
   },
 
   generateShop: () => {
@@ -585,8 +600,6 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       const slides = parseInt(nextEnemy.slides as any) || 20;
       get().initEncounter(hp, slides);
       set({ encounterIdx: encounterIdx + 1, isTransitioning: false });
-      get().spawnRandomTile();
-      get().spawnRandomTile();
     }, 2500);
   },
 
@@ -863,23 +876,66 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     get().addLog("Merchant: Spell uses restored.");
   },
 
-  resetGame: () => set((state) => ({ 
-    ...INITIAL_STATE, 
-    activeEncounters: state.activeEncounters,
-    activeClasses: state.activeClasses,
-    activeArtifacts: state.activeArtifacts,
-    shopItems: [], 
-    slidesSinceRoll: 0, 
-    lastRoll: null, 
-    usesLeft: 0, 
-    spellRoll: null, 
-    lastDirection: null,
-    hunterMarkLeft: 0,
-    runStats: { ...DEFAULT_RUN_STATS, activePackIds: state.runStats.activePackIds } 
-  })),
+  resetGame: () => {
+    GameStorage.clearSave();
+    set((state) => ({ 
+      ...INITIAL_STATE, 
+      activeEncounters: state.activeEncounters,
+      activeClasses: state.activeClasses,
+      activeArtifacts: state.activeArtifacts,
+      shopItems: [], 
+      slidesSinceRoll: 0, 
+      lastRoll: null, 
+      usesLeft: 0, 
+      spellRoll: null, 
+      lastDirection: null,
+      hunterMarkLeft: 0,
+      hasSave: false,
+      runStats: { ...DEFAULT_RUN_STATS, activePackIds: state.runStats.activePackIds } 
+    }));
+  },
+
+  loadGame: async () => {
+    const saved = await GameStorage.loadGame();
+    if (saved) {
+      if (saved.rngState !== undefined) SeededRNG.setSeedState(saved.rngState);
+      
+      // Legacy Parity: If saved in PLAYING with 0 hp, promote to TAVERN/VICTORY
+      if (saved.gameState === 'PLAYING' && saved.monsterHp <= 0) {
+        if (saved.encounterIdx >= (saved.activeEncounters?.length || 0) - 1) {
+          saved.gameState = 'VICTORY';
+          saved.isGameOver = true;
+        } else {
+          saved.gameState = 'TAVERN';
+          saved.gold = (saved.gold || 0) + 20;
+        }
+      }
+
+      set({ 
+        ...saved, 
+        isTransitioning: false, 
+        isGameOver: saved.gameState === 'GAME_OVER' || saved.gameState === 'VICTORY', 
+        isRolling: false, 
+        lastRoll: null, 
+        spellRoll: null,
+        hasSave: true 
+      });
+      await get().initializeRegistry();
+
+      // If we resumed in Tavern and it's empty, regenerate it
+      if (get().gameState === 'TAVERN' && (!get().shopItems || get().shopItems.length === 0)) {
+        get().generateShop();
+        get().saveGame();
+      }
+
+      return true;
+    }
+    return false;
+  },
 
   saveGame: async () => {
     const state = get();
+    // Only save if we are in a resumable state or it's a significant update
     const persistentData = {
       gameState: state.gameState,
       grid: state.grid,
@@ -889,6 +945,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       slidesLeft: state.slidesLeft,
       gold: state.gold,
       multiplier: state.multiplier,
+      score: state.score,
       playerClass: state.playerClass,
       artifacts: state.artifacts,
       logs: state.logs,
@@ -899,19 +956,16 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       hunterMarkLeft: state.hunterMarkLeft,
       settings: state.settings,
       rngState: SeededRNG.getSeed(),
+      activeEncounters: state.activeEncounters,
+      activeClasses: state.activeClasses,
+      activeArtifacts: state.activeArtifacts,
+      shopItems: state.shopItems,
     };
     await GameStorage.saveGame(persistentData);
-  },
-
-  loadGame: async () => {
-    const saved = await GameStorage.loadGame();
-    if (saved) {
-      if (saved.rngState !== undefined) SeededRNG.setSeedState(saved.rngState);
-      set({ ...saved, isTransitioning: false, isGameOver: false, isRolling: false, lastRoll: null, spellRoll: null });
-      await get().initializeRegistry();
-      return true;
-    }
-    return false;
+    
+    // Update hasSave flag
+    const resumable = state.gameState !== 'START' && !state.isGameOver;
+    set({ hasSave: resumable });
   },
 }));
 

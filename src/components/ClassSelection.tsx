@@ -9,8 +9,6 @@ const ClassSelection: React.FC = () => {
   const selectClass = (heroClass: any) => {
     useGameStore.setState({ playerClass: heroClass, usesLeft: heroClass.ability.maxUses });
     initEncounter(150, 25);
-    spawnRandomTile();
-    spawnRandomTile();
     addLog(`Dungeon entered as ${heroClass.name}.`);
   };
 

@@ -21,6 +21,23 @@ export default defineConfig({
         background_color: '#020617',
         display: 'standalone',
         orientation: 'portrait',
+        categories: ['games', 'puzzle', 'education', 'strategy'],
+        screenshots: [
+          {
+            src: 'screenshot_main.png',
+            sizes: '1080x1920',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Crit 2048 Main Menu'
+          },
+          {
+            src: 'screenshot_gameplay.png',
+            sizes: '1080x1920',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Crit 2048 Gameplay'
+          }
+        ],
         start_url: './',
         id: './',
         scope: './',
@@ -40,6 +57,22 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
+          }
+        ],
+        shortcuts: [
+          {
+            name: 'Start New Game',
+            short_name: 'New Game',
+            description: 'Begin a new run in the dungeon',
+            url: './?action=new_game',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+          },
+          {
+            name: 'Open the Forge',
+            short_name: 'Forge',
+            description: 'Create and mod your own content',
+            url: './?action=forge',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
           }
         ]
       },
