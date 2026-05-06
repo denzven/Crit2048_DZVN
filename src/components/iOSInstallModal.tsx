@@ -1,10 +1,10 @@
 import React from 'react';
 
-interface iOSInstallModalProps {
+interface IOSInstallModalProps {
   onClose: () => void;
 }
 
-const iOSInstallModal: React.FC<iOSInstallModalProps> = ({ onClose }) => {
+const IOSInstallModal: React.FC<IOSInstallModalProps> = ({ onClose }) => {
   return (
     <div className="absolute inset-0 bg-slate-950/90 z-[200] flex items-center justify-center p-6 backdrop-blur-xl animate-in fade-in duration-300">
       <div className="bg-slate-900 border border-slate-700 rounded-[2.5rem] max-w-sm w-full shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
@@ -65,4 +65,4 @@ const iOSInstallModal: React.FC<iOSInstallModalProps> = ({ onClose }) => {
   );
 };
 
-export default iOSInstallModal;
+export default IOSInstallModal;

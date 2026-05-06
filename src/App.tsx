@@ -19,7 +19,7 @@ import ShareModal from './components/ShareModal'
 import { MobileInventoryModal, MobileLogsModal } from './components/MobileModals'
 import BackgroundParticles from './components/BackgroundParticles'
 import BrowserWarning from './components/BrowserWarning'
-import iOSInstallModal from './components/iOSInstallModal'
+import IOSInstallModal from './components/IOSInstallModal'
 import Preloader from './components/Preloader'
 import { Native } from './engine/native'
 import { clsx } from 'clsx'
@@ -601,7 +601,7 @@ function App() {
         )}
 
         {showIOSInstall && (
-          <iOSInstallModal onClose={() => setShowIOSInstall(false)} />
+          <IOSInstallModal onClose={() => setShowIOSInstall(false)} />
         )}
 
         <ConfirmationModal />
