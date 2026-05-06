@@ -1,0 +1,47 @@
+name: Bug Report
+description: File a bug report to help us improve the dungeon.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: version
+    attributes:
+      label: Game Version
+      description: e.g. v1.0.0-pwa (Found in Settings)
+      placeholder: v1.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is.
+      placeholder: I merged two Holy Swords and the game crashed.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How did you find this bug?
+      placeholder: |
+        1. Open the game
+        2. Enter the Dungeon
+        3. Merge two tiles...
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - iOS (Safari/PWA)
+        - Android (Chrome/PWA)
+        - Windows (Chrome/Edge)
+        - MacOS (Safari/Chrome)
+        - Linux
+    validations:
+      required: true

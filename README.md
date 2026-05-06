@@ -1,73 +1,87 @@
-# React + TypeScript + Vite
+# 🐉 CRIT 2048: The Ultimate Roguelike Modding Dungeon
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<div align="center">
 
-Currently, two official plugins are available:
+[![Deploy to GitHub Pages](https://github.com/denzven/Crit2048_DZVN/actions/workflows/deploy.yml/badge.svg)](https://github.com/denzven/Crit2048_DZVN/actions/workflows/deploy.yml)
+![PWA Ready](https://img.shields.core/badge/PWA-Ready-success?style=flat-square&logo=pwa)
+![License](https://img.shields.core/badge/License-MIT-rose?style=flat-square)
+![React 19](https://img.shields.core/badge/React-19-blue?style=flat-square&logo=react)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Merge. Forge. Survive.**
+*A seeded roguelike dungeon crawler powered by 2048 mechanics and deep modding support.*
 
-## React Compiler
+[**🕹️ ENTER THE DUNGEON**](https://denzven.github.io/Crit2048_DZVN/)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+</div>
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## ⚔️ The Core Loop
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Crit 2048 isn't just a puzzle; it's a battle of attrition.
+1. **Merge**: Swipe identical weapons to deal damage.
+2. **Spellcraft**: Cast d20-based spells to manipulate the grid.
+3. **Fate**: Every 5 moves, roll for initiative. High rolls grant buffs; low rolls spawn hazards.
+4. **Forge**: Use the 100% data-driven engine to build your own content.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 👹 The Encounters
+
+| Boss | Tactics |
+|------|---------|
+| **Goblin Scout** | High health, but predictable. Use daggers to build early multiplier. |
+| **Orc Brute** | Spawns Hazards every 10 moves. Purify the grid before he overwhelms you. |
+| **Ancient Dragon** | **The Final Test.** Prioritize merging quickly. The Inferno burns your highest tile every 10 slides — never let a Holy Sword sit idle. |
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Role |
+|------------|------|
+| **React 19** | Modern, performant UI and state handling |
+| **Vite 8** | Ultra-fast build and HMR |
+| **Tailwind CSS 4** | Next-gen utility-first styling |
+| **Three.js** | 3D d20 dice physics and rendering |
+| **Zustand** | Minimalist, robust game state management |
+| **Web Audio API** | Procedural orchestral soundscapes |
+
+---
+
+## 📱 Mobile & PWA
+Crit 2048 is built to be a **First-Class Mobile Experience**.
+- **Offline First**: Play anywhere, no connection required.
+- **Standalone Mode**: Fullscreen, immersive UI without browser bars.
+- **iOS Guide**: Dedicated installation modal for iPhone/iPad users.
+- **Haptics**: Taptic feedback for merges and critical hits.
+
+---
+
+## 🚀 Development
+
+### Installation
+```bash
+git clone https://github.com/denzven/Crit2048_DZVN.git
+cd Crit2048_DZVN
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Modding (The Forge)
+Crit 2048 is 100% data-driven. Open the **Forge** ⚒️ in the main menu to create your own Monsters, Hero Classes, and Item Packs. Export them as JSON and share them with the community!
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 📜 License
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+*Built with equal parts dice rolls, merges, and chaos. May your multiplier be high and your Nat 1s be few.*
+
+**⚔️ Roll for initiative. ⚔️**
+
+</div>

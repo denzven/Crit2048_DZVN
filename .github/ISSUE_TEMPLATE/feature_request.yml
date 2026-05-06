@@ -1,0 +1,34 @@
+name: Content or Feature Idea
+description: Propose a new Monster, Hero Class, or Game Mechanic.
+labels: ["enhancement", "content"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The Forge is hungry for new content!
+  - type: dropdown
+    id: type
+    attributes:
+      label: What are you proposing?
+      options:
+        - New Monster / Boss
+        - New Hero Class
+        - New Artifact / Item
+        - Game Mechanic Improvement
+        - UI/UX Refinement
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Explain your idea in detail.
+      placeholder: A new 'Necromancer' class that can revive Hazards as allies...
+    validations:
+      required: true
+  - type: textarea
+    id: lore
+    attributes:
+      label: Lore (Optional)
+      description: Give it some flavor text!
+      placeholder: From the depths of the void comes...
