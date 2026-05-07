@@ -152,7 +152,7 @@ const ClassSelection: React.FC = () => {
         {activeClasses.map((hero, idx) => (
           <motion.button 
             key={hero.id}
-            ref={el => cardRefs.current[idx] = el}
+            ref={el => { cardRefs.current[idx] = el; }}
             variants={itemVariants}
             animate={focusedIndex === idx ? "focused" : "visible"}
             whileHover="focused"
