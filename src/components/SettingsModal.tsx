@@ -1,6 +1,8 @@
 import React from 'react';
 import { useGameStore } from '../engine/gameStore';
 import { SFX } from '../engine/audio';
+import { clsx } from 'clsx';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Native } from '../engine/native';
 
 interface SettingsModalProps {
@@ -42,8 +44,22 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="absolute inset-0 bg-slate-950/95 z-[160] flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-md md:max-w-xl w-full shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in duration-300">
+    <div className="absolute inset-0 z-[160] flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+      />
+      
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="bg-slate-900 border border-slate-700 rounded-3xl max-w-md md:max-w-xl w-full shadow-2xl flex flex-col max-h-[90vh] relative z-10 overflow-hidden"
+      >
         <div className="p-6 border-b border-slate-800 shrink-0">
           <h2 className="text-2xl font-black tracking-widest text-white text-center uppercase font-serif">Settings</h2>
         </div>
@@ -71,6 +87,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                   className="w-full accent-rose-500" 
                 />
               </div>
+              <div className="pt-2">
+                <label className="block text-slate-400 text-[10px] mb-2 font-bold uppercase tracking-wider">Fixed Run Seed</label>
+                <input 
+                  type="text" 
+                  placeholder="RANDOM" 
+                  value={settings.customSeed} 
+                  onChange={(e) => updateSettings({ customSeed: e.target.value.toUpperCase() })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-mono text-xs focus:border-rose-500 outline-none uppercase transition-all" 
+                />
+                <p className="text-[8px] text-slate-600 mt-1.5 italic">Leave blank for a unique random seed every descent.</p>
+              </div>
             </div>
           </section>
 
@@ -78,34 +105,28 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           <section className="pt-6 border-t border-slate-800">
             <h3 className="text-blue-500 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Atmosphere</h3>
             <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Screen Shake</label>
+                <input 
+                  type="checkbox"
+                  checked={settings.screenshake}
+                  onChange={(e) => updateSettings({ screenshake: e.target.checked })}
+                  className="w-5 h-5 accent-rose-500 bg-slate-950 border-slate-800 rounded cursor-pointer" 
+                />
+              </div>
+
               <div>
                 <label className="block text-slate-400 text-[10px] mb-2 font-bold uppercase tracking-wider">Dice Theme</label>
                 <select 
                   value={settings.diceTheme}
                   onChange={(e) => updateSettings({ diceTheme: e.target.value as any })}
-                  className="w-full bg-slate-950 border border-slate-800 text-white font-bold rounded-xl p-3 focus:border-rose-500 outline-none text-xs"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs focus:border-rose-500 outline-none appearance-none"
                 >
-                  <option value="default">Default Colors</option>
-                  <option value="blood">Blood Magic</option>
-                  <option value="bone">Ancient Bone</option>
-                  <option value="neon">Cyber Neon</option>
+                  <option value="default">Default (Bone)</option>
+                  <option value="neon">Neon Pulse</option>
+                  <option value="wood">Elven Wood</option>
+                  <option value="stone">Ancient Stone</option>
                 </select>
-              </div>
-              <div className="flex items-center justify-between">
-                <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Background Particles</label>
-                <input 
-                  type="checkbox" checked={settings.particles} 
-                  onChange={(e) => updateSettings({ particles: e.target.checked })}
-                  className="w-5 h-5 accent-rose-500 bg-slate-950 border-slate-800 rounded cursor-pointer" 
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Screen Shake</label>
-                <input 
-                  type="checkbox" checked={settings.screenshake} 
-                  onChange={(e) => updateSettings({ screenshake: e.target.checked })}
-                  className="w-5 h-5 accent-rose-500 bg-slate-950 border-slate-800 rounded cursor-pointer" 
-                />
               </div>
               {settings.screenshake && (
                 <div>
@@ -250,7 +271,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
             <button onClick={() => { addLog("Settings: Config saved."); onClose(); }} className="flex-1 py-3 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-500 transition-colors uppercase tracking-widest text-[10px] border border-rose-500/50 shadow-lg">Save Config</button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

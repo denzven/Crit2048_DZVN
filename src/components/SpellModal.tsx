@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useGameStore } from '../engine/gameStore';
 import ThreeDice from './ThreeDice';
 import { clsx } from 'clsx';
+import { motion } from 'framer-motion';
 
 const SpellModal: React.FC = () => {
-  const { isRolling, playerClass, spellRoll, executeSpellRoll, resolveSpell, multiplier } = useGameStore();
+  const { isRolling, playerClass, spellRoll, executeSpellRoll, resolveSpell, cancelSpell, multiplier } = useGameStore();
   const [hasStartedRoll, setHasStartedRoll] = useState(false);
 
   if (!playerClass?.ability) return null;
@@ -30,10 +31,28 @@ const SpellModal: React.FC = () => {
   }, [hasStartedRoll, spellRoll]);
 
   return (
-    <div id="modal-attack" className="absolute inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
-      <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md pointer-events-auto" />
+    <div id="modal-attack" className="absolute inset-0 z-[100] flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-slate-950/85 backdrop-blur-md"
+      />
       
-      <div className="pointer-events-auto bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full text-center flex flex-col items-center shadow-2xl relative animate-in fade-in zoom-in duration-300">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full text-center flex flex-col items-center shadow-2xl relative"
+      >
+        <button 
+          onClick={cancelSpell}
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-800 hover:bg-rose-900 text-slate-400 hover:text-white rounded-full transition-colors z-30"
+        >
+          ✕
+        </button>
+
         <h2 className="text-2xl font-black mb-1 text-blue-400 uppercase tracking-widest mt-2 font-serif">
           {ab.name}
         </h2>
@@ -65,7 +84,11 @@ const SpellModal: React.FC = () => {
         </div>
 
         {spellRoll && (
-          <div className="flex flex-col items-center w-full z-20 mt-6 min-h-[100px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center w-full z-20 mt-6 min-h-[100px]"
+          >
             <div className="flex flex-col items-center justify-center w-full text-center">
               <span className="block text-5xl font-black mb-1 font-mono text-white">
                 {spellRoll.sum}
@@ -85,11 +108,11 @@ const SpellModal: React.FC = () => {
               onClick={resolveSpell}
               className="px-8 py-4 bg-slate-100 hover:bg-white text-slate-950 font-black uppercase tracking-widest transition-all w-full rounded-xl border border-slate-600 active:scale-95"
             >
-              Unleash Power
+              Cast
             </button>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

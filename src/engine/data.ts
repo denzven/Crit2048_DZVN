@@ -65,7 +65,7 @@ export const CLASSES: any[] = [
     scripts: { onMergeDamage: "if (G.slides < 10) dmg.val *= 1.25;" }, // Simplified: first 10 slides of encounter
     ability: { name: "Hunter's Mark", sides: 8, count: 1, maxUses: 3, type: "damage" } 
   },
-  { id: "Sorcerer", name: "Sorcerer", icon: "🔥", desc: "D20 crit range expands to 19-20. Spell: Chaos Bolt.", d20Mod: 1, 
+  { id: "Sorcerer", name: "Sorcerer", icon: "🔮", desc: "D20 crit range expands to 19-20. Spell: Chaos Bolt.", d20Mod: 1, 
     scripts: { onD20: "if (roll.val === 19) roll.val = 20;" },
     ability: { name: "Chaos Bolt", sides: 8, count: 2, maxUses: 1, type: "damage" } 
   }

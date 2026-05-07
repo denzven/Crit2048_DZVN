@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useGameStore } from './engine/gameStore'
 import { SFX } from './engine/audio'
+import { Native } from './engine/native'
 
 import Grid from './components/Grid'
 import Tavern from './components/Tavern'
@@ -21,9 +22,10 @@ import BackgroundParticles from './components/BackgroundParticles'
 import BrowserWarning from './components/BrowserWarning'
 import IOSInstallModal from './components/IOSInstallModalFix'
 import Preloader from './components/Preloader'
-import { Native } from './engine/native'
 import { clsx } from 'clsx'
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { Emoji } from './components/Emoji'
+import { motion, AnimatePresence } from 'framer-motion'
 
 function App() {
   const { 
@@ -60,12 +62,12 @@ function App() {
   const [showMobileInventory, setShowMobileInventory] = React.useState(false)
   const [showMobileLogs, setShowMobileLogs] = React.useState(false)
   const [showHelp, setShowHelp] = React.useState(false)
-  const [seedInput, setSeedInput] = React.useState('')
   const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null)
   const [isLoading, setIsLoading] = React.useState(true)
   const [lastBackPress, setLastBackPress] = React.useState(0)
   const [showExitToast, setShowExitToast] = React.useState(false)
   const [showIOSInstall, setShowIOSInstall] = React.useState(false)
+  const [isHUDHovered, setIsHUDHovered] = React.useState(false)
 
   const {
     needRefresh: [needRefresh, setNeedRefresh],
@@ -166,7 +168,7 @@ function App() {
       Native.releaseWakeLock();
       window.removeEventListener('keydown', handleGlobalKeyDown);
     }
-  }, [gameState, seedInput]);
+  }, [gameState]);
 
   useEffect(() => {
     // Intercept back button for PWAs/TWAs
@@ -223,30 +225,43 @@ function App() {
   const handleStart = () => {
     Native.vibrate(50)
     SFX.dungeonEnter();
-    if (seedInput) {
-      useGameStore.setState({ runStats: { ...useGameStore.getState().runStats, seedUsed: seedInput } });
-    }
     setGameState('CLASS_SELECT')
   }
 
+  const [isTitleHovered, setIsTitleHovered] = useState(false);
+
   return (
     <div className="bg-[var(--pack-bg)] text-slate-100 font-sans selection:bg-[var(--pack-primary)] flex flex-col h-dvh w-dvw overflow-hidden select-none safe-top safe-bottom">
-      {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
+      <AnimatePresence>
+        {isLoading && <Preloader key="preloader" onComplete={() => setIsLoading(false)} />}
+      </AnimatePresence>
       {useGameStore.getState().settings.particles && <BackgroundParticles />}
       <BrowserWarning />
       {/* HEADER */}
       <header className="bg-[var(--pack-surface)] border-b border-white/10 flex justify-between items-center shrink-0 relative z-40 px-4 h-14 md:h-16">
         <div className="flex items-center gap-2">
-          <h1 
-            onClick={() => {
-              if (gameState !== 'START') {
-                showConfirm("Abandon Run?", "Are you sure you want to end this run and view your progress?", forfeitRun);
-              }
-            }}
-            className="text-lg md:text-2xl font-black tracking-wider text-[var(--pack-primary)] flex items-center gap-2 font-serif cursor-pointer hover:opacity-80 transition-all"
-          >
-            🐉 CRIT 2048
-          </h1>
+          <AnimatePresence mode="popLayout">
+            {gameState !== 'START' && (
+              <motion.h1 
+                layoutId="main-branding"
+                transition={{
+                  type: "spring",
+                  stiffness: 120,
+                  damping: 20,
+                  mass: 1
+                }}
+                onClick={() => {
+                  showConfirm("Abandon Run?", "Are you sure you want to end this run and view your progress?", forfeitRun);
+                }}
+                onMouseEnter={() => setIsTitleHovered(true)}
+                onMouseLeave={() => setIsTitleHovered(false)}
+                className="text-lg md:text-2xl font-black tracking-wider flex items-center gap-2 font-serif cursor-pointer hover:opacity-80 transition-all origin-left"
+              >
+                <Emoji char="🐉" assetKey="TitleIcon" className="w-6 h-6 md:w-8 md:h-8" active={isTitleHovered} /> 
+                <span className="text-white">CRIT</span> <span className="text-rose-500">2048</span>
+              </motion.h1>
+            )}
+          </AnimatePresence>
           {gameState !== 'START' && (
             <span className="bg-slate-800 text-slate-300 text-[10px] md:text-xs font-bold px-2 py-1 rounded-md ml-2 uppercase tracking-widest">
               Ante {encounterIdx + 1}
@@ -270,10 +285,10 @@ function App() {
                 onClick={() => {
                   showConfirm("Abandon Run?", "Are you sure you want to end this run and view your progress?", forfeitRun);
                 }}
-                className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
-                title="Forfeit"
+                className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95 group" 
+                title="Forfeit & Return Home"
               >
-                🏠
+                <Emoji char="🏠" assetKey="Home" className="w-6 h-6 md:w-8 md:h-8 group-hover:animate-bounce-subtle" />
               </button>
             </>
           )}
@@ -283,80 +298,175 @@ function App() {
             <>
               <button 
                 onClick={() => setShowGrimoire(true)}
-                className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
+                className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95 group" 
                 title="Grimoire"
               >
-                📜
+                <Emoji char="📜" assetKey="Grimoire" active={showGrimoire} animateType="bounce" className="w-6 h-6 md:w-8 md:h-8 group-hover:animate-bounce-subtle" />
               </button>
               <button 
                 onClick={() => {
                   setForgeData(null);
                   setShowForge(true);
                 }}
-                className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95" 
+                className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95 group" 
                 title="Forge"
               >
-                ⚒️
+                <Emoji char="⚒️" assetKey="Forge" active={showForge} animateType="bounce" className="w-6 h-6 md:w-8 md:h-8 group-hover:animate-bounce-subtle" />
               </button>
             </>
           )}
           
           <button 
             onClick={() => setShowHelp(true)}
-            className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95"
+            className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95 group"
             title="Help"
           >
-            ❓
+            <Emoji char="❓" active={showHelp} animateType="bounce" className="w-6 h-6 md:w-8 md:h-8 group-hover:animate-bounce-subtle" />
           </button>
 
           <button 
             onClick={() => setShowSettings(true)}
-            className="text-slate-400 hover:text-white transition-colors text-xl active:scale-95"
+            className="text-slate-400 hover:text-white transition-colors text-xl active:scale-95 group"
             title="Settings"
           >
-            ⚙️
+            <Emoji char="⚙️" active={showSettings} animateType="spin" className="w-6 h-6 md:w-8 md:h-8 group-hover:animate-gear-spin" />
           </button>
         </div>
       </header>
 
       {/* MAIN CONTAINER */}
       <main className="flex-grow flex flex-col items-center relative min-h-0 w-full overflow-hidden">
-        
-        {/* START SCREEN */}
+        <AnimatePresence mode="wait">
+          {/* START SCREEN */}
         {gameState === 'START' && (
-          <div className="text-center space-y-6 md:space-y-8 max-w-4xl mx-auto w-full relative z-10 flex flex-col justify-center h-full overflow-y-auto px-6 py-8">
-            <div>
-              <h2 className="text-5xl md:text-7xl font-black text-white mb-2 tracking-tighter font-serif">CRIT <span className="text-rose-500">2048</span></h2>
-              <p className="text-slate-400 text-lg md:text-xl font-light">Seeded Roguelike Deckbuilder</p>
-            </div>
+          <motion.div 
+            key="start"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -100 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="text-center max-w-7xl mx-auto w-full relative z-10 flex flex-col items-center h-full overflow-y-auto px-6 pt-24 md:pt-32 pb-12"
+          >
+            <motion.div 
+              layoutId="main-branding"
+              transition={{
+                type: "spring",
+                stiffness: 120,
+                damping: 20,
+                mass: 1
+              }}
+              onMouseEnter={() => setIsTitleHovered(true)}
+              onMouseLeave={() => setIsTitleHovered(false)}
+              className="group cursor-default flex flex-col items-center mb-16 md:mb-20"
+            >
+              <h2 className="text-[9.5vw] md:text-[6rem] font-black text-white mb-6 tracking-tighter font-serif flex flex-row items-center justify-center gap-3 md:gap-8 leading-none w-full">
+                <Emoji char="🐉" assetKey="TitleIcon" className="w-10 h-10 md:w-24 md:h-24" active={isTitleHovered} />
+                <span className="flex gap-[2vw] md:gap-6 whitespace-nowrap">
+                  <span>CRIT</span> <span className="text-rose-500">2048</span>
+                </span>
+              </h2>
+              <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest md:tracking-[0.5em] opacity-80 mt-4 md:mt-0 px-6 text-center max-w-xs md:max-w-none">
+                A D&D inspired 2048 roguelike dungeon-crawler
+              </p>
+            </motion.div>
 
-            <div className="bg-slate-900 border border-slate-700 p-6 rounded-3xl text-left text-sm md:text-base space-y-4 shadow-xl">
-              <h3 className="font-black text-slate-300 uppercase tracking-widest border-b border-slate-700 pb-2">How to Play</h3>
-              <ul className="space-y-3 text-slate-400">
-                <li><strong className="text-white">1. Merge:</strong> Swipe to combine weapons and deal damage to the Boss.</li>
-                <li><strong className="text-white">2. Spellcraft:</strong> Cast physical dice spells that unleash grid-wide effects.</li>
-                <li><strong className="text-white">3. Hazards:</strong> Beware Goblins (steal gold) and Skeletons (block merging).</li>
-                <li><strong className="text-white">4. The D20:</strong> Every <span className="font-bold text-amber-400">5</span> moves, roll a D20 to determine your fate.</li>
-              </ul>
-            </div>
+            {/* Cinematic Centerpiece */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 1, delay: 0.6 }}
+              onClick={() => {
+                Native.vibrate(20);
+                setShowHelp(true);
+              }}
+              className="flex-grow flex flex-col items-center justify-center relative w-full py-12 cursor-help md:hidden group"
+            >
+               {/* Rotating Magic Circle */}
+               <motion.div 
+                 animate={{ rotate: 360 }}
+                 transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+                 className="absolute w-[75vw] h-[75vw] border-2 border-rose-500/20 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(225,29,72,0.1)]"
+               >
+                  <div className="absolute inset-1 border border-rose-500/10 rounded-full border-dashed" />
+                  <div className="absolute inset-4 border border-rose-500/10 rounded-full" />
+                  <div className="absolute inset-10 border border-rose-500/20 rounded-full" />
+                  <div className="absolute inset-16 border border-rose-500/5 rounded-full border-dashed" />
+                  
+                  {/* Arcane Lines */}
+                  <div className="absolute w-full h-[1px] bg-rose-500/20 rotate-45" />
+                  <div className="absolute w-full h-[1px] bg-rose-500/20 -rotate-45" />
+                  <div className="absolute w-full h-[1px] bg-rose-500/20 rotate-90" />
+                  <div className="absolute w-full h-[1px] bg-rose-500/20" />
+                  <div className="absolute w-full h-[1px] bg-rose-500/10 rotate-[22.5deg]" />
+                  <div className="absolute w-full h-[1px] bg-rose-500/10 rotate-[67.5deg]" />
+               </motion.div>
 
-            <div className="flex flex-col gap-3 w-full max-w-sm mx-auto">
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-[10px] font-black uppercase tracking-widest pointer-events-none">Seed</span>
-                <input 
-                  type="text" 
-                  placeholder="RANDOM" 
-                  value={seedInput}
-                  onChange={(e) => setSeedInput(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 text-white text-center font-mono rounded-2xl p-4 md:p-5 pl-16 focus:border-rose-500 outline-none uppercase shadow-2xl transition-all text-sm md:text-base" 
-                />
-              </div>
-              <button 
+               {/* Lore Text */}
+               <div className="relative z-10 text-center px-12 transition-all group-active:scale-95">
+                 <div className="w-12 h-[1px] bg-rose-500/50 mx-auto mb-6 shadow-[0_0_10px_rgba(225,29,72,0.5)]" />
+                 <p className="text-rose-500 text-[10px] font-black uppercase tracking-[0.6em] mb-3 drop-shadow-[0_0_8px_rgba(225,29,72,0.5)]">Ancient Prophecy</p>
+                 <p className="text-slate-300 text-xs italic leading-relaxed max-w-[220px] mx-auto font-serif">
+                   "Where the sword meets the soul, the dungeon's heart shall break."
+                 </p>
+                 <p className="text-rose-500/40 text-[8px] font-black uppercase tracking-widest mt-6 animate-pulse underline underline-offset-4">Read the Compendium</p>
+                 <div className="w-12 h-[1px] bg-rose-500/50 mx-auto mt-6 shadow-[0_0_10px_rgba(225,29,72,0.5)]" />
+               </div>
+            </motion.div>
+
+            <div className="flex flex-col gap-4 w-full max-w-md mx-auto mt-auto md:mt-0 pb-10 md:pb-0">
+              <motion.button 
                 onClick={handleStart}
-                className="w-full px-6 py-4 md:px-8 md:py-5 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-2xl shadow-2xl shadow-rose-950/40 transition-all text-lg md:text-xl uppercase tracking-[0.2em] border border-rose-500/50 active:scale-95"
+                whileHover={{ scale: 1.05, filter: "brightness(1.15)" }}
+                whileTap={{ scale: 0.95 }}
+                animate={{ 
+                  boxShadow: [
+                    "0 0 20px rgba(225,29,72,0.3), inset 0 0 10px rgba(225,29,72,0.2)", 
+                    "0 0 60px rgba(225,29,72,0.8), inset 0 0 20px rgba(225,29,72,0.4)", 
+                    "0 0 20px rgba(225,29,72,0.3), inset 0 0 10px rgba(225,29,72,0.2)"
+                  ],
+                }}
+                transition={{ 
+                  boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                }}
+                className="w-full px-8 py-5 md:px-10 md:py-7 bg-gradient-to-br from-rose-600 to-rose-800 text-white font-black rounded-3xl shadow-2xl transition-all text-xl md:text-2xl uppercase tracking-[0.2em] border border-rose-400/50 relative overflow-hidden group z-20"
               >
-                Enter the Dungeon
-              </button>
+                {/* Shimmer Effect */}
+                <motion.div 
+                  animate={{ x: ['-100%', '200%'] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+                />
+
+                <span className="relative z-10 flex items-center justify-center gap-3">
+                  <span>Enter the Dungeon</span>
+                </span>
+
+                {/* Fiery Embers */}
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ 
+                      opacity: [0, 0.8, 0],
+                      scale: [0, 1.2, 0],
+                      y: [-10, -60 - (i * 5)],
+                      x: [0, (i % 2 === 0 ? 1 : -1) * (10 + i * 2)]
+                    }}
+                    transition={{ 
+                      duration: 1.5 + (i * 0.2), 
+                      repeat: Infinity, 
+                      delay: i * 0.3,
+                      ease: "easeOut"
+                    }}
+                    className="absolute w-1 h-1 bg-orange-400 rounded-full blur-[1px] pointer-events-none z-0"
+                    style={{ 
+                      left: `${20 + (i * 10)}%`,
+                      bottom: '10%'
+                    }}
+                  />
+                ))}
+              </motion.button>
 
               {hasSave && (
                 <button 
@@ -365,7 +475,7 @@ function App() {
                     SFX.dungeonEnter();
                     loadGame();
                   }}
-                  className="w-full px-6 py-4 md:px-8 md:py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl shadow-2xl shadow-indigo-950/40 transition-all text-lg md:text-xl uppercase tracking-[0.2em] border border-indigo-500/50 active:scale-95"
+                  className="w-full px-8 py-5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl transition-all text-base uppercase tracking-widest border border-slate-700 active:scale-95 shadow-lg"
                 >
                   Resume Quest
                 </button>
@@ -396,27 +506,41 @@ function App() {
                 🏆 Hall of Heroes
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* CLASS SELECTION */}
         {gameState === 'CLASS_SELECT' && (
-          <div className="w-full h-full animate-in fade-in duration-500">
+          <motion.div 
+            key="class-select"
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "-100%" }}
+            transition={{ type: 'spring', damping: 30, stiffness: 200 }}
+            className="w-full h-full"
+          >
             <ClassSelection />
-          </div>
+          </motion.div>
         )}
 
         {/* PLAYING SCREEN */}
         {gameState === 'PLAYING' && (
-          <div className="flex flex-col items-center w-full max-w-4xl relative z-10 flex-1 min-h-0 justify-evenly px-4 py-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center w-full max-w-4xl relative z-10 flex-1 min-h-0 justify-evenly px-4 py-2"
+          >
             
             {/* HUD */}
             <div id="playing-hud" className="w-full bg-slate-900 border border-slate-700 rounded-2xl p-2 md:p-3 mb-2 md:mb-4 relative overflow-hidden flex flex-col gap-1 shrink-0 shadow-lg">
               <div className="absolute inset-0 bg-slate-800/50 w-full z-0">
-                <div 
-                  className="h-full bg-rose-600/80 transition-all duration-300 ease-out" 
-                  style={{ width: `${(monsterHp / monsterMaxHp) * 100}%` }}
-                ></div>
+                <motion.div 
+                  initial={false}
+                  animate={{ width: `${(monsterHp / monsterMaxHp) * 100}%` }}
+                  transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                  className="h-full bg-rose-600/80" 
+                />
               </div>
               <div className="relative z-10 flex items-center justify-between">
                 <div className="flex items-center gap-2 md:gap-3">
@@ -493,21 +617,76 @@ function App() {
 
               {/* Right Sidebar (Desktop) */}
               <div className="hidden md:flex flex-col gap-4 w-48 lg:w-56 shrink-0 min-h-0">
-                <div className="bg-slate-900 p-4 rounded-2xl border border-slate-700 text-center shadow-lg relative overflow-hidden shrink-0">
-                  <span className="text-4xl block mb-2 relative z-10">{playerClass?.icon || '⚔️'}</span>
-                  <p className="font-black text-sm text-white uppercase tracking-wider relative z-10">{playerClass?.name || 'Hero'}</p>
-                  <p className="text-xs text-indigo-400 font-mono mt-1 relative z-10">Spell: {playerClass?.ability?.name || 'None'}</p>
-                  <p className={clsx("text-xs font-mono mb-4 relative z-10", usesLeft > 0 ? "text-amber-400" : "text-slate-600")}>
-                    Uses: {usesLeft}/{playerClass?.ability?.maxUses || 0}
-                  </p>
-                  <button 
-                    onClick={castSpell}
-                    disabled={usesLeft <= 0}
-                    className="relative z-10 w-full py-3 rounded-xl text-sm font-black transition-all bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white shadow-lg uppercase tracking-widest border border-blue-400/30 active:scale-95"
+                <motion.div 
+                  initial="initial"
+                  animate="animate"
+                  whileHover="panelHover"
+                  onMouseEnter={() => setIsHUDHovered(true)}
+                  onMouseLeave={() => setIsHUDHovered(false)}
+                  className="bg-slate-900/90 p-6 rounded-[2rem] border border-slate-700/50 text-center shadow-2xl relative overflow-hidden shrink-0 backdrop-blur-xl group cursor-default"
+                >
+                  <motion.div variants={{ panelHover: { y: -5 } }} className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
+                  
+                  {/* Ghostly Background Icon */}
+                  <motion.div 
+                    variants={{
+                      initial: { opacity: 0.05, rotate: 12, scale: 1, filter: 'blur(4px)' },
+                      animate: { opacity: 0.15, rotate: 6, filter: 'blur(2px)' },
+                      panelHover: { scale: 1.3, opacity: 0.35, rotate: 0, filter: 'blur(0px)' }
+                    }}
+                    transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                    className="absolute -top-6 -right-6 pointer-events-none select-none z-0 transition-opacity"
                   >
-                    Cast
-                  </button>
-                </div>
+                    <span className="text-9xl grayscale opacity-40">{playerClass?.icon || '⚔️'}</span>
+                  </motion.div>
+
+                  <motion.div 
+                    variants={{
+                      initial: { scale: 0.8, opacity: 0 },
+                      animate: { scale: 1, opacity: 1 },
+                      panelHover: { scale: 1.15, rotate: 5 }
+                    }}
+                    transition={{ type: 'spring', damping: 12, stiffness: 200 }}
+                    className="w-20 h-20 bg-slate-800 rounded-2xl mx-auto mb-4 flex items-center justify-center text-5xl shadow-inner border border-slate-700 relative z-10 transition-transform duration-500"
+                  >
+                    <Emoji char={playerClass?.icon || '⚔️'} assetKey={playerClass?.name} active={isHUDHovered} className="w-12 h-12" />
+                  </motion.div>
+
+                  <div className="relative z-10">
+                    <h3 className="font-black text-lg text-white uppercase tracking-tighter italic font-serif leading-none">{playerClass?.name || 'Hero'}</h3>
+                    <div className="flex items-center justify-center gap-1 mt-2 mb-4">
+                      <span className="text-[8px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-black uppercase tracking-widest border border-blue-500/20">Active Spell</span>
+                    </div>
+
+                    <div className="bg-slate-950/50 border border-slate-800 rounded-xl p-3 mb-4 space-y-1">
+                      <p className="text-[10px] text-white font-bold uppercase tracking-widest truncate">{playerClass?.ability?.name || 'None'}</p>
+                      <div className="flex items-center justify-center gap-2">
+                         <div className="flex gap-0.5">
+                           {Array(playerClass?.ability?.maxUses || 0).fill(0).map((_, i) => (
+                             <div key={i} className={clsx("w-1.5 h-1.5 rounded-full transition-colors duration-500", i < usesLeft ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "bg-slate-800")} />
+                           ))}
+                         </div>
+                         <span className="text-[9px] text-slate-500 font-black uppercase tracking-tighter">{usesLeft} Left</span>
+                      </div>
+                    </div>
+
+                    <motion.button 
+                      whileHover={usesLeft > 0 ? { 
+                        scale: 1.05, 
+                        backgroundColor: "#3b82f6",
+                        boxShadow: "0 0 25px rgba(59, 130, 246, 0.4)",
+                        textShadow: "0 0 8px rgba(255, 255, 255, 0.5)"
+                      } : {}}
+                      whileTap={usesLeft > 0 ? { scale: 0.95 } : {}}
+                      onClick={castSpell}
+                      disabled={usesLeft <= 0}
+                      className="w-full py-3.5 rounded-xl text-xs font-black transition-all bg-blue-600 disabled:bg-slate-800 disabled:text-slate-500 text-white shadow-xl uppercase tracking-widest border border-blue-400/30 flex items-center justify-center gap-2"
+                    >
+                      <span>✨</span>
+                      <span>Cast</span>
+                    </motion.button>
+                  </div>
+                </motion.div>
                 
                 <div className="bg-slate-900 border border-slate-700 rounded-2xl p-2 text-[10px] text-slate-400 font-mono flex-1 overflow-y-auto custom-scrollbar flex flex-col-reverse">
                   {logs.map((log, i) => (
@@ -546,13 +725,18 @@ function App() {
                  </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {gameState === 'TAVERN' && (
-          <div className="w-full h-full pull-up">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="w-full h-full pull-up"
+          >
             <Tavern />
-          </div>
+          </motion.div>
         )}
 
         {gameState === 'DICE' && (
@@ -562,57 +746,61 @@ function App() {
         {gameState === 'SPELL' && (
           <SpellModal />
         )}
+      </AnimatePresence>
 
-        {showSettings && (
-          <SettingsModal onClose={() => setShowSettings(false)} />
-        )}
+        <AnimatePresence>
+          {showSettings && (
+            <SettingsModal key="settings" onClose={() => setShowSettings(false)} />
+          )}
 
-        {showGrimoire && (
-          <GrimoireModal 
-            onClose={() => setShowGrimoire(false)} 
-            onEditPack={(data: any) => {
-              setForgeData(data);
-              setShowGrimoire(false);
-              setShowForge(true);
-            }}
-          />
-        )}
+          {showGrimoire && (
+            <GrimoireModal 
+              key="grimoire"
+              onClose={() => setShowGrimoire(false)} 
+              onEditPack={(data: any) => {
+                setForgeData(data);
+                setShowGrimoire(false);
+                setShowForge(true);
+              }}
+            />
+          )}
 
-        {showForge && (
-          <ForgeModal 
-            initialData={forgeData}
-            onClose={() => {
-              setShowForge(false);
-              setForgeData(null);
-            }} 
-          />
-        )}
+          {showForge && (
+            <ForgeModal 
+              key="forge"
+              initialData={forgeData}
+              onClose={() => {
+                setShowForge(false);
+                setForgeData(null);
+              }} 
+            />
+          )}
 
-        {showHelp && (
-          <HelpModal onClose={() => setShowHelp(false)} />
-        )}
+          {showHelp && (
+            <HelpModal key="help" onClose={() => setShowHelp(false)} />
+          )}
 
-        {showLeaderboard && (
-          <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
-        )}
+          {showLeaderboard && (
+            <LeaderboardModal key="leaderboard" onClose={() => setShowLeaderboard(false)} />
+          )}
 
-        {showShare && (
-          <ShareModal onClose={() => setShowShare(false)} />
-        )}
+          {showShare && (
+            <ShareModal key="share" onClose={() => setShowShare(false)} />
+          )}
 
-        {showIOSInstall && (
-          <IOSInstallModal onClose={() => setShowIOSInstall(false)} />
-        )}
+          {showIOSInstall && (
+            <IOSInstallModal key="ios" onClose={() => setShowIOSInstall(false)} />
+          )}
 
+          {showMobileInventory && (
+            <MobileInventoryModal key="inventory" onClose={() => setShowMobileInventory(false)} />
+          )}
+
+          {showMobileLogs && (
+            <MobileLogsModal key="logs" onClose={() => setShowMobileLogs(false)} />
+          )}
+        </AnimatePresence>
         <ConfirmationModal />
-
-        {showMobileInventory && (
-          <MobileInventoryModal onClose={() => setShowMobileInventory(false)} />
-        )}
-
-        {showMobileLogs && (
-          <MobileLogsModal onClose={() => setShowMobileLogs(false)} />
-        )}
 
         {(gameState === 'GAME_OVER' || gameState === 'VICTORY') && (
           <RunStatsModal 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface HelpModalProps {
   onClose: () => void;
@@ -12,8 +13,22 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
   const prevHelpPage = () => setCurrentPage(p => Math.max(p - 1, 1));
 
   return (
-    <div className="absolute inset-0 bg-slate-950/80 z-[150] flex flex-col items-center justify-center p-4 md:p-8 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative flex flex-col h-[85vh] max-h-[800px]">
+    <div className="absolute inset-0 z-[150] flex flex-col items-center justify-center p-4 md:p-8">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+      />
+      
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="bg-slate-900 border border-slate-700 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative flex flex-col h-[85vh] max-h-[800px] overflow-hidden"
+      >
         {/* Subtle Glow Background */}
         <div className="absolute inset-0 bg-gradient-to-b from-rose-500/5 to-transparent pointer-events-none rounded-3xl"></div>
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white text-3xl font-light z-10">&times;</button>
@@ -152,7 +167,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
           <button onClick={nextPage} disabled={currentPage === totalPages} className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg transition-colors font-bold disabled:opacity-50">Next</button>
         </div>
 
-      </div>
+      </motion.div>
     </div>
   );
 };

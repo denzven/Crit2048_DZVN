@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Noto+Color+Emoji&display=swap');
 @import "tailwindcss";
 
 :root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', 'Noto Color Emoji', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -104,6 +104,42 @@ body {
 
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Emoji Consistency Styles */
+.emoji {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Default size if not specified */
+span.emoji, .emoji:not([class*='w-']), .emoji:not([class*='h-']) {
+  height: 1.2em;
+  width: 1.2em;
+}
+
+@keyframes gear-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15%); }
+}
+
+.animate-gear-spin {
+  animation: gear-spin 4s linear infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 1.5s ease-in-out infinite;
+}
+
+/* Ensure emojis in headers/large text scale correctly */
+h1 img.emoji, h2 img.emoji, h3 img.emoji {
+  vertical-align: middle;
 }
 
 .skin-particle {

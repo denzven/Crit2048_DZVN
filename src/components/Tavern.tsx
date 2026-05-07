@@ -3,6 +3,7 @@ import { useGameStore } from '../engine/gameStore';
 import { SeededRNG } from '../engine/prng';
 import { clsx } from 'clsx';
 import { PackEngine } from '../engine/packEngine';
+import { motion } from 'framer-motion';
 
 const Tavern: React.FC = () => {
   const { gold, shopItems, buyArtifact, nextEncounter, restoreSpells, upgradeSpell, usesLeft, playerClass, addLog } = useGameStore();
@@ -61,10 +62,15 @@ const Tavern: React.FC = () => {
     <div id="screen-tavern" className="w-full flex flex-col h-full relative z-10 px-4">
       <div id="tavern-scroll-area" className="flex-grow overflow-y-auto pb-6 space-y-6 flex flex-col min-h-0 custom-scrollbar">
         <div className="tavern-content max-w-2xl mx-auto w-full">
-          <div id="tavern-header" className="text-center mt-8 mb-6 shrink-0 animate-in fade-in slide-in-from-top-4 duration-500">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            id="tavern-header" 
+            className="text-center mt-8 mb-6 shrink-0"
+          >
             <h2 className="text-4xl md:text-5xl font-black text-amber-500 mb-1 font-serif tracking-tight">Tavern</h2>
             <p className="text-slate-500 text-[10px] uppercase tracking-[0.3em] font-bold">spend gold to buy or level up artifacts</p>
-          </div>
+          </motion.div>
             
           <div className="grid grid-cols-2 gap-4 shrink-0 mb-6">
             {/* Services Card */}
@@ -153,7 +159,18 @@ const Tavern: React.FC = () => {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 shrink-0 pb-8">
+            <motion.div 
+              initial="hidden"
+              animate="visible"
+              variants={{
+                visible: {
+                  transition: {
+                    staggerChildren: 0.1
+                  }
+                }
+              }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 shrink-0 pb-8"
+            >
               {shopItems.map((item, idx) => {
                 const owned = useGameStore.getState().artifacts.find(a => a.id === item.id);
                 const level = owned ? owned.level : 0;
@@ -172,15 +189,21 @@ const Tavern: React.FC = () => {
                 const styles = getRarityStyles(item.rarity);
 
                 return (
-                  <div key={item.id} 
-                    onMouseEnter={() => setFocusedIndex(4 + idx)}
-                    style={{ 
-                      animationDelay: `${idx * 150}ms`,
-                      transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)' 
+                  <motion.div key={item.id} 
+                    variants={{
+                      hidden: { opacity: 0, x: 20 },
+                      visible: { 
+                        opacity: 1, 
+                        x: 0,
+                        transition: { duration: 0.4, ease: "easeOut" }
+                      }
                     }}
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onMouseEnter={() => setFocusedIndex(4 + idx)}
                     className={clsx(
-                      "tavern-item relative bg-slate-900/40 border-2 rounded-[2rem] p-6 flex flex-col gap-5 overflow-hidden group backdrop-blur-md shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-right-full",
-                      focusedIndex === 4 + idx ? "border-white/30 -translate-y-2 scale-[1.03] shadow-amber-950/20" : "border-slate-800/80 hover:border-slate-700/50",
+                      "tavern-item relative bg-slate-900/40 border-2 rounded-[2rem] p-6 flex flex-col gap-5 overflow-hidden group backdrop-blur-md shadow-2xl",
+                      focusedIndex === 4 + idx ? "border-white/30 shadow-amber-950/20" : "border-slate-800/80 hover:border-slate-700/50",
                       styles.glow
                     )}
                   >
@@ -242,10 +265,10 @@ const Tavern: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>

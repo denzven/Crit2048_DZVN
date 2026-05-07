@@ -3,6 +3,7 @@ import { clsx } from 'clsx';
 import { useGameStore } from '../engine/gameStore';
 import { GameStorage } from '../engine/storage';
 import { PackEngine } from '../engine/packEngine';
+import { motion } from 'framer-motion';
 import { 
   CRIT2048_DEFAULT_PACK, 
   CRIT2048_DEFAULT_ENEMIES_PACK, 
@@ -197,8 +198,22 @@ const GrimoireModal: React.FC<GrimoireProps> = ({ onClose, onEditPack }) => {
   );
 
   return (
-    <div className="absolute inset-0 bg-slate-950 z-[120] flex items-center justify-center p-2 md:p-4">
-      <div className="bg-slate-900/95 border border-slate-700 rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col h-full max-h-[95vh] overflow-hidden backdrop-blur-3xl relative">
+    <div className="absolute inset-0 z-[120] flex items-center justify-center p-2 md:p-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+      />
+      
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="bg-slate-900/95 border border-slate-700 rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col h-full max-h-[95vh] overflow-hidden backdrop-blur-3xl relative"
+      >
         <div className="absolute inset-0 bg-gradient-to-b from-rose-500/5 to-transparent pointer-events-none"></div>
         
         {/* Header */}
@@ -345,7 +360,7 @@ const GrimoireModal: React.FC<GrimoireProps> = ({ onClose, onEditPack }) => {
           </div>
           <div className="opacity-40 font-mono">Grimoire Protocol v3.1</div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

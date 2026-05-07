@@ -110,6 +110,20 @@ export default defineConfig({
                 statuses: [0, 200]
               }
             }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/s\/e\/notoemoji\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'noto-emoji-cache',
+              expiration: {
+                maxEntries: 500,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
           }
         ]
       }

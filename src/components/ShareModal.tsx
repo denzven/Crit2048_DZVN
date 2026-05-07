@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ImageGenerator } from '../engine/imageGenerator';
 import { useGameStore } from '../engine/gameStore';
 import { Native } from '../engine/native';
+import { motion } from 'framer-motion';
 
 const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { runStats, playerClass, encounterIdx, artifacts } = useGameStore();
@@ -67,8 +68,22 @@ const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   };
 
   return (
-    <div className="absolute inset-0 bg-slate-950/95 z-[150] flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
-      <div className="bg-slate-900/95 border border-slate-700 rounded-[2.5rem] w-full max-w-lg shadow-2xl flex flex-col h-full max-h-[90vh] overflow-hidden backdrop-blur-3xl relative">
+    <div className="absolute inset-0 z-[150] flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-950/95 backdrop-blur-md"
+      />
+      
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="bg-slate-900/95 border border-slate-700 rounded-[2.5rem] w-full max-w-lg shadow-2xl flex flex-col h-full max-h-[90vh] overflow-hidden backdrop-blur-3xl relative"
+      >
         <div className="absolute inset-0 bg-gradient-to-b from-rose-500/5 to-transparent pointer-events-none"></div>
         
         {/* Header */}
@@ -118,7 +133,7 @@ const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             Save to Local Archives
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

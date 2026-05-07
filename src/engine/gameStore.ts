@@ -65,7 +65,8 @@ const INITIAL_STATE: GameStoreState = {
     fontScale: 1.0,
     movesPerRoll: 5,
     startingGold: 0,
-    diceTheme: 'default'
+    diceTheme: 'default',
+    customSeed: ''
   },
   floatingTexts: [],
   confirmation: null,
@@ -92,6 +93,7 @@ export interface GameActions {
   castSpell: () => void;
   executeSpellRoll: () => Promise<void>;
   resolveSpell: () => void;
+  cancelSpell: () => void;
   upgradeSpell: () => void;
   restoreSpells: () => void;
   resetGame: () => void;
@@ -546,7 +548,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     const { playerClass, runStats } = get();
     
     // Seed initialization
-    let seed = runStats.seedUsed;
+    let seed = runStats.seedUsed || get().settings.customSeed;
     if (!seed) {
       seed = SeededRNG.setSeed();
     } else {
@@ -846,6 +848,10 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     }
 
     get().saveGame();
+  },
+
+  cancelSpell: () => {
+    set({ gameState: 'PLAYING', spellRoll: null });
   },
 
   upgradeSpell: () => {

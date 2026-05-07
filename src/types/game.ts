@@ -65,6 +65,7 @@ export interface Settings {
   movesPerRoll: number;
   startingGold: number;
   diceTheme: 'default' | 'blood' | 'bone' | 'neon';
+  customSeed?: string;
 }
 
 export interface GameStoreState {

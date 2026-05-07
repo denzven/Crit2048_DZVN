@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { LeaderboardLogic } from '../engine/leaderboard';
 import type { LeaderboardEntry } from '../engine/leaderboard';
 import { clsx } from 'clsx';
+import { motion } from 'framer-motion';
 
 const LeaderboardModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -11,8 +12,22 @@ const LeaderboardModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   }, []);
 
   return (
-    <div className="absolute inset-0 bg-slate-950 z-[130] flex items-center justify-center p-2 md:p-4 animate-in fade-in duration-300">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col h-full max-h-[90vh] overflow-hidden backdrop-blur-3xl relative">
+    <div className="absolute inset-0 z-[130] flex items-center justify-center p-2 md:p-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+      />
+      
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col h-full max-h-[90vh] overflow-hidden backdrop-blur-3xl relative"
+      >
         <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none"></div>
         
         {/* Header */}
@@ -79,7 +94,7 @@ const LeaderboardModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="p-4 border-t border-slate-800 bg-slate-900 flex justify-center relative z-10">
           <p className="text-[8px] text-slate-600 uppercase tracking-[0.3em] font-black">Crit 2048 — Hall of Heroes v1.0</p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

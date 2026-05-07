@@ -1,6 +1,8 @@
 import React from 'react';
 import { useGameStore } from '../engine/gameStore';
 import { clsx } from 'clsx';
+import { Emoji } from './Emoji';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const RunStatsModal: React.FC<{ onShowLeaderboard: () => void, onShowShare: () => void }> = ({ onShowLeaderboard, onShowShare }) => {
   const { gameState, runStats, playerClass, encounterIdx, artifacts, resetGame } = useGameStore();
@@ -22,8 +24,21 @@ const RunStatsModal: React.FC<{ onShowLeaderboard: () => void, onShowShare: () =
   };
 
   return (
-    <div className="absolute inset-0 bg-slate-950/90 z-[100] flex flex-col items-center justify-center p-4 overflow-y-auto custom-scrollbar">
-      <div className="max-w-lg w-full bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-[2.5rem] text-center shadow-2xl relative border-t-rose-600/30 animate-in zoom-in duration-500 backdrop-blur-xl">
+    <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+      />
+      
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="max-w-lg w-full bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-[2.5rem] text-center shadow-2xl relative border-t-rose-600/30 overflow-y-auto custom-scrollbar"
+      >
         <div className="absolute inset-0 bg-gradient-to-b from-rose-500/5 to-transparent pointer-events-none"></div>
 
         <div className="relative z-10">
@@ -111,7 +126,7 @@ const RunStatsModal: React.FC<{ onShowLeaderboard: () => void, onShowShare: () =
           
           <p className="text-[8px] text-slate-700 mt-8 uppercase tracking-[0.4em] font-black">Crit 2048: Rogue-Like RPG</p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 interface IOSInstallModalProps {
   onClose: () => void;
@@ -6,8 +7,22 @@ interface IOSInstallModalProps {
 
 const IOSInstallModalFix: React.FC<IOSInstallModalProps> = ({ onClose }) => {
   return (
-    <div className="absolute inset-0 bg-slate-950/90 z-[200] flex items-center justify-center p-6 backdrop-blur-xl animate-in fade-in duration-300">
-      <div className="bg-slate-900 border border-slate-700 rounded-[2.5rem] max-w-sm w-full shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+    <div className="absolute inset-0 z-[200] flex items-center justify-center p-6">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl"
+      />
+      
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="bg-slate-900 border border-slate-700 rounded-[2.5rem] max-w-sm w-full shadow-2xl overflow-hidden flex flex-col relative"
+      >
         
         {/* Header */}
         <div className="p-8 text-center bg-gradient-to-b from-rose-500/10 to-transparent">
@@ -60,7 +75,7 @@ const IOSInstallModalFix: React.FC<IOSInstallModalProps> = ({ onClose }) => {
           </button>
         </div>
 
-      </div>
+      </motion.div>
     </div>
   );
 };

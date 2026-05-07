@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { Emoji } from './Emoji';
+import { motion } from 'framer-motion';
 
 interface PreloaderProps {
   onComplete: () => void;
 }
 
 const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
-  const [isVisible, setIsVisible] = useState(true);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -18,12 +19,11 @@ const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
         }
         return prev + Math.random() * 15;
       });
-    }, 150);
+    }, 100);
 
     const timer = setTimeout(() => {
-      setIsVisible(false);
-      setTimeout(onComplete, 500); // Wait for fade animation
-    }, 2000);
+      onComplete();
+    }, 2200);
 
     return () => {
       clearInterval(interval);
@@ -31,10 +31,14 @@ const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
     };
   }, [onComplete]);
 
-  if (!isVisible && progress >= 100) return null;
-
   return (
-    <div className={`fixed inset-0 bg-slate-950 z-[1000] flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+    <motion.div 
+      initial={{ opacity: 1 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.8, ease: "easeInOut" }}
+      className="fixed inset-0 bg-slate-950 z-[1000] flex flex-col items-center justify-center"
+    >
       <div className="relative flex flex-col items-center">
         {/* Spinner */}
         <div className="relative w-24 h-24 mb-8">
@@ -42,19 +46,28 @@ const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
           <div className="absolute inset-0 border-4 border-t-rose-500 rounded-full animate-spin shadow-[0_0_20px_rgba(244,63,94,0.4)]"></div>
           
           {/* Central Icon */}
-          <div className="absolute inset-0 flex items-center justify-center text-3xl animate-pulse">
-            🐉
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Emoji char="🐉" active={true} className="w-14 h-14" />
           </div>
         </div>
 
         {/* Text */}
         <div className="text-center">
-          <h1 className="text-2xl font-black text-white tracking-[0.3em] uppercase font-serif mb-2">Crit 2048</h1>
+          <motion.h1 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-2xl font-black text-white tracking-[0.3em] uppercase font-serif mb-2"
+          >
+            Crit 2048
+          </motion.h1>
           <div className="w-48 h-1 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
-            <div 
-              className="h-full bg-rose-600 transition-all duration-300 ease-out"
-              style={{ width: `${progress}%` }}
-            ></div>
+            <motion.div 
+              className="h-full bg-rose-600"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+            ></motion.div>
           </div>
           <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-4 font-bold animate-pulse">
             Communing with the Vestige...
@@ -63,11 +76,31 @@ const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
       </div>
 
       {/* Decorative corners */}
-      <div className="absolute top-8 left-8 w-12 h-12 border-t-2 border-l-2 border-rose-900/30"></div>
-      <div className="absolute top-8 right-8 w-12 h-12 border-t-2 border-r-2 border-rose-900/30"></div>
-      <div className="absolute bottom-8 left-8 w-12 h-12 border-b-2 border-l-2 border-rose-900/30"></div>
-      <div className="absolute bottom-8 right-8 w-12 h-12 border-b-2 border-r-2 border-rose-900/30"></div>
-    </div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="absolute top-8 left-8 w-12 h-12 border-t-2 border-l-2 border-rose-900/30"
+      ></motion.div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="absolute top-8 right-8 w-12 h-12 border-t-2 border-r-2 border-rose-900/30"
+      ></motion.div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="absolute bottom-8 left-8 w-12 h-12 border-b-2 border-l-2 border-rose-900/30"
+      ></motion.div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="absolute bottom-8 right-8 w-12 h-12 border-b-2 border-r-2 border-rose-900/30"
+      ></motion.div>
+    </motion.div>
   );
 };
 

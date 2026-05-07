@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useGameStore } from '../engine/gameStore';
 import ThreeDice from './ThreeDice';
 import { clsx } from 'clsx';
+import { motion } from 'framer-motion';
 
 const DiceModal: React.FC = () => {
   const [hasLanded, setHasLanded] = useState(false);
@@ -45,10 +46,22 @@ const DiceModal: React.FC = () => {
   const mod = playerClass?.d20Mod || 0;
 
   return (
-    <div id="modal-dice" className="absolute inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
-      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm pointer-events-auto" />
+    <div id="modal-dice" className="absolute inset-0 z-[100] flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" 
+      />
       
-      <div id="d20-panel" className="pointer-events-auto bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full text-center flex flex-col items-center shadow-2xl relative fx-modal-entrance">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        id="d20-panel" 
+        className="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full text-center flex flex-col items-center shadow-2xl relative"
+      >
         <h2 className="text-2xl font-black mb-1 text-rose-500 uppercase tracking-widest mt-2 font-serif">D20 Check</h2>
         <p className="text-slate-400 text-xs uppercase tracking-widest mb-6 font-bold">
           Mod: <span className="text-white bg-slate-800 px-2 py-0.5 rounded ml-1">{mod >= 0 ? `+${mod}` : mod}</span>
@@ -78,7 +91,12 @@ const DiceModal: React.FC = () => {
         </div>
 
         {lastRoll && hasLanded && (
-          <div id="dice-post-roll" className="flex flex-col items-center w-full z-20 mt-6 min-h-[80px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            id="dice-post-roll" 
+            className="flex flex-col items-center w-full z-20 mt-6 min-h-[80px]"
+          >
             <div id="dice-result-msg" className="flex flex-col items-center justify-center w-full text-center">
               <span className={clsx("block text-5xl font-black mb-2 font-mono", getResultColor())}>
                 {lastRoll.val}
@@ -93,9 +111,9 @@ const DiceModal: React.FC = () => {
             >
               Continue
             </button>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };
