@@ -230,7 +230,7 @@ function App() {
   }
 
   return (
-    <div className="bg-[var(--pack-bg)] text-slate-100 font-sans selection:bg-[var(--pack-primary)] flex flex-col h-screen w-screen overflow-hidden select-none safe-top safe-bottom">
+    <div className="bg-[var(--pack-bg)] text-slate-100 font-sans selection:bg-[var(--pack-primary)] flex flex-col h-dvh w-dvw overflow-hidden select-none safe-top safe-bottom">
       {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
       {useGameStore.getState().settings.particles && <BackgroundParticles />}
       <BrowserWarning />
@@ -517,8 +517,8 @@ function App() {
               </div>
             </div>
 
-            <div className="md:hidden flex w-full gap-2 mt-2 shrink-0 h-16">
-              <div className="bg-slate-900 p-1.5 rounded-xl border border-slate-700 text-center flex items-center justify-center gap-2 w-full shadow-lg">
+            <div className="md:hidden flex w-full gap-2 mt-2 shrink-0 pb-[env(safe-area-inset-bottom)] px-4 mb-2">
+              <div className="bg-slate-900 p-2 rounded-2xl border border-slate-700/50 flex items-center justify-center gap-2 w-full shadow-2xl h-20 backdrop-blur-md">
                  <button 
                    onClick={() => setShowMobileInventory(true)}
                    className="flex-1 h-full rounded-lg bg-slate-800 text-slate-300 font-black uppercase tracking-widest text-[10px] border border-slate-700 flex flex-col items-center justify-center gap-0.5 active:bg-slate-700"
@@ -647,7 +647,10 @@ function App() {
 
         {/* Exit Toast */}
         {showExitToast && (
-          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900/90 border border-slate-700 px-6 py-3 rounded-2xl text-xs font-black text-white uppercase tracking-widest animate-in slide-in-from-bottom-4 fade-in duration-300 z-[300] shadow-2xl backdrop-blur-md">
+          <div 
+            className="fixed left-1/2 -translate-x-1/2 bg-slate-900/90 border border-slate-700 px-6 py-3 rounded-2xl text-xs font-black text-white uppercase tracking-widest animate-in slide-in-from-bottom-4 fade-in duration-300 z-[300] shadow-2xl backdrop-blur-md"
+            style={{ bottom: 'calc(env(safe-area-inset-bottom) + 2.5rem)' }}
+          >
             Press back again to exit
           </div>
         )}

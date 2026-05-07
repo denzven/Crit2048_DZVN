@@ -6,7 +6,7 @@ export const MobileInventoryModal: React.FC<{ onClose: () => void }> = ({ onClos
 
   return (
     <div className="absolute inset-0 bg-slate-950/90 z-[200] flex items-center justify-center p-6 animate-in fade-in zoom-in duration-300 md:hidden">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-h-[80vh] flex flex-col overflow-hidden shadow-2xl">
+      <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-h-[80vh] flex flex-col overflow-hidden shadow-2xl safe-bottom">
         <div className="p-4 border-b border-slate-800 flex justify-between items-center">
           <h2 className="text-white font-black uppercase tracking-widest text-sm">Inventory</h2>
           <button onClick={onClose} className="text-slate-400 text-xl p-2">✕</button>
@@ -37,7 +37,7 @@ export const MobileLogsModal: React.FC<{ onClose: () => void }> = ({ onClose }) 
 
   return (
     <div className="absolute inset-0 bg-slate-950/90 z-[200] flex items-center justify-center p-6 animate-in fade-in zoom-in duration-300 md:hidden">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-h-[80vh] flex flex-col overflow-hidden shadow-2xl">
+      <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-h-[80vh] flex flex-col overflow-hidden shadow-2xl safe-bottom">
         <div className="p-4 border-b border-slate-800 flex justify-between items-center">
           <h2 className="text-white font-black uppercase tracking-widest text-sm">Combat Logs</h2>
           <button onClick={onClose} className="text-slate-400 text-xl p-2">✕</button>

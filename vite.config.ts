@@ -12,7 +12,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'app_icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+      includeAssets: ['app_icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'Crit2048 - a D&D inspired 2048 roguelike dungeon-crawler',
         short_name: 'Crit2048',
@@ -77,7 +77,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
