@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/app_icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/app_icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -13,7 +15,7 @@
     <meta name="language" content="English" />
     
     <!-- Dublin Core (High-Authority Archival Metadata) -->
-    <meta name="dc.title" content="Crit 2048: Roguelike Modding Dungeon" />
+    <meta name="dc.title" content="Crit2048 - a D&D inspired 2048 roguelike dungeon-crawler" />
     <meta name="dc.creator" content="denzven" />
     <meta name="dc.description" content="A dark fantasy 2048 roguelike with deep modding support and educational math elements." />
     <meta name="dc.publisher" content="denzven" />
@@ -26,8 +28,8 @@
     <link rel="preload" href="/app_icon.png" as="image" />
     <link rel="search" type="application/opensearchdescription+xml" title="Crit 2048 Search" href="/opensearch.xml" />
     
-    <title>CRIT 2048 — The Ultimate Roguelike Modding Dungeon</title>
-    <meta name="description" content="CRIT 2048 is a dark fantasy 2048 roguelike with deep modding support. Forge custom monsters, build hero classes, and survive the endless dungeon. 100% Data-Driven & Community Powered roguelike deckbuilder." />
+    <title>Crit2048 - a D&D inspired 2048 roguelike dungeon-crawler</title>
+    <meta name="description" content="Crit2048 is a D&D inspired 2048 roguelike dungeon-crawler with deep modding support. Forge custom monsters, build hero classes, and survive the endless dungeon. 100% Data-Driven & Community Powered." />
     <meta name="keywords" content="2048, roguelike, dungeon crawler, dnd, modding, game, pwa, denzven, crit2048, rpg, tactical, deckbuilder, puzzle game, fantasy, dungeon, adventure, browser game, mobile game, free game, indie game, pixel art, dice roll, d20, crit, 2048 game, moddable, content packs, open source game, webgame, strategy, turned-based combat" />
     <meta name="author" content="denzven" />
     <meta name="robots" content="max-image-preview:large, noodp, noydir, index, follow" />
@@ -38,18 +40,18 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://denzven.github.io/Crit2048_DZVN/" />
-    <meta property="og:title" content="CRIT 2048 — Merge. Forge. Survive." />
+    <meta property="og:title" content="Crit2048 - a D&D inspired 2048 roguelike dungeon-crawler" />
     <meta property="og:description" content="The roguelike evolution of 2048. Deep modding, custom skins, and tactical combat. Can you survive the Ancient Dragon? Play for free on any device." />
-    <meta property="og:image" content="https://denzven.github.io/Crit2048_DZVN/app_icon.png" />
-    <meta property="og:site_name" content="Crit 2048" />
+    <meta property="og:image" content="https://denzven.github.io/Crit2048_DZVN/screenshot_main.png" />
+    <meta property="og:site_name" content="Crit2048" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://denzven.github.io/Crit2048_DZVN/" />
-    <meta property="twitter:title" content="CRIT 2048 — The Ultimate Modding Dungeon" />
+    <meta property="twitter:title" content="Crit2048 - a D&D inspired 2048 roguelike dungeon-crawler" />
     <meta property="twitter:description" content="Merge weapons, cast spells, and forge your own destiny. The most powerful 2048 roguelike ever built. Play now in your browser." />
-    <meta property="twitter:image" content="https://denzven.github.io/Crit2048_DZVN/app_icon.png" />
+    <meta property="twitter:image" content="https://denzven.github.io/Crit2048_DZVN/screenshot_main.png" />
 
     <!-- Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -79,19 +81,31 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "VideoGame",
-      "name": "Crit 2048",
-      "description": "A dark fantasy 2048 roguelike with deep modding support. Forge custom monsters and survive the dungeon. Fun for kids (math/puzzle) and adults (strategy/roguelike).",
+      "@type": ["VideoGame", "SoftwareApplication"],
+      "name": "Crit2048",
+      "alternateName": "Crit 2048",
+      "headline": "Crit2048 - a D&D inspired 2048 roguelike dungeon-crawler",
+      "description": "Crit2048 is a D&D inspired 2048 roguelike dungeon-crawler with deep modding support. Forge custom monsters, build hero classes, and survive the dungeon. Educational math meets tactical RPG combat.",
       "genre": ["Roguelike", "Puzzle", "Strategy", "Educational"],
       "url": "https://denzven.github.io/Crit2048_DZVN/",
-      "image": "https://denzven.github.io/Crit2048_DZVN/app_icon.png",
+      "image": "https://denzven.github.io/Crit2048_DZVN/screenshot_main.png",
+      "logo": "https://denzven.github.io/Crit2048_DZVN/app_icon.png",
       "author": {
         "@type": "Person",
         "name": "denzven",
         "url": "https://github.com/denzven"
       },
+      "publisher": {
+        "@type": "Organization",
+        "name": "denzven",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://denzven.github.io/Crit2048_DZVN/app_icon.png"
+        }
+      },
       "operatingSystem": "Web, Android, iOS, Windows, Linux, MacOS",
       "applicationCategory": "GameApplication",
+      "applicationSubCategory": "Puzzle, Roguelike",
       "playMode": "SinglePlayer",
       "gamePlatform": "Web Browser",
       "audience": {
@@ -105,6 +119,10 @@
         "price": "0",
         "priceCurrency": "USD"
       },
+      "screenshot": [
+        "https://denzven.github.io/Crit2048_DZVN/screenshot_main.png",
+        "https://denzven.github.io/Crit2048_DZVN/screenshot_gameplay.png"
+      ],
       "sameAs": [
         "https://github.com/denzven/Crit2048_DZVN",
         "https://twitter.com/denzven"
@@ -124,7 +142,7 @@
   <body class="bg-slate-950 text-slate-50 selection:bg-rose-500">
     <!-- GHOST CONTENT BLOCK: Aggressive SEO Indexing (Off-screen) -->
     <div style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;" aria-hidden="true" class="h-entry">
-      <h1 class="p-name">Crit 2048: The Ultimate Math Roguelike & Dungeon Crawler</h1>
+      <h1 class="p-name">Crit2048 - a D&D inspired 2048 roguelike dungeon-crawler</h1>
       <div class="e-content">
         <p>Crit 2048 is an innovative puzzle game designed for all ages, from kids learning math through merging numbers to adults seeking deep roguelike tactical combat. It combines the addictive mechanics of 2048 with the intensity of a dungeon crawler.</p>
         

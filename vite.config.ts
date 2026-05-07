@@ -14,9 +14,9 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'app_icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
-        name: 'Crit 2048: Roguelike Crawler',
-        short_name: 'Crit 2048',
-        description: 'Seeded Roguelike Dungeon Crawler powered by 2048 mechanics',
+        name: 'Crit2048 - a D&D inspired 2048 roguelike dungeon-crawler',
+        short_name: 'Crit2048',
+        description: 'D&D inspired 2048 roguelike dungeon-crawler with deep modding support',
         theme_color: '#020617',
         background_color: '#020617',
         display: 'standalone',
