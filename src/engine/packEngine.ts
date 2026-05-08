@@ -1,18 +1,19 @@
 import { GameStorage } from './storage';
 import { SeededRNG } from './prng';
 import { MASTER_ARTIFACTS, ENEMIES, CLASSES } from './data';
-import { 
-  CRIT2048_DEFAULT_PACK, 
-  CRIT2048_DEFAULT_ENEMIES_PACK, 
-  CRIT2048_DEFAULT_CLASSES_PACK, 
+import {
+  CRIT2048_DEFAULT_MEGA_PACK, 
+  CRIT2048_DEFAULT_MONSTERS_PACK, 
+  CRIT2048_DEFAULT_HEROES_PACK, 
   CRIT2048_DEFAULT_ARTIFACTS_PACK, 
-  CRIT2048_DEFAULT_WEAPONS_PACK, 
+  CRIT2048_DEFAULT_ARSENAL_PACK, 
   CRIT2048_DEFAULT_HAZARDS_PACK,
-  CRIT2048_DEFAULT_SKIN_PACK,
-  CRIT2048_SHADOWFELL_SKIN_PACK
-} from './defaultPacks';
+  CRIT2048_DEFAULT_THEMES_PACK,
+  CRIT2048_SHADOWFELL_THEMES_PACK
+} from '../engine_core/packs';
 import { SFX } from './audio';
 import type { PackData, PackEntry } from '../types/pack';
+import { useRegistry } from './registryHub';
 
 /**
  * PACK ENGINE — Core Content Pack runtime.
@@ -134,18 +135,24 @@ export class PackEngine {
       return 0;
     });
 
+    const registry = useRegistry.getState();
+    registry.clear();
+
+    // 1. Load Base Game (Mod Priority 0)
+    await registry.loadBaseGame();
+
     for (const entry of packsToApply) {
       let pack = await GameStorage.loadPack(entry.id);
 
       if (!pack) {
-        if (entry.id === 'crit2048-default') pack = CRIT2048_DEFAULT_PACK;
-        else if (entry.id === 'crit2048-default-enemies') pack = CRIT2048_DEFAULT_ENEMIES_PACK;
-        else if (entry.id === 'crit2048-default-classes') pack = CRIT2048_DEFAULT_CLASSES_PACK;
+        if (entry.id === 'crit2048-default') pack = CRIT2048_DEFAULT_MEGA_PACK;
+        else if (entry.id === 'crit2048-default-monsters') pack = CRIT2048_DEFAULT_MONSTERS_PACK;
+        else if (entry.id === 'crit2048-default-heroes') pack = CRIT2048_DEFAULT_HEROES_PACK;
         else if (entry.id === 'crit2048-default-artifacts') pack = CRIT2048_DEFAULT_ARTIFACTS_PACK;
-        else if (entry.id === 'crit2048-default-weapons') pack = CRIT2048_DEFAULT_WEAPONS_PACK;
+        else if (entry.id === 'crit2048-default-arsenal') pack = CRIT2048_DEFAULT_ARSENAL_PACK;
         else if (entry.id === 'crit2048-default-hazards') pack = CRIT2048_DEFAULT_HAZARDS_PACK;
-        else if (entry.id === 'crit2048-default-skin') pack = CRIT2048_DEFAULT_SKIN_PACK;
-        else if (entry.id === 'crit2048-shadowfell-skin') pack = CRIT2048_SHADOWFELL_SKIN_PACK;
+        else if (entry.id === 'crit2048-default-themes') pack = CRIT2048_DEFAULT_THEMES_PACK;
+        else if (entry.id === 'crit2048-shadowfell-themes') pack = CRIT2048_SHADOWFELL_THEMES_PACK;
       }
 
       if (!pack) continue;
@@ -153,34 +160,21 @@ export class PackEngine {
       const strategy = pack.loadStrategy || (pack.type === 'mega' ? 'replace' : 'append');
 
       if (strategy === 'replace') {
-        if (pack.enemies?.length) encounters.length = 0;
-        if (pack.classes?.length) classes.length = 0;
-        if (pack.artifacts?.length) artifacts.length = 0;
+        // Clear categories if we are replacing
+        if (pack.monsters?.length) useRegistry.setState({ monsters: {} });
+        if (pack.heroes?.length) useRegistry.setState({ heroes: {} });
+        if (pack.artifacts?.length) useRegistry.setState({ artifacts: {} });
+        if (pack.arsenal?.length) useRegistry.setState({ arsenal: {} });
       }
 
-      // Merge Enemies
-      pack.enemies?.forEach(e => {
-        const idx = encounters.findIndex(orig => orig.id === e.id);
-        if (idx >= 0) encounters[idx] = { ...e };
-        else encounters.push({ ...e });
-      });
+      // Register Pack Content into Registry Hub (always append now as we cleared above if needed)
+      pack.monsters?.forEach(e => registry.registerMonster(e));
+      pack.heroes?.forEach(c => registry.registerHero(c));
+      pack.artifacts?.forEach(a => registry.registerArtifact(a));
+      pack.arsenal?.forEach(w => registry.registerArsenal(w));
 
-      // Merge Classes
-      pack.classes?.forEach(c => {
-        const idx = classes.findIndex(orig => orig.id === c.id);
-        if (idx >= 0) classes[idx] = { ...c };
-        else classes.push({ ...c });
-      });
-
-      // Merge Artifacts
-      pack.artifacts?.forEach(a => {
-        const idx = artifacts.findIndex(orig => orig.id === a.id);
-        if (idx >= 0) artifacts[idx] = { ...a };
-        else artifacts.push({ ...a });
-      });
-
-      if (pack.skin) {
-        this.activeSkin = pack.skin;
+      if (pack.themes) {
+        this.activeSkin = pack.themes;
       }
     }
 
@@ -190,7 +184,11 @@ export class PackEngine {
       this.resetSkin();
     }
 
-    return { encounters, classes, artifacts };
+    return { 
+      encounters: Object.values(registry.monsters), 
+      classes: Object.values(registry.heroes), 
+      artifacts: Object.values(registry.artifacts) 
+    };
   }
 
   /**
@@ -229,33 +227,52 @@ export class PackEngine {
   }
 
   /**
-   * Simple Mode Logic
+   * Action Queue Executor (Rule of Zero)
    */
-  private static checkTrigger(ability: any, state: any): boolean {
-    const n = ability.triggerParam || 10;
-    switch (ability.trigger) {
-      case 'every_n_slides':   return state.runStats.totalMoves > 0 && state.runStats.totalMoves % n === 0;
-      case 'on_hp_below':      return (state.monsterHp / state.monsterMaxHp) * 100 < n;
-      case 'on_slide_start':   return true;
-      default:                 return false;
-    }
-  }
+  private static executeActionQueue(actionsOrString: any, state: any, G: GameAPI, extraArgs: any = {}) {
+    if (!actionsOrString) return;
 
-  private static applyEffect(ability: any, state: any, G: GameAPI) {
-    const p = ability.effectParam;
-    const store = (window as any).useGameStore?.getState();
-    if (!store) return;
-
-    switch (ability.effect) {
-      case 'spawn_hazard':    G.spawnHazard(p); break;
-      case 'regen':           store.setMonsterHp?.(Math.min(state.monsterMaxHp, state.monsterHp + (p || 0))); break;
-      case 'tile_shuffle':    G.shuffleTiles(); break;
-      case 'weapon_degrade':  G.degradeWeapon(p || 'best'); break;
-      case 'weapon_destroy':  G.destroyWeapon(p || 'best'); break;
-      case 'drain_slides':    store.restoreSlides?.(-(p || 1)); break;
-      case 'add_gold':        store.addGold?.(p || 0); break;
+    let actions = actionsOrString;
+    if (typeof actionsOrString === 'string') {
+      const presets = useRegistry.getState().presets || {};
+      actions = presets[actionsOrString]?.actions || [];
     }
-    if (ability.logMessage) G.log(ability.logMessage.replace('${amount}', p || ''));
+
+    if (!Array.isArray(actions)) return;
+
+    actions.forEach(action => {
+      // Evaluate optional condition
+      if (action.condition) {
+        try {
+          const context = { state, G, ...extraArgs };
+          const keys = Object.keys(context);
+          const vals = Object.values(context);
+          // eslint-disable-next-line no-new-func
+          const fn = new Function(...keys, `"use strict";\nreturn ${action.condition};`);
+          if (!fn(...vals)) return;
+        } catch (e) {
+          console.error("PackEngine Action Condition Error:", action.condition, e);
+          return;
+        }
+      }
+
+      const store = (window as any).useGameStore?.getState();
+      if (!store) return;
+
+      const p = action.amount || 0;
+      switch (action.type) {
+        case 'spawn_hazard':    G.spawnHazard(p); break;
+        case 'regen':           if (action.target === 'player') { store.setMonsterHp?.(Math.min(state.monsterMaxHp, state.monsterHp + p)); } break;
+        case 'tile_shuffle':    G.shuffleTiles(); break;
+        case 'weapon_degrade':  G.degradeWeapon(action.stringParam || 'best'); break;
+        case 'weapon_destroy':  G.destroyWeapon(action.stringParam || 'best'); break;
+        case 'drain_slides':    store.restoreSlides?.(-Math.abs(p)); break;
+        case 'add_gold':        store.addGold?.(p); break;
+        case 'add_multiplier':  store.addMultiplier?.(p); break;
+        case 'deal_damage':     if (action.target === 'player') store.applyDamage?.(p); else G.enemy.dealDamage(p); break;
+        case 'log':             if (action.stringParam) G.log(action.stringParam.replace('${amount}', p.toString())); break;
+      }
+    });
   }
 
   /**
@@ -292,18 +309,33 @@ export class PackEngine {
     const enemy = state.activeEncounters[state.encounterIdx];
     if (!enemy || enemy.mode === 'builtin') return;
 
-    if (enemy.mode === 'simple' && enemy.primaryAbility) {
-      const G = this.buildGameAPI(state);
-      if (this.checkTrigger(enemy.primaryAbility, state)) {
-        this.applyEffect(enemy.primaryAbility, state, G);
-      }
-    } else if (enemy.mode === 'advanced' && enemy.script?.onSlide) {
-      this.runScript(enemy.script.onSlide, state, { dir: direction });
+    const G = this.buildGameAPI(state);
+
+    // Advanced Scripts
+    if (enemy.scripts?.onSlide || enemy.script?.onSlide) {
+      this.runScript(enemy.scripts?.onSlide || enemy.script.onSlide, state, { dir: direction });
+    }
+
+    // Action Queue
+    if (enemy.passiveTriggers?.onSlide) {
+      this.executeActionQueue(enemy.passiveTriggers.onSlide, state, G, { dir: direction });
     }
   }
 
   static onTavern(state: any) {
     this.applyArtifactHooks(state, 'onTavern', {});
+  }
+
+  static onPurchase(state: any, artifactId: string, level: number) {
+    const art = state.activeArtifacts.find((a: any) => a.id === artifactId);
+    if (!art) return;
+    const G = this.buildGameAPI(state);
+    if (art.scripts?.onPurchase) {
+      this.runScript(art.scripts.onPurchase, state, { lvl: level });
+    }
+    if (art.passiveTriggers?.onPurchase) {
+      this.executeActionQueue(art.passiveTriggers.onPurchase, state, G, { lvl: level });
+    }
   }
 
   static onTavernLeave(state: any) {
@@ -325,22 +357,36 @@ export class PackEngine {
   static onEncounterStart(state: any) {
     this.applyArtifactHooks(state, 'onEncounterStart', {});
     const enemy = state.activeEncounters[state.encounterIdx];
-    if (enemy && enemy.mode === 'advanced' && enemy.script?.onEncounterStart) {
-      this.runScript(enemy.script.onEncounterStart, state, {});
+    if (!enemy) return;
+
+    const G = this.buildGameAPI(state);
+
+    if (enemy.scripts?.onEncounterStart || enemy.script?.onEncounterStart) {
+      this.runScript(enemy.scripts?.onEncounterStart || enemy.script.onEncounterStart, state, {});
+    }
+
+    if (enemy.passiveTriggers?.onEncounterStart) {
+      this.executeActionQueue(enemy.passiveTriggers.onEncounterStart, state, G, {});
     }
   }
 
   static onMerge(state: any, newVal: number) {
     this.applyArtifactHooks(state, 'onMerge', { val: newVal });
     const enemy = state.activeEncounters[state.encounterIdx];
-    if (enemy && enemy.mode === 'advanced' && enemy.script?.onMerge) {
-      this.runScript(enemy.script.onMerge, state, { val: newVal });
+    const G = this.buildGameAPI(state);
+
+    if (enemy && (enemy.scripts?.onMerge || enemy.script?.onMerge)) {
+      this.runScript(enemy.scripts?.onMerge || enemy.script.onMerge, state, { val: newVal });
+    }
+    
+    if (enemy?.passiveTriggers?.onMerge) {
+      this.executeActionQueue(enemy.passiveTriggers.onMerge, state, G, { val: newVal });
     }
 
     // Class passive
     const cls = state.playerClass;
-    if (cls && cls.passiveTrigger === 'on_merge') {
-      this.dispatchSimpleEffect(cls, state);
+    if (cls && cls.passiveTriggers?.onMerge) {
+      this.executeActionQueue(cls.passiveTriggers.onMerge, state, G, { val: newVal });
     }
   }
 
@@ -401,40 +447,20 @@ export class PackEngine {
 
   private static applyArtifactHooks(state: any, hookName: string, extraArgs: any) {
     if (!state.artifacts) return;
+    const G = this.buildGameAPI(state);
     state.artifacts.forEach((art: any) => {
       const def = state.activeArtifacts.find((a: any) => a.id === art.id);
       if (!def) return;
 
-      if (def.mode === 'advanced' && def.scripts?.[hookName]) {
+      if (def.scripts?.[hookName]) {
         this.runScript(def.scripts[hookName], state, { lvl: art.level, ...extraArgs });
-      } else if (def.mode !== 'advanced' && def.passiveTrigger && def.passiveEffect) {
-        // Handle simple mode artifact effects (mapping hook names to triggers)
-        const hookToTrigger: Record<string, string> = {
-          onSlide: 'on_slide',
-          onMerge: 'on_merge',
-          onD20: 'on_d20',
-          onEncounterStart: 'on_encounter_start'
-        };
-        if (hookToTrigger[hookName] === def.passiveTrigger) {
-          this.dispatchSimpleEffect(def, state, art.level);
-        }
+      }
+      
+      if (def.passiveTriggers?.[hookName]) {
+        // Evaluate logic
+        this.executeActionQueue(def.passiveTriggers[hookName], state, G, { lvl: art.level, ...extraArgs });
       }
     });
-  }
-
-  private static dispatchSimpleEffect(def: any, state: any, lvl = 1) {
-    let p = parseFloat(def.passiveParam || 0);
-    if (isNaN(p)) p = 0;
-    p *= lvl;
-    
-    const store = (window as any).useGameStore?.getState();
-    if (!store) return;
-    switch (def.passiveEffect) {
-      case 'restore_slides': store.restoreSlides?.(p); break;
-      case 'add_gold': store.addGold?.(p); break;
-      case 'add_multiplier': store.addMultiplier?.(p); break;
-      case 'deal_damage': store.applyDamage?.(p); break;
-    }
   }
 
   private static buildGameAPI(state: any): GameAPI {
@@ -611,10 +637,10 @@ export class PackEngine {
     if (!pack.type) errors.push('Pack must specify a type (e.g. mega, dungeon).');
     
     // Check nested content
-    if (pack.enemies) {
-      pack.enemies.forEach((e: any, i: number) => {
-        if (!e.id) errors.push(`Enemy #${i+1} is missing an ID.`);
-        if (!e.name) errors.push(`Enemy #${i+1} is missing a name.`);
+    if (pack.monsters) {
+      pack.monsters.forEach((e: any, i: number) => {
+        if (!e.id) errors.push(`Monster #${i+1} is missing an ID.`);
+        if (!e.name) errors.push(`Monster #${i+1} is missing a name.`);
       });
     }
 

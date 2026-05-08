@@ -8,6 +8,7 @@ import { SFX } from './audio';
 import { LeaderboardLogic } from './leaderboard';
 import { SeededRNG } from './prng';
 import { PackEngine } from './packEngine';
+import { useRegistry } from './registryHub';
 
 const DEFAULT_RUN_STATS: RunStats = {
   maxDamage: 0,
@@ -156,13 +157,20 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   },
 
   initializeRegistry: async () => {
+    // 1. Load Presets (the "Foundation")
+    await useRegistry.getState().loadPresets();
+    
+    // 2. Load Base Game (Mod Priority 0)
+    await useRegistry.getState().loadBaseGame();
+    
+    // 3. Load Packs (User Mods)
     const { encounters, classes, artifacts } = await PackEngine.applyPacks(get().runStats.activePackIds);
+    
     set({ 
       activeEncounters: encounters, 
       activeClasses: classes, 
       activeArtifacts: artifacts 
     });
-
     // Retention Notification
     const lastPlayed = localStorage.getItem('crit2048_last_played');
     const now = Date.now();
@@ -678,6 +686,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         artifacts: newArtifacts,
         runStats: { ...get().runStats, totalCoinsSpent: get().runStats.totalCoinsSpent + cost }
       });
+      PackEngine.onPurchase(get(), artifactId, level + 1);
     }
   },
 

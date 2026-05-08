@@ -4,16 +4,18 @@ import { useGameStore } from '../engine/gameStore';
 import { GameStorage } from '../engine/storage';
 import { PackEngine } from '../engine/packEngine';
 import { motion } from 'framer-motion';
-import { 
-  CRIT2048_DEFAULT_PACK, 
-  CRIT2048_DEFAULT_ENEMIES_PACK, 
-  CRIT2048_DEFAULT_CLASSES_PACK, 
+import {
+  CRIT2048_DEFAULT_MEGA_PACK,
+  CRIT2048_DEFAULT_MONSTERS_PACK, 
+  CRIT2048_DEFAULT_HEROES_PACK, 
   CRIT2048_DEFAULT_ARTIFACTS_PACK, 
-  CRIT2048_DEFAULT_WEAPONS_PACK, 
+  CRIT2048_DEFAULT_ARSENAL_PACK, 
   CRIT2048_DEFAULT_HAZARDS_PACK,
-  CRIT2048_DEFAULT_SKIN_PACK,
-  CRIT2048_SHADOWFELL_SKIN_PACK
-} from '../engine/defaultPacks';
+  CRIT2048_DEFAULT_THEMES_PACK,
+  CRIT2048_SHADOWFELL_THEMES_PACK,
+  CRIT2048_DEFAULT_FATES_PACK,
+  CRIT2048_DEFAULT_TUNES_PACK
+} from '../engine_core/packs';
 import type { PackEntry, PackData } from '../types/pack';
 
 const REGISTRY_URL = "https://raw.githubusercontent.com/denzven/Crit2048-grimoire/main/registry.json";
@@ -46,14 +48,16 @@ const GrimoireModal: React.FC<GrimoireProps> = ({ onClose, onEditPack }) => {
     
     // Inject default packs as "Templates"
     const templates: PackEntry[] = [
-      CRIT2048_DEFAULT_PACK,
-      CRIT2048_DEFAULT_ENEMIES_PACK,
-      CRIT2048_DEFAULT_CLASSES_PACK,
+      CRIT2048_DEFAULT_MEGA_PACK,
+      CRIT2048_DEFAULT_MONSTERS_PACK,
+      CRIT2048_DEFAULT_HEROES_PACK,
       CRIT2048_DEFAULT_ARTIFACTS_PACK,
-      CRIT2048_DEFAULT_WEAPONS_PACK,
+      CRIT2048_DEFAULT_ARSENAL_PACK,
       CRIT2048_DEFAULT_HAZARDS_PACK,
-      CRIT2048_DEFAULT_SKIN_PACK,
-      CRIT2048_SHADOWFELL_SKIN_PACK
+      CRIT2048_DEFAULT_THEMES_PACK,
+      CRIT2048_SHADOWFELL_THEMES_PACK,
+      CRIT2048_DEFAULT_FATES_PACK,
+      CRIT2048_DEFAULT_TUNES_PACK
     ].map(p => ({
       id: p.id,
       name: p.name,
@@ -120,18 +124,45 @@ const GrimoireModal: React.FC<GrimoireProps> = ({ onClose, onEditPack }) => {
   const handleImport = () => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.json';
+    input.accept = '.crit,.zip,.json';
     input.onchange = async (e: any) => {
       const file = e.target.files[0];
       if (!file) return;
-      const text = await file.text();
+      
       try {
-        const pack = JSON.parse(text);
+        let pack: any;
+        if (file.name.endsWith('.json')) {
+          const text = await file.text();
+          pack = JSON.parse(text);
+        } else {
+          const JSZip = (await import('jszip')).default;
+          const zip = await JSZip.loadAsync(file);
+          
+          let manifest: any = { id: `pack-${Date.now()}`, name: "Imported Pack", type: "mega" };
+          const manifestFile = zip.file('manifest.json');
+          if (manifestFile) manifest = JSON.parse(await manifestFile.async('string'));
+          
+          const packData: any = { monsters: [], heroes: [], artifacts: [], arsenal: [], fates: [], hazards: [], tunes: [], themes: undefined };
+          
+          for (const [path, zipObj] of Object.entries(zip.files)) {
+            if (zipObj.dir || path === 'manifest.json' || !path.endsWith('.json')) continue;
+            
+            const content = JSON.parse(await zipObj.async('string'));
+            if (path.startsWith('monsters/')) packData.monsters.push(content);
+            else if (path.startsWith('heroes/')) packData.heroes.push(content);
+            else if (path.startsWith('artifacts/')) packData.artifacts.push(content);
+            else if (path.startsWith('arsenal/')) packData.arsenal.push(content);
+            else if (path.startsWith('hazards/')) packData.hazards.push(content);
+          }
+          pack = { ...manifest, ...packData };
+        }
+        
         await GameStorage.savePack(pack);
         loadLocalPacks();
         alert(`Successfully imported: ${pack.name}`);
       } catch (err) {
-        alert("Failed to parse pack JSON.");
+        console.error("Grimoire Import Error:", err);
+        alert("Failed to parse or load pack file.");
       }
     };
     input.click();
@@ -141,12 +172,13 @@ const GrimoireModal: React.FC<GrimoireProps> = ({ onClose, onEditPack }) => {
     let pack = await GameStorage.loadPack(id);
     if (!pack) {
       // Check templates
-      const templates = [
-        CRIT2048_DEFAULT_PACK, CRIT2048_DEFAULT_ENEMIES_PACK, CRIT2048_DEFAULT_CLASSES_PACK,
-        CRIT2048_DEFAULT_ARTIFACTS_PACK, CRIT2048_DEFAULT_WEAPONS_PACK, CRIT2048_DEFAULT_HAZARDS_PACK,
-        CRIT2048_DEFAULT_SKIN_PACK, CRIT2048_SHADOWFELL_SKIN_PACK
+      const templates: PackData[] = [
+        CRIT2048_DEFAULT_MEGA_PACK, CRIT2048_DEFAULT_MONSTERS_PACK, CRIT2048_DEFAULT_HEROES_PACK,
+        CRIT2048_DEFAULT_ARTIFACTS_PACK, CRIT2048_DEFAULT_ARSENAL_PACK, CRIT2048_DEFAULT_HAZARDS_PACK,
+        CRIT2048_DEFAULT_THEMES_PACK, CRIT2048_SHADOWFELL_THEMES_PACK, CRIT2048_DEFAULT_FATES_PACK,
+        CRIT2048_DEFAULT_TUNES_PACK
       ];
-      pack = templates.find(t => t.id === id) || null;
+      pack = templates.find((t: PackData) => t.id === id) || null;
     }
 
     if (pack) {
@@ -167,12 +199,13 @@ const GrimoireModal: React.FC<GrimoireProps> = ({ onClose, onEditPack }) => {
     let pack = await GameStorage.loadPack(id);
     if (!pack) {
       // Check templates
-      const templates = [
-        CRIT2048_DEFAULT_PACK, CRIT2048_DEFAULT_ENEMIES_PACK, CRIT2048_DEFAULT_CLASSES_PACK,
-        CRIT2048_DEFAULT_ARTIFACTS_PACK, CRIT2048_DEFAULT_WEAPONS_PACK, CRIT2048_DEFAULT_HAZARDS_PACK,
-        CRIT2048_DEFAULT_SKIN_PACK, CRIT2048_SHADOWFELL_SKIN_PACK
+      const templates: PackData[] = [
+        CRIT2048_DEFAULT_MEGA_PACK, CRIT2048_DEFAULT_MONSTERS_PACK, CRIT2048_DEFAULT_HEROES_PACK,
+        CRIT2048_DEFAULT_ARTIFACTS_PACK, CRIT2048_DEFAULT_ARSENAL_PACK, CRIT2048_DEFAULT_HAZARDS_PACK,
+        CRIT2048_DEFAULT_THEMES_PACK, CRIT2048_SHADOWFELL_THEMES_PACK, CRIT2048_DEFAULT_FATES_PACK,
+        CRIT2048_DEFAULT_TUNES_PACK
       ];
-      pack = templates.find(t => t.id === id) || null;
+      pack = templates.find((t: PackData) => t.id === id) || null;
     }
     if (pack) onEditPack(pack);
   };
@@ -180,11 +213,14 @@ const GrimoireModal: React.FC<GrimoireProps> = ({ onClose, onEditPack }) => {
   const tabs = [
     { id: 'all', label: 'All' },
     { id: 'mega', label: 'Mega' },
-    { id: 'dungeon', label: 'Enemies' },
-    { id: 'class', label: 'Class' },
-    { id: 'weapon', label: 'Weapon' },
-    { id: 'artifacts', label: 'Artifact' },
-    { id: 'skin', label: 'Skin' },
+    { id: 'monsters', label: 'Monsters' },
+    { id: 'heroes', label: 'Heroes' },
+    { id: 'arsenal', label: 'Arsenal' },
+    { id: 'artifacts', label: 'Artifacts' },
+    { id: 'fates', label: 'Fates' },
+    { id: 'hazards', label: 'Hazards' },
+    { id: 'themes', label: 'Themes' },
+    { id: 'tunes', label: 'Tunes' }
   ];
 
   const mergedPacks = Array.from(new Map<string, any>([

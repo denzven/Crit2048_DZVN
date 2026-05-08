@@ -1,0 +1,8 @@
+{
+  "id": "artifact_boots_haste",
+  "defaults": {
+    "scripts": {
+      "onEncounterStart": "G.addSlides(3 * lvl); G.log('⚡ Boots of Haste: +' + (3 * lvl) + ' slides!');"
+    }
+  }
+}

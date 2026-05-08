@@ -20,12 +20,11 @@ const INITIAL_PACK: PackData = {
   type: 'mega',
   game_version: '>=1.0.0',
   icon: '📦',
-  enemies: [],
-  classes: [],
+  monsters: [],
+  heroes: [],
   artifacts: [],
-  weapons: [],
-  hazards: [],
-  skin: {
+  arsenal: [],
+  themes: {
     primaryColor: '#f43f5e',
     accentColor: '#facc15',
     bgColor: '#020617',
@@ -39,7 +38,7 @@ const INITIAL_PACK: PackData = {
 
 const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void }> = ({ initialData, onClose }) => {
   const [step, setStep] = useState(1);
-  const [activeSubTab, setActiveSubTab] = useState<'enemies' | 'artifacts' | 'classes' | 'weapons' | 'hazards'>('enemies');
+  const [activeSubTab, setActiveSubTab] = useState<'artifacts' | 'monsters' | 'heroes' | 'arsenal' | 'fates' | 'themes' | 'tunes' | 'hazards'>('monsters');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [pack, setPack] = useState<PackData>(initialData || INITIAL_PACK);
   const [editorMode, setEditorMode] = useState<'visual' | 'source'>('visual');
@@ -56,10 +55,10 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
     setPack(prev => ({ ...prev, ...updates }));
   };
 
-  const updateSkin = (updates: Partial<NonNullable<PackData['skin']>>) => {
+  const updateSkin = (updates: Partial<NonNullable<PackData['themes']>>) => {
     setPack(prev => ({
       ...prev,
-      skin: { ...prev.skin, ...updates } as any
+      themes: { ...prev.themes, ...updates } as any
     }));
   };
 
@@ -229,7 +228,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
               <div className="space-y-6">
                 {/* SUB-TABS FOR CONTENT TYPES */}
                 <div className="grid grid-cols-5 gap-2">
-                  {['enemies', 'artifacts', 'classes', 'weapons', 'hazards'].map(t => (
+                  {['monsters', 'hazards', 'artifacts', 'heroes', 'arsenal', 'fates', 'themes'].map(t => (
                     <button 
                       key={t}
                       onClick={() => {
@@ -381,18 +380,18 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                           </div>
                         )}
 
-                        {activeSubTab === 'classes' && (
+                        {activeSubTab === 'heroes' && (
                           <div className="space-y-6">
                             <div className="space-y-2">
                               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">D20 Modifier</label>
                               <input 
                                 type="number"
                                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs"
-                                value={(pack.classes as any[])[editingIndex].d20Mod}
+                                value={(pack.heroes as any[])[editingIndex].d20Mod}
                                 onChange={e => {
-                                  const list = [...(pack.classes || [])];
+                                  const list = [...(pack.heroes || [])];
                                   list[editingIndex] = { ...list[editingIndex], d20Mod: parseInt(e.target.value) };
-                                  updatePack({ classes: list });
+                                  updatePack({ heroes: list });
                                 }}
                               />
                             </div>
@@ -403,11 +402,11 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                   <label className="text-[8px] font-black text-slate-700 uppercase">Name</label>
                                   <input 
                                     className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white text-[10px]"
-                                    value={(pack.classes as any[])[editingIndex].ability?.name || ''}
+                                    value={(pack.heroes as any[])[editingIndex].ability?.name || ''}
                                     onChange={e => {
-                                      const list = [...(pack.classes || [])];
+                                      const list = [...(pack.heroes || [])];
                                       list[editingIndex] = { ...list[editingIndex], ability: { ...list[editingIndex].ability, name: e.target.value } };
-                                      updatePack({ classes: list });
+                                      updatePack({ heroes: list });
                                     }}
                                   />
                                 </div>
@@ -416,11 +415,11 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                   <input 
                                     type="number"
                                     className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white text-[10px]"
-                                    value={(pack.classes as any[])[editingIndex].ability?.sides || 6}
+                                    value={(pack.heroes as any[])[editingIndex].ability?.sides || 6}
                                     onChange={e => {
-                                      const list = [...(pack.classes || [])];
+                                      const list = [...(pack.heroes || [])];
                                       list[editingIndex] = { ...list[editingIndex], ability: { ...list[editingIndex].ability, sides: parseInt(e.target.value) } };
-                                      updatePack({ classes: list });
+                                      updatePack({ heroes: list });
                                     }}
                                   />
                                 </div>
@@ -429,11 +428,11 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                   <input 
                                     type="number"
                                     className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white text-[10px]"
-                                    value={(pack.classes as any[])[editingIndex].ability?.maxUses || 1}
+                                    value={(pack.heroes as any[])[editingIndex].ability?.maxUses || 1}
                                     onChange={e => {
-                                      const list = [...(pack.classes || [])];
+                                      const list = [...(pack.heroes || [])];
                                       list[editingIndex] = { ...list[editingIndex], ability: { ...list[editingIndex].ability, maxUses: parseInt(e.target.value) } };
-                                      updatePack({ classes: list });
+                                      updatePack({ heroes: list });
                                     }}
                                   />
                                 </div>
@@ -441,11 +440,11 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                   <label className="text-[8px] font-black text-slate-700 uppercase">Type</label>
                                   <select 
                                     className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white text-[10px]"
-                                    value={(pack.classes as any[])[editingIndex].ability?.type || 'damage'}
+                                    value={(pack.heroes as any[])[editingIndex].ability?.type || 'damage'}
                                     onChange={e => {
-                                      const list = [...(pack.classes || [])];
+                                      const list = [...(pack.heroes || [])];
                                       list[editingIndex] = { ...list[editingIndex], ability: { ...list[editingIndex].ability, type: e.target.value } };
-                                      updatePack({ classes: list });
+                                      updatePack({ heroes: list });
                                     }}
                                   >
                                     <option value="damage">Damage</option>
@@ -457,33 +456,33 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                           </div>
                         )}
 
-                        {activeSubTab === 'weapons' && (
+                        {activeSubTab === 'arsenal' && (
                           <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Base Damage</label>
                             <input 
                               type="number"
                               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs"
-                              value={(pack.weapons as any[])[editingIndex].dmg}
+                              value={(pack.arsenal as any[])[editingIndex].dmg}
                               onChange={e => {
-                                const list = [...(pack.weapons || [])];
+                                const list = [...(pack.arsenal || [])];
                                 list[editingIndex] = { ...list[editingIndex], dmg: parseInt(e.target.value) };
-                                updatePack({ weapons: list });
+                                updatePack({ arsenal: list });
                               }}
                             />
                           </div>
                         )}
 
-                        {activeSubTab === 'enemies' && (
+                        {activeSubTab === 'monsters' && (
                           <div className="space-y-4 pt-4 border-t border-slate-800">
                             <div className="flex justify-between items-center">
                               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Behavior Profile</label>
                               <select 
                                 className="bg-slate-950 border border-slate-800 text-white text-[10px] rounded-lg px-2 py-1 outline-none focus:border-rose-500"
-                                value={(pack.enemies as any[])[editingIndex].mode}
+                                value={(pack.monsters as any[])[editingIndex].mode}
                                 onChange={e => {
-                                  const list = [...(pack.enemies || [])];
+                                  const list = [...(pack.monsters || [])];
                                   list[editingIndex] = { ...list[editingIndex], mode: e.target.value as any };
-                                  updatePack({ enemies: list });
+                                  updatePack({ monsters: list });
                                 }}
                               >
                                 <option value="simple">Simple (Passive)</option>
@@ -491,21 +490,21 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                               </select>
                             </div>
 
-                            {(pack.enemies as any[])[editingIndex].mode === 'simple' ? (
+                            {(pack.monsters as any[])[editingIndex].mode === 'simple' ? (
                               <div className="bg-slate-950/50 border border-slate-800 rounded-xl p-4 space-y-4">
                                 <div className="space-y-2">
                                   <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Passive Power</label>
                                   <select 
                                     className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white text-xs"
-                                    value={(pack.enemies as any[])[editingIndex].passiveAbility?.effect || 'none'}
+                                    value={(pack.monsters as any[])[editingIndex].passiveAbility?.effect || 'none'}
                                     onChange={e => {
-                                      const list = [...(pack.enemies || [])];
+                                      const list = [...(pack.monsters || [])];
                                       const effect = e.target.value;
                                       list[editingIndex] = { 
                                         ...list[editingIndex], 
                                         passiveAbility: effect === 'none' ? undefined : { effect, effectParam: 10 } 
                                       };
-                                      updatePack({ enemies: list });
+                                      updatePack({ monsters: list });
                                     }}
                                   >
                                     <option value="none">No Passive</option>
@@ -514,20 +513,20 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                     <option value="drain_slides">⏳ Drain (Reduce Slides)</option>
                                   </select>
                                 </div>
-                                {((pack.enemies as any[])[editingIndex].passiveAbility) && (
+                                {((pack.monsters as any[])[editingIndex].passiveAbility) && (
                                   <div className="space-y-2">
                                     <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Power Magnitude</label>
                                     <input 
                                       type="number"
                                       className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white text-xs"
-                                      value={(pack.enemies as any[])[editingIndex].passiveAbility?.effectParam || 0}
+                                      value={(pack.monsters as any[])[editingIndex].passiveAbility?.effectParam || 0}
                                       onChange={e => {
-                                        const list = [...(pack.enemies || [])];
+                                        const list = [...(pack.monsters || [])];
                                         list[editingIndex] = { 
                                           ...list[editingIndex], 
                                           passiveAbility: { ...list[editingIndex].passiveAbility, effectParam: parseInt(e.target.value) } 
                                         };
-                                        updatePack({ enemies: list });
+                                        updatePack({ monsters: list });
                                       }}
                                     />
                                   </div>
@@ -542,13 +541,13 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                 <textarea 
                                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-rose-500 text-[10px] font-mono min-h-[120px] focus:border-rose-500 outline-none"
                                   spellCheck={false}
-                                  value={JSON.stringify((pack.enemies as any[])[editingIndex].script || {}, null, 2)}
+                                  value={JSON.stringify((pack.monsters as any[])[editingIndex].script || {}, null, 2)}
                                   onChange={e => {
                                     try {
                                       const script = JSON.parse(e.target.value);
-                                      const list = [...(pack.enemies || [])];
+                                      const list = [...(pack.monsters || [])];
                                       list[editingIndex] = { ...list[editingIndex], script };
-                                      updatePack({ enemies: list });
+                                      updatePack({ monsters: list });
                                     } catch (err) {}
                                   }}
                                 />
@@ -564,7 +563,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                             value={(pack[activeSubTab as keyof PackData] as any[])[editingIndex].lore || (pack[activeSubTab as keyof PackData] as any[])[editingIndex].desc}
                             onChange={e => {
                               const list = [...(pack[activeSubTab as keyof PackData] as any[])];
-                              if (activeSubTab === 'enemies') list[editingIndex] = { ...list[editingIndex], lore: e.target.value };
+                              if (activeSubTab === 'monsters') list[editingIndex] = { ...list[editingIndex], lore: e.target.value };
                               else list[editingIndex] = { ...list[editingIndex], desc: e.target.value };
                               updatePack({ [activeSubTab]: list });
                             }}
@@ -606,8 +605,8 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                  { id: 'onEncounterStart', label: 'On Battle Start', icon: '⚔️' }
                                ].map(hook => {
                                  const current = (pack[activeSubTab as keyof PackData] as any[])[editingIndex];
-                                 const scripts = activeSubTab === 'enemies' ? (current.script || {}) : (current.scripts || {});
-                                 const script = scripts[hook.id] || "";
+                                 const scripts = current.passiveTriggers || {};
+                                 const script = scripts[hook.id] ? JSON.stringify(scripts[hook.id], null, 2) : "";
                                  
                                  return (
                                    <div key={hook.id} className="bg-slate-950/50 border border-slate-800/50 rounded-xl p-3 space-y-2">
@@ -619,10 +618,9 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                           <button 
                                             onClick={() => {
                                               const list = [...(pack[activeSubTab as keyof PackData] as any[])];
-                                              const newScripts = { ...scripts };
-                                              delete newScripts[hook.id];
-                                              if (activeSubTab === 'enemies') list[editingIndex] = { ...current, script: newScripts };
-                                              else list[editingIndex] = { ...current, scripts: newScripts };
+                                              const newTriggers = { ...scripts };
+                                              delete newTriggers[hook.id];
+                                              list[editingIndex] = { ...current, passiveTriggers: newTriggers };
                                               updatePack({ [activeSubTab]: list });
                                             }}
                                             className="text-[8px] text-rose-500 font-bold uppercase hover:underline"
@@ -635,16 +633,14 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                                             onChange={e => {
                                               if (!e.target.value) return;
                                               const list = [...(pack[activeSubTab as keyof PackData] as any[])];
-                                              let code = "";
-                                              if (e.target.value === 'gold') code = "G.player.addGold(10); G.log('Gold found!');";
-                                              if (e.target.value === 'hazard') code = "G.spawnHazard('-1'); G.log('Something spawned...');";
-                                              if (e.target.value === 'heal') code = "G.player.addSlides(2); G.log('Life restored!');";
-                                              if (e.target.value === 'shake') code = "G.shake(); G.log('Earthquake!');";
-                                              if (e.target.value === 'damage') code = "G.enemy.dealDamage(50); G.log('Direct strike!');";
+                                              let actions: any[] = [];
+                                              if (e.target.value === 'gold') actions = [{ type: 'add_gold', amount: 10 }, { type: 'log', stringParam: 'Gold found!' }];
+                                              if (e.target.value === 'hazard') actions = [{ type: 'spawn_hazard', amount: -1 }, { type: 'log', stringParam: 'Something spawned...' }];
+                                              if (e.target.value === 'heal') actions = [{ type: 'regen', target: 'player', amount: 2 }, { type: 'log', stringParam: 'Life restored!' }];
+                                              if (e.target.value === 'damage') actions = [{ type: 'deal_damage', target: 'enemy', amount: 50 }, { type: 'log', stringParam: 'Direct strike!' }];
                                               
-                                              const newScripts = { ...scripts, [hook.id]: code };
-                                              if (activeSubTab === 'enemies') list[editingIndex] = { ...current, script: newScripts, mode: 'advanced' };
-                                              else list[editingIndex] = { ...current, scripts: newScripts, mode: 'advanced' };
+                                              const newTriggers = { ...scripts, [hook.id]: actions };
+                                              list[editingIndex] = { ...current, passiveTriggers: newTriggers, mode: 'advanced' };
                                               updatePack({ [activeSubTab]: list });
                                             }}
                                             value=""
@@ -671,13 +667,12 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                              <textarea 
                               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-rose-500 text-[10px] font-mono min-h-[150px] focus:border-rose-500 outline-none"
                               spellCheck={false}
-                              value={JSON.stringify((pack[activeSubTab as keyof PackData] as any[])[editingIndex].script || (pack[activeSubTab as keyof PackData] as any[])[editingIndex].scripts || {}, null, 2)}
+                              value={JSON.stringify((pack[activeSubTab as keyof PackData] as any[])[editingIndex].passiveTriggers || {}, null, 2)}
                               onChange={e => {
                                 try {
-                                  const scripts = JSON.parse(e.target.value);
+                                  const triggers = JSON.parse(e.target.value);
                                   const list = [...(pack[activeSubTab as keyof PackData] as any[])];
-                                  if (activeSubTab === 'enemies') list[editingIndex] = { ...list[editingIndex], script: scripts, mode: 'advanced' };
-                                  else list[editingIndex] = { ...list[editingIndex], scripts, mode: 'advanced' };
+                                  list[editingIndex] = { ...list[editingIndex], passiveTriggers: triggers, mode: 'advanced' };
                                   updatePack({ [activeSubTab]: list });
                                 } catch (err) {}
                               }}
@@ -695,22 +690,22 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                             
                             <h5 className="absolute top-6 left-6 text-[9px] font-black text-slate-700 uppercase tracking-[0.3em]">Live Simulation</h5>
                             
-                            {activeSubTab === 'enemies' && (
+                            {activeSubTab === 'monsters' && (
                               <div className="w-full space-y-8 animate-in fade-in zoom-in duration-500">
                                 <div className="flex flex-col items-center gap-4">
                                    <div className="w-24 h-24 bg-slate-900 rounded-3xl flex items-center justify-center text-5xl shadow-2xl border border-slate-800 ring-4 ring-rose-500/10 group-hover:scale-110 transition-transform">
-                                      {(pack.enemies as any[])[editingIndex].icon}
+                                      {(pack.monsters as any[])[editingIndex].icon}
                                    </div>
                                    <div className="text-center">
-                                      <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic">{(pack.enemies as any[])[editingIndex].name}</h3>
-                                      <p className="text-[10px] text-rose-500 font-black uppercase tracking-widest">{(pack.enemies as any[])[editingIndex].hp} HP / {(pack.enemies as any[])[editingIndex].slides} Slides</p>
+                                      <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic">{(pack.monsters as any[])[editingIndex].name}</h3>
+                                      <p className="text-[10px] text-rose-500 font-black uppercase tracking-widest">{(pack.monsters as any[])[editingIndex].hp} HP / {(pack.monsters as any[])[editingIndex].slides} Slides</p>
                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                    <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden border border-slate-700">
                                       <div className="h-full bg-rose-600 w-3/4"></div>
                                    </div>
-                                   <p className="text-center text-[9px] text-slate-500 font-medium italic">"{(pack.enemies as any[])[editingIndex].lore}"</p>
+                                   <p className="text-center text-[9px] text-slate-500 font-medium italic">"{(pack.monsters as any[])[editingIndex].lore}"</p>
                                 </div>
                               </div>
                             )}
@@ -729,16 +724,16 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                               </div>
                             )}
 
-                            {activeSubTab === 'weapons' && (
+                            {activeSubTab === 'arsenal' && (
                               <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
                                  <div className="w-24 h-24 bg-slate-100 rounded-2xl flex items-center justify-center text-5xl shadow-2xl border border-white/20">
-                                    {(pack.weapons as any[])[editingIndex].icon}
+                                    {(pack.arsenal as any[])[editingIndex].icon}
                                  </div>
                                  <div className="text-center">
-                                    <h4 className="text-lg font-black text-white">{(pack.weapons as any[])[editingIndex].name}</h4>
+                                    <h4 className="text-lg font-black text-white">{(pack.arsenal as any[])[editingIndex].name}</h4>
                                     <div className="mt-2 inline-flex items-center gap-2 bg-rose-500/20 text-rose-500 px-3 py-1 rounded-full border border-rose-500/30">
                                        <span className="text-[10px] font-black uppercase tracking-widest">Base DMG</span>
-                                       <span className="font-mono font-black">{(pack.weapons as any[])[editingIndex].dmg}</span>
+                                       <span className="font-mono font-black">{(pack.arsenal as any[])[editingIndex].dmg}</span>
                                     </div>
                                  </div>
                               </div>
@@ -794,8 +789,8 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                       <button 
                         onClick={() => {
                           const list = [...(pack[activeSubTab as keyof PackData] as any[]) || []];
-                          const newEntry = activeSubTab === 'enemies' 
-                            ? { id: `new-enemy-${list.length}`, name: `New Enemy`, icon: '👹', hp: 100, slides: 20, lore: 'Description here', mode: 'simple' }
+                          const newEntry = activeSubTab === 'monsters' 
+                            ? { id: `new-${activeSubTab}-${list.length}`, name: `New Monster`, icon: '👹', hp: 100, slides: 20, lore: 'Description here', mode: 'simple' }
                             : { id: `new-${activeSubTab}-${list.length}`, name: `New Entry`, icon: '❓', desc: 'Description here', mode: 'simple' };
                           list.push(newEntry);
                           updatePack({ [activeSubTab]: list });
@@ -826,7 +821,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                         <div className="relative group">
                           <input 
                             type="color" 
-                            value={(pack.skin as any)?.[c.key] || '#000000'}
+                            value={(pack.themes as any)?.[c.key] || '#000000'}
                             onChange={e => updateSkin({ [c.key]: e.target.value })}
                             className="w-full h-10 rounded-xl border border-slate-700 shadow-lg cursor-pointer bg-transparent" 
                           />
@@ -839,7 +834,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                       <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Background Image URL</label>
                       <input 
                         type="text" 
-                        value={pack.skin?.bgImage}
+                        value={pack.themes?.bgImage}
                         onChange={e => updateSkin({ bgImage: e.target.value })}
                         placeholder="https://example.com/bg.jpg" 
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:border-rose-500 outline-none" 
@@ -848,7 +843,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Custom CSS Injection</label>
                       <textarea 
-                        value={pack.skin?.customCss}
+                        value={pack.themes?.customCss}
                         onChange={e => updateSkin({ customCss: e.target.value })}
                         placeholder=".tile-merge { filter: hue-rotate(90deg); }" 
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs font-mono min-h-[100px] focus:border-rose-500 outline-none resize-none"
@@ -878,7 +873,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                   </div>
                   <div className="flex justify-between text-[10px] uppercase tracking-widest font-black">
                     <span className="text-slate-500">Entries:</span>
-                    <span className="text-white">{(pack.enemies?.length || 0) + (pack.artifacts?.length || 0)} Total</span>
+                    <span className="text-white">{(pack.monsters?.length || 0) + (pack.artifacts?.length || 0)} Total</span>
                   </div>
                 </div>
                 <button 

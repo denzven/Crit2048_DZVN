@@ -1,0 +1,20 @@
+{
+  "id": "base_monster",
+  "defaults": {
+    "hp": 100,
+    "slides": 20,
+    "icon": "👾",
+    "lore": "A generic inhabitant of the dungeon.",
+    "passiveTriggers": {
+      "onEncounterStart": [],
+      "onMerge": [],
+      "onSlide": [],
+      "onD20": [],
+      "onDamage": [],
+      "onCast": [],
+      "onTavern": [],
+      "onGameOver": []
+    },
+    "scripts": {}
+  }
+}

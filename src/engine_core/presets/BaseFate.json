@@ -1,0 +1,14 @@
+{
+  "id": "base_fate",
+  "defaults": {
+    "name": "The Weave of Fate",
+    "description": "Global rules that govern the dungeon.",
+    "mechanics": {
+      "d20": {
+        "sides": 20,
+        "critSuccess": 20,
+        "critFail": 1
+      }
+    }
+  }
+}

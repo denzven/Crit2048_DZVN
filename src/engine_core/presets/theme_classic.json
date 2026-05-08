@@ -1,0 +1,8 @@
+{
+  "id": "theme_classic",
+  "defaults": {
+    "script": {
+      "onLoad": "G.log('Skin: Spawning atmosphere...');"
+    }
+  }
+}

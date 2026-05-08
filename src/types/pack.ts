@@ -1,4 +1,4 @@
-export type PackType = 'dungeon' | 'class' | 'skin' | 'mega' | 'artifacts' | 'weapon' | 'hazard';
+export type PackType = 'mega' | 'monsters' | 'heroes' | 'arsenal' | 'artifacts' | 'fates' | 'themes' | 'tunes' | 'hazards';
 
 export interface PackEntry {
   id: string;
@@ -14,6 +14,7 @@ export interface PackEntry {
 
 export interface EnemyDef {
   id: string;
+  parent?: string | string[];
   name: string;
   icon: string;
   hp: number;
@@ -37,6 +38,7 @@ export interface EnemyDef {
 
 export interface ClassDef {
   id: string;
+  parent?: string | string[];
   name: string;
   icon: string;
   desc: string;
@@ -51,6 +53,7 @@ export interface ClassDef {
 
 export interface ArtifactDef {
   id: string;
+  parent?: string | string[];
   name: string;
   icon: string;
   rarity: string;
@@ -65,18 +68,25 @@ export interface ArtifactDef {
 
 export interface WeaponDef {
   id: string;
+  parent?: string | string[];
   name: string;
   icon: string;
   dmg: number;
+  bg?: string;
+  text?: string;
 }
 
 export interface HazardDef {
   id: string;
+  parent?: string | string[];
   name: string;
   icon: string;
+  bg?: string;
+  lore?: string;
 }
 
 export interface SkinDef {
+  parent?: string | string[];
   themeName?: string;
   primaryColor?: string;
   accentColor?: string;
@@ -98,10 +108,12 @@ export interface SkinDef {
 export interface PackData extends PackEntry {
   game_version: string;
   loadStrategy?: 'append' | 'replace';
-  enemies?: EnemyDef[];
-  classes?: ClassDef[];
-  weapons?: WeaponDef[];
-  hazards?: HazardDef[];
+  monsters?: EnemyDef[];
+  heroes?: ClassDef[];
+  arsenal?: WeaponDef[];
   artifacts?: ArtifactDef[];
-  skin?: SkinDef;
+  fates?: any[];
+  hazards?: HazardDef[];
+  themes?: SkinDef;
+  tunes?: any[];
 }

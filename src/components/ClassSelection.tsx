@@ -149,6 +149,13 @@ const ClassSelection: React.FC = () => {
         animate="visible"
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto w-full pb-8"
       >
+        {activeClasses.length === 0 && (
+          <div className="col-span-full text-center py-20">
+            <div className="text-rose-500 text-6xl animate-spin mb-4">🐉</div>
+            <p className="text-slate-500 font-black uppercase tracking-widest">Reshaping the Multiverse...</p>
+            <p className="text-[10px] text-slate-700 mt-2 font-mono italic">(Registry is currently empty)</p>
+          </div>
+        )}
         {activeClasses.map((hero, idx) => (
           <motion.button 
             key={hero.id}

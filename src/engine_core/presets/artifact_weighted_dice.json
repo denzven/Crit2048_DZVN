@@ -1,0 +1,8 @@
+{
+  "id": "artifact_weighted_dice",
+  "defaults": {
+    "scripts": {
+      "onD20": "if (roll.val < 4 + lvl) { roll.val = 4 + lvl; G.log('🎲 Weighted Dice: Roll bumped to ' + roll.val + '!'); }"
+    }
+  }
+}

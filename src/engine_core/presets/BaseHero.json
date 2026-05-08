@@ -1,0 +1,27 @@
+{
+  "id": "base_hero",
+  "defaults": {
+    "name": "Adventurer",
+    "icon": "👤",
+    "desc": "A brave soul seeking fortune.",
+    "d20Mod": 0,
+    "ability": {
+      "name": "Standard Attack",
+      "sides": 6,
+      "count": 1,
+      "maxUses": 3,
+      "type": "damage"
+    },
+    "passiveTriggers": {
+      "onEncounterStart": [],
+      "onMerge": [],
+      "onSlide": [],
+      "onD20": [],
+      "onDamage": [],
+      "onCast": [],
+      "onTavern": [],
+      "onGameOver": []
+    },
+    "scripts": {}
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "id": "artifact_gravity_boots",
+  "defaults": {
+    "scripts": {
+      "onMergeDamage": "if (dir === 'DOWN') { dmg.val *= (1 + 0.5 * lvl); } else if (dir === 'UP') { dmg.val *= 0.5; }"
+    }
+  }
+}

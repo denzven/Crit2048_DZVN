@@ -1,0 +1,10 @@
+{
+  "id": "base_weapon",
+  "defaults": {
+    "name": "Generic Weapon",
+    "icon": "⚔️",
+    "bg": "bg-slate-800",
+    "text": "text-white",
+    "dmg": 0
+  }
+}

@@ -1,0 +1,96 @@
+import type { PackData } from '../../types/pack';
+
+export const CRIT2048_DEFAULT_THEMES_PACK: PackData = {
+  "id": "crit2048-default-themes",
+  "name": "Crit 2048 — Original Theme",
+  "version": "1.0.0",
+  "game_version": ">=1.0.0",
+  "author": "denzven",
+  "description": "The classic Crit 2048 aesthetic.",
+  "type": "themes",
+  "icon": "🎨",
+  "themes": {
+    "themeName": "Classic Noir",
+    "primaryColor": "#f43f5e",
+    "accentColor": "#e11d48",
+    "bgColor": "#020617",
+    "surfaceColor": "#0f172a",
+    "borderColor": "#1e293b",
+    "fontFamily": "Cinzel",
+    "borderRadius": "0.5rem",
+    "hpBarColor": "#f43f5e",
+    "loadingColor": "#f43f5e",
+    "glowColor": "#f43f5e",
+    "parent": "theme_classic"
+  }
+};
+
+export const CRIT2048_SYLVAN_THEMES_PACK: PackData = {
+  "id": "crit2048-sylvan-themes",
+  "name": "Crit 2048 — Sylvan Glade",
+  "version": "1.0.0",
+  "game_version": ">=1.0.0",
+  "author": "denzven",
+  "description": "Vibrant forest aesthetic with mossy accents.",
+  "type": "themes",
+  "icon": "🌿",
+  "themes": {
+    "themeName": "Sylvan",
+    "primaryColor": "#10b981",
+    "accentColor": "#059669",
+    "bgColor": "#064e3b",
+    "surfaceColor": "#065f46",
+    "borderColor": "#047857",
+    "hpBarColor": "#34d399",
+    "loadingColor": "#6ee7b7",
+    "glowColor": "#10b981",
+    "borderRadius": "1rem"
+  }
+};
+
+export const CRIT2048_ABYSSAL_THEMES_PACK: PackData = {
+  "id": "crit2048-abyssal-themes",
+  "name": "Crit 2048 — Abyssal Crypt",
+  "version": "1.0.0",
+  "game_version": ">=1.0.0",
+  "author": "denzven",
+  "description": "Bone-white and deep-shadow aesthetic.",
+  "type": "themes",
+  "icon": "💀",
+  "themes": {
+    "themeName": "Abyssal",
+    "primaryColor": "#94a3b8",
+    "accentColor": "#64748b",
+    "bgColor": "#020617",
+    "surfaceColor": "#0f172a",
+    "borderColor": "#1e293b",
+    "hpBarColor": "#cbd5e1",
+    "loadingColor": "#f1f5f9",
+    "glowColor": "#ffffff",
+    "borderRadius": "0px"
+  }
+};
+
+export const CRIT2048_SHADOWFELL_THEMES_PACK: PackData = {
+  "id": "crit2048-shadowfell-themes",
+  "name": "Crit 2048 — Shadowfell Noir",
+  "version": "1.0.0",
+  "game_version": ">=1.0.0",
+  "author": "denzven",
+  "description": "A dark, void-themed aesthetic with purple pulses.",
+  "type": "themes",
+  "icon": "🌌",
+  "themes": {
+    "themeName": "Shadowfell",
+    "logoOverride": "VOID 2048",
+    "primaryColor": "#a855f7",
+    "accentColor": "#7e22ce",
+    "bgColor": "#050010",
+    "surfaceColor": "#0c001a",
+    "borderColor": "#2e1065",
+    "hpBarColor": "#9333ea",
+    "loadingColor": "#d946ef",
+    "glowColor": "#a855f7",
+    "borderRadius": "2px"
+  }
+};

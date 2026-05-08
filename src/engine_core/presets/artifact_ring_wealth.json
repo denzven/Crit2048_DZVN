@@ -1,0 +1,8 @@
+{
+  "id": "artifact_ring_wealth",
+  "defaults": {
+    "scripts": {
+      "onTavern": "G.player.addGold(30 * lvl); G.log('💍 Ring of Wealth: +' + (30 * lvl) + ' Gold!');"
+    }
+  }
+}

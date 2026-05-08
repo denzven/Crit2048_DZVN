@@ -1,0 +1,10 @@
+{
+  "id": "base_artifact",
+  "defaults": {
+    "name": "Strange Trinket",
+    "icon": "🏺",
+    "rarity": "Common",
+    "basePrice": 10,
+    "desc": "Its purpose is unknown."
+  }
+}

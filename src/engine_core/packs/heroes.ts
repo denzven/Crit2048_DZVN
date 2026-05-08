@@ -1,0 +1,26 @@
+import type { PackData } from '../../types/pack';
+
+export const CRIT2048_DEFAULT_HEROES_PACK: PackData = {
+  "id": "crit2048-default-heroes",
+  "name": "Crit 2048 — Default Heroes",
+  "version": "1.0.0",
+  "game_version": ">=1.0.0",
+  "author": "denzven",
+  "description": "The core game hero classes.",
+  "type": "heroes",
+  "icon": "👤",
+  "heroes": [
+    { "id": "barbarian", "name": "Barbarian", "icon": "😡", "desc": "+10 Dmg to T1&2 combos.", "d20Mod": -1, "mode": "simple", "ability": { "name": "Rage", "count": 2, "sides": 6, "maxUses": 1, "type": "damage" } },
+    { "id": "rogue", "name": "Rogue", "icon": "🥷", "desc": "+1 Gold per merge, +2 to D20.", "d20Mod": 2, "mode": "simple", "passiveTrigger": "on_merge", "passiveEffect": "add_gold", "passiveParam": 1, "ability": { "name": "Backstab", "count": 1, "sides": 20, "maxUses": 1, "type": "damage" } },
+    { "id": "wizard", "name": "Wizard", "icon": "🧙‍♂️", "desc": "+1 to D20. Spell: Fireball.", "d20Mod": 1, "mode": "simple", "ability": { "name": "Fireball", "count": 1, "sides": 6, "maxUses": 1, "type": "damage" } },
+    { "id": "warlock", "name": "Warlock", "icon": "👁️", "desc": "+1 to D20. Spell: Eldritch Blast.", "d20Mod": 1, "mode": "simple", "ability": { "name": "Eldritch Blast", "count": 1, "sides": 10, "maxUses": 3, "type": "damage" } },
+    { "id": "cleric", "name": "Cleric", "icon": "✨", "desc": "Spell: Divine Aid (Heals Slides).", "d20Mod": 0, "mode": "simple", "ability": { "name": "Divine Aid", "count": 1, "sides": 8, "maxUses": 2, "type": "heal" } },
+    { "id": "paladin", "name": "Paladin", "icon": "🛡️", "desc": "Spell: Smite.", "d20Mod": 0, "mode": "simple", "ability": { "name": "Divine Smite", "count": 1, "sides": 8, "maxUses": 2, "type": "damage" } },
+    { "id": "bard", "name": "Bard", "icon": "🎵", "desc": "+1 to D20. Spell: Vicious Mockery.", "d20Mod": 1, "mode": "simple", "ability": { "name": "Vicious Mockery", "count": 1, "sides": 6, "maxUses": 3, "type": "damage" } },
+    { "id": "druid", "name": "Druid", "icon": "🌿", "desc": "Spell: Entangle.", "d20Mod": 0, "mode": "simple", "ability": { "name": "Entangle", "count": 1, "sides": 8, "maxUses": 2, "type": "heal" } },
+    { "id": "fighter", "name": "Fighter", "icon": "⚔️", "desc": "Spell: Action Surge.", "d20Mod": 0, "mode": "simple", "ability": { "name": "Action Surge", "count": 2, "sides": 6, "maxUses": 2, "type": "damage" } },
+    { "id": "monk", "name": "Monk", "icon": "👊", "desc": "Spell: Flurry of Blows.", "d20Mod": 1, "mode": "simple", "ability": { "name": "Flurry of Blows", "count": 3, "sides": 4, "maxUses": 2, "type": "damage" } },
+    { "id": "ranger", "name": "Ranger", "icon": "🏹", "desc": "Spell: Hunter's Mark.", "d20Mod": -1, "mode": "simple", "ability": { "name": "Hunter's Mark", "count": 1, "sides": 8, "maxUses": 3, "type": "damage" } },
+    { "id": "sorcerer", "name": "Sorcerer", "icon": "🔮", "desc": "Spell: Chaos Bolt.", "d20Mod": 1, "mode": "simple", "ability": { "name": "Chaos Bolt", "count": 2, "sides": 8, "maxUses": 1, "type": "damage" } }
+  ]
+};

@@ -126,8 +126,12 @@ function App() {
     return () => window.removeEventListener('click', handleButtonClick);
   }, []);
 
+  const [isRegistryReady, setIsRegistryReady] = React.useState(false)
+
   useEffect(() => {
-    useGameStore.getState().initializeRegistry();
+    useGameStore.getState().initializeRegistry().then(() => {
+      setIsRegistryReady(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -233,7 +237,7 @@ function App() {
   return (
     <div className="bg-[var(--pack-bg)] text-slate-100 font-sans selection:bg-[var(--pack-primary)] flex flex-col h-dvh w-dvw overflow-hidden select-none safe-top safe-bottom">
       <AnimatePresence>
-        {isLoading && <Preloader key="preloader" onComplete={() => setIsLoading(false)} />}
+        {(isLoading || !isRegistryReady) && <Preloader key="preloader" onComplete={() => setIsLoading(false)} />}
       </AnimatePresence>
       {useGameStore.getState().settings.particles && <BackgroundParticles />}
       <BrowserWarning />

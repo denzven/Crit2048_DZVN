@@ -1,0 +1,8 @@
+{
+  "id": "artifact_giant_potion",
+  "defaults": {
+    "scripts": {
+      "onPurchase": "G.player.addMultiplier(0.3);"
+    }
+  }
+}

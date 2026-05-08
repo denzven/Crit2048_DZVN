@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Noto+Color+Emoji&display=swap');
 @import "tailwindcss";
+@source "./engine_core/base_game/data/*.json";
+@source "./engine_core/presets/*.json";
 
 :root {
   font-family: 'Inter', 'Noto Color Emoji', system-ui, Avenir, Helvetica, Arial, sans-serif;
