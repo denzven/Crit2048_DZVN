@@ -8,33 +8,44 @@ const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { runStats, playerClass, encounterIdx, artifacts } = useGameStore();
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [options, setOptions] = useState({
+    theme: 'classic',
+    showSeed: true,
+    showArtifacts: true
+  });
+
+  const generate = async () => {
+    setLoading(true);
+    try {
+      const data = {
+        ante: encounterIdx + 1,
+        classIcon: playerClass?.icon || '🛡️',
+        className: playerClass?.name || 'Hero',
+        maxDamage: runStats.maxDamage,
+        totalMoves: runStats.totalMoves,
+        totalMerges: runStats.totalMerges,
+        maxMultiplier: runStats.maxMultiplier,
+        startTime: runStats.startTime,
+        seedUsed: runStats.seedUsed,
+        artifacts: artifacts
+      };
+      const bytes = await ImageGenerator.generate(data, options);
+      const blob = new Blob([bytes as any], { type: 'image/png' });
+      
+      // Cleanup old URL
+      if (preview) URL.revokeObjectURL(preview);
+      
+      setPreview(URL.createObjectURL(blob));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const generate = async () => {
-      try {
-        const data = {
-          ante: encounterIdx + 1,
-          classIcon: playerClass?.icon || '🛡️',
-          className: playerClass?.name || 'Hero',
-          maxDamage: runStats.maxDamage,
-          totalMoves: runStats.totalMoves,
-          totalMerges: runStats.totalMerges,
-          maxMultiplier: runStats.maxMultiplier,
-          startTime: runStats.startTime,
-          seedUsed: runStats.seedUsed,
-          artifacts: artifacts
-        };
-        const bytes = await ImageGenerator.generate(data);
-        const blob = new Blob([bytes as any], { type: 'image/png' });
-        setPreview(URL.createObjectURL(blob));
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
     generate();
-  }, []);
+  }, [options]);
 
   const handleDownload = () => {
     if (!preview) return;
@@ -96,24 +107,60 @@ const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
 
         {/* Preview */}
-        <div className="flex-grow p-8 flex flex-col items-center justify-center gap-6 bg-slate-950/50 relative z-10">
-          {loading ? (
-            <div className="flex flex-col items-center gap-6 text-slate-500">
-              <div className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full animate-spin shadow-[0_0_20px_rgba(225,29,72,0.3)]"></div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Forging Visuals...</p>
-            </div>
-          ) : (
-            <>
-              <div className="w-full max-w-[260px] aspect-[1080/1920] bg-slate-900 rounded-[2rem] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.5)] border border-slate-800 ring-1 ring-white/10 relative group">
+        <div className="flex-grow p-6 flex flex-col md:flex-row items-center justify-center gap-8 bg-slate-950/50 relative z-10 overflow-y-auto custom-scrollbar">
+          <div className="flex flex-col items-center gap-4 shrink-0">
+            {loading ? (
+              <div className="w-[200px] aspect-[1080/1920] flex flex-col items-center justify-center gap-6 bg-slate-900 rounded-[1.5rem] border border-slate-800">
+                <div className="w-10 h-10 border-4 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-[8px] font-black uppercase tracking-[0.3em] animate-pulse">Forging...</p>
+              </div>
+            ) : (
+              <div className="w-[200px] aspect-[1080/1920] bg-slate-900 rounded-[1.5rem] overflow-hidden shadow-2xl border border-slate-800 ring-1 ring-white/10 relative group">
                 {preview && <img src={preview} className="w-full h-full object-contain" alt="Run Summary" />}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
               </div>
-              <div className="text-center space-y-1">
-                <p className="text-[10px] text-slate-300 font-black uppercase tracking-widest">Masterpiece Ready</p>
-                <p className="text-[8px] text-slate-500 font-bold uppercase tracking-[0.2em]">High-resolution run summary generated</p>
+            )}
+            <div className="text-center space-y-1">
+              <p className="text-[8px] text-slate-300 font-black uppercase tracking-widest">Masterpiece Preview</p>
+            </div>
+          </div>
+
+          {/* Designer Controls */}
+          <div className="flex-1 w-full max-w-[280px] space-y-6">
+            <div className="space-y-3">
+              <h3 className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Themes</h3>
+              <div className="flex gap-2">
+                <ThemeBtn 
+                  label="Classic" 
+                  active={options.theme === 'classic'} 
+                  color="bg-rose-600" 
+                  onClick={() => setOptions(o => ({ ...o, theme: 'classic' }))} 
+                />
+                <ThemeBtn 
+                  label="Midnight" 
+                  active={options.theme === 'midnight'} 
+                  color="bg-slate-700" 
+                  onClick={() => setOptions(o => ({ ...o, theme: 'midnight' }))} 
+                />
               </div>
-            </>
-          )}
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Details</h3>
+              <div className="grid grid-cols-1 gap-2">
+                <ToggleBtn 
+                  label="Show Seed" 
+                  active={options.showSeed} 
+                  onClick={() => setOptions(o => ({ ...o, showSeed: !o.showSeed }))} 
+                />
+                <ToggleBtn 
+                  label="Show Treasures" 
+                  active={options.showArtifacts} 
+                  onClick={() => setOptions(o => ({ ...o, showArtifacts: !o.showArtifacts }))} 
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Actions */}
@@ -137,5 +184,27 @@ const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     </div>
   );
 };
+
+const ThemeBtn: React.FC<{ label: string, active: boolean, color: string, onClick: () => void }> = ({ label, active, color, onClick }) => (
+  <button 
+    onClick={onClick}
+    className={`flex-1 py-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all active:scale-95 ${active ? 'border-white/40 bg-white/10' : 'border-white/5 bg-black/20 opacity-60'}`}
+  >
+    <div className={`w-8 h-2 rounded-full ${color}`} />
+    <span className="text-[8px] font-black uppercase tracking-widest">{label}</span>
+  </button>
+);
+
+const ToggleBtn: React.FC<{ label: string, active: boolean, onClick: () => void }> = ({ label, active, onClick }) => (
+  <button 
+    onClick={onClick}
+    className={`w-full py-3 px-4 rounded-xl border flex justify-between items-center transition-all active:scale-95 ${active ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-white/5 bg-black/20 opacity-60'}`}
+  >
+    <span className="text-[8px] font-black uppercase tracking-widest">{label}</span>
+    <div className={`w-6 h-3 rounded-full relative transition-colors ${active ? 'bg-emerald-500' : 'bg-slate-700'}`}>
+      <div className={`absolute top-0.5 w-2 h-2 bg-white rounded-full transition-all ${active ? 'right-0.5' : 'left-0.5'}`} />
+    </div>
+  </button>
+);
 
 export default ShareModal;

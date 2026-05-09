@@ -141,6 +141,17 @@ export interface ExtendedGameStoreState extends GameStoreState {
   } | null;
   lastDirection: 'LEFT' | 'RIGHT' | 'UP' | 'DOWN' | null;
   hunterMarkLeft: number;
+  isChallengeMode: boolean;
+  rivalData: { 
+    score: number; 
+    merges: number; 
+    damage: number; 
+    maxDamage: number;
+    moves: number;
+    name?: string; 
+    icon?: string;
+    seed: string 
+  } | null;
   activeFX: { id: string; name: string; params?: any }[];
   isDevMode: boolean;
   d20Override: number | null;
@@ -155,6 +166,8 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   spellRoll: null,
   lastDirection: null,
   hunterMarkLeft: 0,
+  isChallengeMode: false,
+  rivalData: null,
   activeFX: [],
   isDevMode: false,
   d20Override: null,
@@ -238,9 +251,30 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   },
 
   checkSave: async () => {
-    const saved = await GameStorage.loadGame();
-    const resumable = saved && saved.gameState !== 'START' && !saved.isGameOver;
-    set({ hasSave: !!resumable });
+    // Check for challenge in URL first
+    const { ChallengeUtils } = await import('../utils/challengeUtils');
+    const challenge = ChallengeUtils.parseUrl();
+    if (challenge) {
+      set({ 
+        isChallengeMode: true, 
+        rivalData: {
+          seed: challenge.s,
+          score: challenge.sc,
+          merges: challenge.m,
+          damage: challenge.d,
+          maxDamage: challenge.mx,
+          moves: challenge.mv,
+          name: challenge.n,
+          icon: challenge.i
+        },
+        hasSave: false
+      });
+      SeededRNG.setSeed(challenge.s);
+    } else {
+      const saved = await GameStorage.loadGame();
+      const resumable = saved && saved.gameState !== 'START' && !saved.isGameOver;
+      set({ hasSave: !!resumable });
+    }
   },
 
   setState: (partial: any) => set(partial),
@@ -981,8 +1015,16 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
   resetGame: () => {
     GameStorage.clearSave();
+    // Clear URL parameters to prevent re-triggering challenge on refresh
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('c');
+      window.history.replaceState({}, '', url.toString());
+    }
     set((state) => ({ 
       ...INITIAL_STATE, 
+      isChallengeMode: false,
+      rivalData: null,
       activeEncounters: state.activeEncounters,
       activeClasses: state.activeClasses,
       activeArtifacts: state.activeArtifacts,

@@ -27,6 +27,7 @@ import FXRenderer from './components/FXRenderer'
 import { Counter } from './components/Counter'
 import DevPanel from './components/DevPanel'
 import GodModeAuthModal from './components/GodModeAuthModal'
+import ChallengeBanner from './components/ChallengeBanner'
 import { clsx } from 'clsx'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { Emoji } from './components/Emoji'
@@ -162,6 +163,7 @@ function App() {
 
   useEffect(() => {
     useGameStore.getState().initializeRegistry();
+    useGameStore.getState().checkSave();
   }, []);
 
   useEffect(() => {
@@ -209,11 +211,11 @@ function App() {
 
   useEffect(() => {
     // Intercept back button for PWAs/TWAs
-    window.history.pushState(null, '', window.location.pathname);
+    window.history.pushState(null, '', window.location.pathname + window.location.search);
     
     const handlePopState = (e: PopStateEvent) => {
       // Re-push state to keep intercepting
-      window.history.pushState(null, '', window.location.pathname);
+      window.history.pushState(null, '', window.location.pathname + window.location.search);
       
       if (gameState !== 'START') {
         // Abandon run
@@ -289,6 +291,7 @@ function App() {
       </AnimatePresence>
       <FXRenderer />
       <DevPanel />
+      <ChallengeBanner />
       <AnimatePresence>
         {showGodModeAuth && <GodModeAuthModal onClose={() => setShowGodModeAuth(false)} />}
       </AnimatePresence>
