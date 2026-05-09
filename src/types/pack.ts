@@ -82,6 +82,7 @@ export interface HazardDef {
   name: string;
   icon: string;
   bg?: string;
+  text?: string;
   lore?: string;
 }
 

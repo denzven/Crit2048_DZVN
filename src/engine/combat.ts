@@ -51,7 +51,7 @@ export const CombatLogic = {
           // (mergeResults tracking handled below)
           
           // Pack Hook: onMerge
-          PackEngine.onMerge(state, newVal);
+          PackEngine.onMerge(state, newVal, lineIndices[i], direction);
           
           // Calculate Damage
           let baseDmg = WEAPON_STATS[newVal]?.dmg || newVal; 

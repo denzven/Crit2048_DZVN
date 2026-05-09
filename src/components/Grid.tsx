@@ -1,18 +1,22 @@
 import React, { useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../engine/gameStore';
 import { getTileStats } from '../engine/data';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { GridFXLayer } from './FXRenderer';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 const Grid: React.FC = () => {
-  const { grid, move, gameState } = useGameStore();
+  const { grid, move, gameState, activeFX } = useGameStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
       if (gameState !== 'PLAYING') return;
       
       switch (e.key) {
@@ -134,6 +138,9 @@ const Grid: React.FC = () => {
             {ft.text}
           </div>
         ))}
+
+        {/* Local Artifact FX (Positional) */}
+        <GridFXLayer activeFX={activeFX} />
       </div>
     </div>
   );

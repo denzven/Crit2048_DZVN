@@ -498,3 +498,42 @@ h1 img.emoji, h2 img.emoji, h3 img.emoji {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* =====================================================
+   FX RENDERER — preset keyframes
+   ===================================================== */
+
+/* Full-screen flash wipe */
+@keyframes screen-flash {
+  0%   { opacity: 0.75; }
+  100% { opacity: 0; }
+}
+.fx-flash { animation: screen-flash 0.4s ease-out forwards; }
+
+/* AoE shockwave ring */
+@keyframes aoe-ring {
+  0%   { transform: translate(-50%, -50%) scale(0.1); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(4);   opacity: 0; }
+}
+
+/* Smite pillar */
+@keyframes smite-pillar {
+  0%   { opacity: 0; transform: scaleX(0.1); }
+  15%  { opacity: 1; transform: scaleX(1); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: scaleX(0.2); }
+}
+
+/* Curse swirl */
+@keyframes curse-swirl {
+  0%   { opacity: 0; transform: translate(-50%,-50%) rotate(0deg)    scale(0); }
+  25%  { opacity: 1; transform: translate(-50%,-50%) rotate(-90deg)  scale(1.5); }
+  75%  { opacity: 0.8; transform: translate(-50%,-50%) rotate(-270deg) scale(1); }
+  100% { opacity: 0; transform: translate(-50%,-50%) rotate(-360deg) scale(0); }
+}
+
+/* Arrow projectile */
+@keyframes arrow-fly {
+  0%   { opacity: 0; transform: translate(-80px, -50%) scale(0.4); }
+  30%  { opacity: 1; transform: translate(0px, -50%)   scale(1.2); }
+  100% { opacity: 0; transform: translate(60px, -50%)  scale(0.6); }
+}

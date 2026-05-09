@@ -33,6 +33,7 @@ export interface RunStats {
   activePackIds: string[];
   packRunLabel: string;
   customEnemiesDefeated: number;
+  wasGodModeUsed?: boolean;
 }
 
 export type GameState = 'START' | 'CLASS_SELECT' | 'PLAYING' | 'DICE' | 'SPELL' | 'TAVERN' | 'GAME_OVER' | 'VICTORY';

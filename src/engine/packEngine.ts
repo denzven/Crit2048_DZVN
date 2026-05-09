@@ -59,8 +59,21 @@ export interface GameAPI {
     wait: (ms: number) => Promise<void>;
     onInterval: (cb: () => void, ms: number) => any;
   };
+  triggerFX: (name: string, params?: any) => void;
+  fx: {
+    fireball: (x?: number, y?: number, color?: string) => void;
+    smite: (x?: number, y?: number, color?: string) => void;
+    lightning: (x?: number, y?: number, color?: string) => void;
+    curse: (x?: number, y?: number, color?: string) => void;
+    heal: (x?: number, y?: number) => void;
+    poison: (x?: number, y?: number) => void;
+    projectile: (x: number, y: number, dir: string, icon: string, color?: string) => void;
+    flash: (color?: string) => void;
+    stomp: (icon: string, name?: string) => void;
+    announce: (text: string, icon?: string) => void;
+  };
   onTavernLeave: (state: any) => void;
-  onGameOver: (state: any, reason: 'VICTORY' | 'GRIDLOCK' | 'SURRENDER') => void;
+  onGameOver: (state: any, reason: 'VICTORY' | 'GRIDLOCK' | 'OUT_OF_SLIDES' | 'FORFEIT' | 'SURRENDER') => void;
   packState: Record<string, any>;
   [key: string]: any;
 }
@@ -108,10 +121,10 @@ export class PackEngine {
     const dbPacks = await GameStorage.getPackIndex();
     const defaultIds = [
       'crit2048-default',
-      'crit2048-default-enemies',
-      'crit2048-default-classes',
+      'crit2048-default-monsters',
+      'crit2048-default-heroes',
       'crit2048-default-artifacts',
-      'crit2048-default-weapons',
+      'crit2048-default-arsenal',
       'crit2048-default-hazards'
     ];
 
@@ -346,7 +359,7 @@ export class PackEngine {
     }
   }
 
-  static onGameOver(state: any, reason: 'VICTORY' | 'GRIDLOCK' | 'SURRENDER') {
+  static onGameOver(state: any, reason: 'VICTORY' | 'GRIDLOCK' | 'OUT_OF_SLIDES' | 'FORFEIT' | 'SURRENDER') {
     this.applyArtifactHooks(state, 'onGameOver', { reason });
     const cls = state.playerClass;
     if (cls && cls.scripts?.onGameOver) {
@@ -370,23 +383,27 @@ export class PackEngine {
     }
   }
 
-  static onMerge(state: any, newVal: number) {
-    this.applyArtifactHooks(state, 'onMerge', { val: newVal });
+  static onMerge(state: any, newVal: number, pos: number, dir: string) {
+    const r = Math.floor(pos / 4);
+    const c = pos % 4;
+    const x = c * 25 + 12.5;
+    const y = r * 25 + 12.5;
+    this.applyArtifactHooks(state, 'onMerge', { val: newVal, pos, x, y, dir });
     const enemy = state.activeEncounters[state.encounterIdx];
     const G = this.buildGameAPI(state);
 
     if (enemy && (enemy.scripts?.onMerge || enemy.script?.onMerge)) {
-      this.runScript(enemy.scripts?.onMerge || enemy.script.onMerge, state, { val: newVal });
+      this.runScript(enemy.scripts?.onMerge || enemy.script.onMerge, state, { val: newVal, pos, x, y, dir });
     }
     
     if (enemy?.passiveTriggers?.onMerge) {
-      this.executeActionQueue(enemy.passiveTriggers.onMerge, state, G, { val: newVal });
+      this.executeActionQueue(enemy.passiveTriggers.onMerge, state, G, { val: newVal, pos, x, y, dir });
     }
 
     // Class passive
     const cls = state.playerClass;
     if (cls && cls.passiveTriggers?.onMerge) {
-      this.executeActionQueue(cls.passiveTriggers.onMerge, state, G, { val: newVal });
+      this.executeActionQueue(cls.passiveTriggers.onMerge, state, G, { val: newVal, pos, x, y, dir });
     }
   }
 
@@ -406,28 +423,37 @@ export class PackEngine {
     }
   }
 
-  static onD20(state: any, roll: number): number {
+  static onD20(state: any, roll: number): { val: number, trace: { label: string, val: number, id: string, type: 'add' | 'multiply' | 'set' }[] } {
     let currentRoll = roll;
+    const trace: { label: string, val: number, id: string, type: 'add' | 'multiply' | 'set' }[] = [];
     
     // Class hook
     const cls = state.playerClass;
     if (cls && cls.scripts?.onD20) {
       const rollObj = { val: currentRoll };
       this.runScript(cls.scripts.onD20, state, { roll: rollObj });
-      currentRoll = rollObj.val;
+      if (rollObj.val !== currentRoll) {
+        trace.push({ label: cls.name, val: rollObj.val, id: cls.id, type: 'set' });
+        currentRoll = rollObj.val;
+      }
     }
 
     if (state.artifacts) {
       state.artifacts.forEach((art: any) => {
-        const def = state.activeArtifacts.find((a: any) => a.id === art.id);
+        const def = state.activeArtifacts.find((a: any) => a.id.toUpperCase() === art.id.toUpperCase());
+        console.log(`[PackEngine] Checking artifact ${art.id}`, { found: !!def, hasScript: !!def?.scripts?.onD20 });
         if (def && def.scripts?.onD20) {
           const rollObj = { val: currentRoll };
+          console.log(`[PackEngine] Running script for ${def.id} on roll ${currentRoll}`);
           this.runScript(def.scripts.onD20, state, { roll: rollObj, lvl: art.level });
-          currentRoll = rollObj.val;
+          if (rollObj.val !== currentRoll) {
+            trace.push({ label: def.name, val: rollObj.val, id: def.id, type: 'set' });
+            currentRoll = rollObj.val;
+          }
         }
       });
     }
-    return currentRoll;
+    return { val: currentRoll, trace };
   }
 
   static calculateMergeDamage(state: any, baseDmg: number, direction: string, newVal: number): number {
@@ -449,15 +475,17 @@ export class PackEngine {
     if (!state.artifacts) return;
     const G = this.buildGameAPI(state);
     state.artifacts.forEach((art: any) => {
-      const def = state.activeArtifacts.find((a: any) => a.id === art.id);
-      if (!def) return;
+      const def = (state.activeArtifacts || []).find((a: any) => a.id === art.id);
+      if (!def) {
+        console.warn('PackEngine: Definition for artifact not found in activeArtifacts:', art.id);
+        return;
+      }
 
       if (def.scripts?.[hookName]) {
         this.runScript(def.scripts[hookName], state, { lvl: art.level, ...extraArgs });
       }
       
       if (def.passiveTriggers?.[hookName]) {
-        // Evaluate logic
         this.executeActionQueue(def.passiveTriggers[hookName], state, G, { lvl: art.level, ...extraArgs });
       }
     });
@@ -466,11 +494,12 @@ export class PackEngine {
   private static buildGameAPI(state: any): GameAPI {
     const storeObj = (window as any).useGameStore;
     if (!storeObj) {
-        // Return dummy API to prevent crash
+        console.warn('PackEngine: useGameStore not found on window!');
         return { log: (m: any) => console.log(m), prng: () => Math.random() } as any;
     }
     const store = storeObj.getState();
     return {
+      state: state,
       slides: state.slidesLeft,
       enemy: {
         hp: state.monsterHp,
@@ -580,6 +609,43 @@ export class PackEngine {
       },
       onTavernLeave: () => { store.nextEncounter?.(); },
       onGameOver: (reason) => { store.endGame?.(reason); },
+      triggerFX: (name, params) => { store.triggerFX?.(name, params); },
+      fx: {
+        fireball: (x = 50, y = 50, color = '#f97316') => {
+          store.triggerFX?.('stomp', { icon: '🔥', name: 'FIREBALL' });
+          store.triggerFX?.('flash', { color: `${color}40` });
+          store.triggerFX?.('aoe', { x, y, color });
+        },
+        smite: (x = 50, y = 50, color = '#fde047') => {
+          store.triggerFX?.('stomp', { icon: '⚡', name: 'SMITE' });
+          store.triggerFX?.('flash', { color: `${color}40` });
+          store.triggerFX?.('smite', { x, y, color });
+        },
+        lightning: (x = 50, y = 50, color = '#facc15') => {
+          store.triggerFX?.('lightning', { x, y, color });
+        },
+        curse: (x = 50, y = 50, color = '#a855f7') => {
+          store.triggerFX?.('swirl', { x, y, color, icon: '🌀' });
+        },
+        heal: (x = 50, y = 50) => {
+          store.triggerFX?.('heal', { x, y });
+        },
+        poison: (x = 50, y = 50) => {
+          store.triggerFX?.('poison', { x, y });
+        },
+        projectile: (x, y, dir, icon, color) => {
+          store.triggerFX?.('projectile', { x, y, dir, icon, color });
+        },
+        flash: (color = 'white') => {
+          store.triggerFX?.('flash', { color });
+        },
+        stomp: (icon, name) => {
+          store.triggerFX?.('stomp', { icon, name });
+        },
+        announce: (text, icon = '📢') => {
+          store.triggerFX?.('announce', { name: text, icon });
+        }
+      },
       packState: this.runState,
       prng: () => SeededRNG.random(),
       prngInt: (min, max) => SeededRNG.randomInt(min, max),

@@ -36,6 +36,7 @@ const DEFAULT_RUN_STATS: RunStats = {
   activePackIds: [],
   packRunLabel: '',
   customEnemiesDefeated: 0,
+  wasGodModeUsed: false,
 };
 
 const INITIAL_STATE: GameStoreState = {
@@ -98,6 +99,7 @@ export interface GameActions {
   upgradeSpell: () => void;
   restoreSpells: () => void;
   resetGame: () => void;
+  setD20Result: (val: number) => void;
   saveGame: () => Promise<void>;
   loadGame: () => Promise<boolean>;
   checkSave: () => Promise<void>;
@@ -113,15 +115,22 @@ export interface GameActions {
   addMultiplier: (n: number) => void;
   applyDamage: (n: number) => void;
   setMonsterHp: (hp: number) => void;
+  setMultiplier: (n: number) => void;
+  prevEncounter: () => void;
   checkHazards: (newGrid: (Tile | null)[], damage: number) => (Tile | null)[];
+  triggerFX: (name: string, params?: any) => void;
   setState: (partial: any) => void;
+  toggleDevMode: () => void;
+  executeDebugScript: (code: string) => void;
 }
 
 export interface ExtendedGameStoreState extends GameStoreState {
   shopItems: any[];
   slidesSinceRoll: number;
   lastRoll: {
-    val: number;
+    rawVal: number;
+    finalVal: number;
+    modifiers: { label: string; val: number; id: string; type: 'add' | 'multiply' | 'set' }[];
     msg: string;
     type: 'crit' | 'success' | 'fail' | 'crit-fail';
   } | null;
@@ -132,6 +141,9 @@ export interface ExtendedGameStoreState extends GameStoreState {
   } | null;
   lastDirection: 'LEFT' | 'RIGHT' | 'UP' | 'DOWN' | null;
   hunterMarkLeft: number;
+  activeFX: { id: string; name: string; params?: any }[];
+  isDevMode: boolean;
+  d20Override: number | null;
 }
 
 export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, get) => ({
@@ -143,6 +155,9 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   spellRoll: null,
   lastDirection: null,
   hunterMarkLeft: 0,
+  activeFX: [],
+  isDevMode: false,
+  d20Override: null,
 
   addFloatingText: (text, type, x = 50, y = 50) => {
     const id = Date.now() + SeededRNG.random();
@@ -154,6 +169,38 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         floatingTexts: state.floatingTexts.filter((t) => t.id !== id)
       }));
     }, 850);
+  },
+
+  triggerFX: (name, params) => {
+    const id = Math.random().toString(36).substring(7);
+    set((state) => ({
+      activeFX: [...state.activeFX, { id, name, params }]
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        activeFX: state.activeFX.filter((f) => f.id !== id)
+      }));
+    }, 2000);
+  },
+
+  toggleDevMode: () => {
+    const next = !get().isDevMode;
+    set((s) => ({ 
+      isDevMode: next,
+      runStats: { ...s.runStats, wasGodModeUsed: true }
+    }));
+    get().addLog(next ? "🛠️ DEV MODE ENABLED" : "🛠️ DEV MODE DISABLED");
+    if (next) SFX.menuEnter();
+  },
+
+  executeDebugScript: (code: string) => {
+    try {
+      PackEngine.runScript(code, get());
+      get().addLog("🛠️ DEBUG SCRIPT EXECUTED");
+    } catch (e) {
+      console.error("Debug Script Error:", e);
+      get().addLog("❌ DEBUG SCRIPT FAILED");
+    }
   },
 
   initializeRegistry: async () => {
@@ -171,6 +218,12 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       activeClasses: classes, 
       activeArtifacts: artifacts 
     });
+    console.log("[GameStore] Registry initialized with", { 
+      encounters: encounters.length, 
+      classes: classes.length, 
+      artifacts: artifacts.length 
+    });
+    useRegistry.getState().setIsReady(true);
     // Retention Notification
     const lastPlayed = localStorage.getItem('crit2048_last_played');
     const now = Date.now();
@@ -238,8 +291,8 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       runStats: stats
     });
     
-    // Only save to leaderboard if the player has actually engaged in combat
-    if (state.runStats.totalMoves > 0 || state.monsterHp < state.monsterMaxHp) {
+    // Only save to leaderboard if the player has actually engaged in combat and NOT in god mode
+    if (!state.runStats.wasGodModeUsed && (state.runStats.totalMoves > 0 || state.monsterHp < state.monsterMaxHp)) {
       LeaderboardLogic.saveRun(stats, state.playerClass, state.encounterIdx);
     }
     get().saveGame();
@@ -357,6 +410,31 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         set((s) => ({ runStats: { ...s.runStats, hazardsSpawned: s.runStats.hazardsSpawned + 1 } }));
       }
     }
+  },
+
+  prevEncounter: () => {
+    const { encounterIdx, activeEncounters } = get();
+    if (encounterIdx <= 0) return;
+    const prevIdx = encounterIdx - 1;
+    const nextE = activeEncounters[prevIdx];
+    set({ 
+      encounterIdx: prevIdx,
+      monsterHp: nextE.hp,
+      monsterMaxHp: nextE.hp,
+      slidesLeft: nextE.slides,
+      isTransitioning: false,
+      isGameOver: false
+    });
+    get().addLog(`⏪ BACKTRACKED TO ANTE ${prevIdx + 1}`);
+  },
+
+  setMultiplier: (n: number) => {
+    set({ multiplier: n });
+    get().addLog(`🛠️ MULTIPLIER SET TO x${n.toFixed(1)}`);
+  },
+
+  setD20Result: (val: number) => {
+    set({ d20Override: val });
   },
 
   checkHazards: (newGrid: (Tile | null)[], damage: number) => {
@@ -528,20 +606,24 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
             });
           } else {
             get().generateShop();
+            PackEngine.onTavern(get());
             set({ gameState: 'TAVERN', isTransitioning: false });
             get().saveGame();
           }
         }, 2000);
       } else if (updatedState.monsterHp > 0 && (updatedState.slidesLeft <= 0 || CombatLogic.checkGridlock(updatedState.grid))) {
-        const stats = { ...get().runStats, endTime: Date.now(), endReason: 'GRIDLOCK' };
-        PackEngine.onGameOver(get(), 'GRIDLOCK');
+        const reason = updatedState.slidesLeft <= 0 ? 'OUT_OF_SLIDES' : 'GRIDLOCK';
+        const stats = { ...get().runStats, endTime: Date.now(), endReason: reason };
+        PackEngine.onGameOver(get(), reason);
         SFX.gameOver();
         set({ 
           gameState: 'GAME_OVER', 
           isGameOver: true,
           runStats: stats
         });
-        LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
+        if (!stats.wasGodModeUsed) {
+          LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
+        }
       } else if (updatedState.monsterHp > 0 && updatedState.slidesSinceRoll >= get().settings.movesPerRoll) {
         setTimeout(() => {
           if (get().gameState === 'PLAYING') set({ gameState: 'DICE' });
@@ -591,10 +673,17 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   },
 
   generateShop: () => {
-    const { artifacts } = get();
-    // In legacy-style, we can still see owned artifacts to "enhance" them
-    const shuffled = [...MASTER_ARTIFACTS].sort(() => SeededRNG.random() - 0.5);
-    set({ shopItems: shuffled.slice(0, 4) });
+    const { activeArtifacts, playerClass } = get();
+    
+    // Filter by required class if specified
+    const pool = activeArtifacts.filter(a => {
+      if (!a.requiredClass) return true;
+      return a.requiredClass.toLowerCase() === playerClass?.id?.toLowerCase();
+    });
+
+    const shuffled = [...pool].sort(() => SeededRNG.random() - 0.5);
+    // Expand shop to 6 items for better variety
+    set({ shopItems: shuffled.slice(0, 6) });
   },
 
   nextEncounter: () => {
@@ -699,34 +788,33 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
     await new Promise(r => setTimeout(r, 800));
 
-    let rawRoll = Math.floor(SeededRNG.random() * 20) + 1;
+    const rawRoll = get().d20Override !== null ? get().d20Override as number : Math.floor(SeededRNG.random() * 20) + 1;
+    set({ d20Override: null });
     
-    // Artifact: Weighted Dice
-    if (get().artifacts.some(a => a.id === 'WEIGHTED_DICE') && rawRoll < 4) {
-      rawRoll = 4;
-      get().addLog("🎲 Weighted Dice: Roll bumped to 4!");
-    }
+    // Call PackEngine to get modifiers
+    const { val: finalRollVal, trace } = PackEngine.onD20(get(), rawRoll);
 
     let mod = playerClass?.d20Mod || 0;
     if (typeof mod !== 'number' || isNaN(mod)) mod = 0;
-    let roll = rawRoll + mod;
-
-    // Artifact: Adamantine Armor
-    if (get().artifacts.some(a => a.id === 'ADAMANTINE') && rawRoll === 1) {
-      rawRoll = 2; // Negate crit fail
-      roll = rawRoll + mod;
-      get().addLog("🛡️ Adamantine: Crit fail negated!");
-    }
+    
+    // Total roll including class mod
+    const totalRoll = finalRollVal + mod;
 
     let result: ExtendedGameStoreState['lastRoll'] = { 
-      val: rawRoll, 
+      rawVal: rawRoll,
+      finalVal: totalRoll,
+      modifiers: trace,
       msg: '', 
       type: 'success' 
     };
 
-    if (roll >= 20) {
+    if (mod !== 0) {
+      result.modifiers.push({ label: 'Class Bonus', val: mod, id: 'class_bonus', type: 'add' });
+    }
+
+    if (totalRoll >= 20) {
       SFX.crit();
-      result = { val: rawRoll, msg: 'NATURAL 20! Critical Hit!', type: 'crit' };
+      result = { ...result, msg: 'NATURAL 20! Critical Hit!', type: 'crit' };
       set((s) => ({ multiplier: s.multiplier + 1.0, runStats: { ...s.runStats, maxMultiplier: Math.max(s.runStats.maxMultiplier, s.multiplier + 1.0) } }));
       const validIndices = get().grid.map((c, i) => (c && c.val > 0 ? i : null)).filter((c): c is number => c !== null);
       if (validIndices.length > 0) {
@@ -735,24 +823,23 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         if (newGrid[idx]) newGrid[idx] = { ...newGrid[idx]!, val: newGrid[idx]!.val * 2, pop: true };
         set({ grid: newGrid });
       }
-    } else if (roll >= 15) {
-      result = { val: rawRoll, msg: 'GREAT SUCCESS! Magic Staff spawned.', type: 'success' };
+    } else if (totalRoll >= 15) {
+      result = { ...result, msg: 'GREAT SUCCESS! Magic Staff spawned.', type: 'success' };
       get().spawnRandomTile(32);
-    } else if (roll >= 10) {
-      result = { val: rawRoll, msg: 'SUCCESS! Crossbow spawned.', type: 'success' };
+    } else if (totalRoll >= 10) {
+      result = { ...result, msg: 'SUCCESS! Crossbow spawned.', type: 'success' };
       get().spawnRandomTile(8);
-    } else if (roll > 1) {
+    } else if (totalRoll > 1) {
       SFX.fail();
-      result = { val: rawRoll, msg: 'MISS! A Slime blocked your path.', type: 'fail' };
+      result = { ...result, msg: 'MISS! A Slime blocked your path.', type: 'fail' };
       get().spawnRandomTile(-1);
     } else {
       SFX.fail();
-      result = { val: rawRoll, msg: 'CRITICAL FAILURE! Necromancy rising.', type: 'fail' };
+      result = { ...result, msg: 'CRITICAL FAILURE! Necromancy rising.', type: 'fail' };
       get().spawnRandomTile(-3);
       get().spawnRandomTile(-3);
       get().spawnRandomTile(-3);
       
-      // Also burn highest weapon on crit fail for extra parity with some legacy variants
       let maxV = 0, maxI = -1;
       get().grid.forEach((c, i) => { if (c && c.val > maxV) { maxV = c.val; maxI = i; } });
       if (maxI !== -1) {
@@ -762,7 +849,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       }
     }
 
-    get().addLog(`D20 Roll: ${rawRoll} (${result.type})`);
+    get().addLog(`D20 Roll: ${rawRoll} -> ${totalRoll} (${result.type})`);
     set({ lastRoll: result, isRolling: false });
   },
 
@@ -824,6 +911,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       get().triggerScreenShake(2.0);
     } else if (ab.type === 'heal') {
       const heal = spellRoll.sum;
+      PackEngine.onCast(get(), { val: 0 }); // Trigger scripts even for heals
       set({ slidesLeft: slidesLeft + heal });
       get().addLog(`Spell: ${ab.name} restored ${heal} slides!`);
     }

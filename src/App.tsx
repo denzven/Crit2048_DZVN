@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useGameStore } from './engine/gameStore'
 import { useRegistry } from './engine/registryHub'
 import { SFX } from './engine/audio'
@@ -23,6 +23,10 @@ import BackgroundParticles from './components/BackgroundParticles'
 import BrowserWarning from './components/BrowserWarning'
 import IOSInstallModal from './components/IOSInstallModalFix'
 import Preloader from './components/Preloader'
+import FXRenderer from './components/FXRenderer'
+import { Counter } from './components/Counter'
+import DevPanel from './components/DevPanel'
+import GodModeAuthModal from './components/GodModeAuthModal'
 import { clsx } from 'clsx'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { Emoji } from './components/Emoji'
@@ -42,6 +46,7 @@ function App() {
     usesLeft,
     playerClass,
     score,
+    runStats,
     setGameState,
     castSpell,
     forfeitRun,
@@ -49,6 +54,7 @@ function App() {
     settings,
     hasSave,
     loadGame,
+    toggleDevMode,
   } = useGameStore()
 
   const settingsVolume = settings.volume;
@@ -59,6 +65,15 @@ function App() {
   const [showForge, setShowForge] = React.useState(false)
   const [forgeData, setForgeData] = React.useState<any>(null)
   const [showLeaderboard, setShowLeaderboard] = React.useState(false)
+
+  // Secret Handshake: Console Activation
+  useEffect(() => {
+    (window as any).ACTIVATE_GOD_MODE = () => {
+      setShowGodModeAuth(true);
+      return "INITIALIZING SECURITY PROTOCOL...";
+    };
+    return () => { delete (window as any).ACTIVATE_GOD_MODE; };
+  }, [toggleDevMode]);
   const [showShare, setShowShare] = React.useState(false)
   const [showMobileInventory, setShowMobileInventory] = React.useState(false)
   const [showMobileLogs, setShowMobileLogs] = React.useState(false)
@@ -136,12 +151,17 @@ function App() {
     return () => window.removeEventListener('click', handleButtonClick);
   }, []);
 
-  const [isRegistryReady, setIsRegistryReady] = React.useState(false)
+  const isRegistryReady = useRegistry(state => state.isReady)
 
   useEffect(() => {
-    useGameStore.getState().initializeRegistry().then(() => {
-      setIsRegistryReady(true);
-    });
+    if (useGameStore.getState().isDevMode) {
+      (window as any).G_STORE = useGameStore.getState();
+      (window as any).G_REGISTRY = useRegistry.getState();
+    }
+  }, [useGameStore.getState().isDevMode]);
+
+  useEffect(() => {
+    useGameStore.getState().initializeRegistry();
   }, []);
 
   useEffect(() => {
@@ -166,6 +186,9 @@ function App() {
     Native.requestWakeLock()
     
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+
       if (e.key === 'Enter' && gameState === 'START') {
         handleStart();
       }
@@ -243,11 +266,31 @@ function App() {
   }
 
   const [isTitleHovered, setIsTitleHovered] = useState(false);
+  const [showGodModeAuth, setShowGodModeAuth] = useState(false);
+  const holdTimer = useRef<any>(null);
+
+  const handleHoldStart = () => {
+    holdTimer.current = setTimeout(() => {
+      setShowGodModeAuth(true);
+    }, 3000);
+  };
+
+  const handleHoldEnd = () => {
+    if (holdTimer.current) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+  };
 
   return (
     <div className="bg-[var(--pack-bg)] text-slate-100 font-sans selection:bg-[var(--pack-primary)] flex flex-col h-dvh w-dvw overflow-hidden select-none safe-top safe-bottom">
       <AnimatePresence>
         {(isLoading || !isRegistryReady) && <Preloader key="preloader" onComplete={() => setIsLoading(false)} />}
+      </AnimatePresence>
+      <FXRenderer />
+      <DevPanel />
+      <AnimatePresence>
+        {showGodModeAuth && <GodModeAuthModal onClose={() => setShowGodModeAuth(false)} />}
       </AnimatePresence>
       {useGameStore.getState().settings.particles && <BackgroundParticles />}
       <BrowserWarning />
@@ -265,7 +308,9 @@ function App() {
                   mass: 1
                 }}
                 onClick={() => {
-                  showConfirm("Abandon Run?", "Are you sure you want to end this run and view your progress?", forfeitRun);
+                  if (gameState !== 'START') {
+                    showConfirm("Abandon Run?", "Are you sure you want to end this run and view your progress?", forfeitRun);
+                  }
                 }}
                 onMouseEnter={() => setIsTitleHovered(true)}
                 onMouseLeave={() => setIsTitleHovered(false)}
@@ -287,19 +332,27 @@ function App() {
           {gameState !== 'START' && (
             <>
               <div className="flex gap-2 md:gap-4 text-xs md:text-base font-black text-amber-400">
-                <span className="flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm">
-                  💰 <span className="font-mono">{gold}</span>
+                <span id="hud-gold" className="flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm">
+                  💰 <motion.span key={gold} initial={{ y: -10, opacity: 0, scale: 1.5 }} animate={{ y: 0, opacity: 1, scale: 1 }} className="font-mono">
+                    <Counter value={gold} className="font-mono" />
+                  </motion.span>
                 </span>
-                <span className={clsx(
+                <span id="hud-multiplier" className={clsx(
                   "flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm",
                   multiplier >= multRage ? "border-amber-500/50" :
                   multiplier >= multHigh ? "border-amber-500/20" : ""
                 )}>
-                  ⚔️ <span className={clsx(
+                  ⚔️ <motion.span 
+                    key={multiplier}
+                    initial={{ scale: 1.5, filter: 'brightness(2)' }}
+                    animate={{ scale: 1, filter: 'brightness(1)' }}
+                    className={clsx(
                     "font-mono",
                     multiplier >= multRage ? "mult-rage" :
                     multiplier >= multHigh ? "mult-high" : "text-rose-400"
-                  )}>{multiplier.toFixed(1)}</span>
+                  )}>
+                    <Counter value={multiplier} decimals={1} className="font-mono" />
+                  </motion.span>
                 </span>
               </div>
               
@@ -382,7 +435,15 @@ function App() {
               className="group cursor-default flex flex-col items-center mb-16 md:mb-20"
             >
               <h2 className="text-[9.5vw] md:text-[6rem] font-black text-white mb-6 tracking-tighter font-serif flex flex-row items-center justify-center gap-3 md:gap-8 leading-none w-full">
-                <Emoji char="🐉" assetKey="TitleIcon" className="w-10 h-10 md:w-24 md:h-24" active={isTitleHovered} />
+                <div 
+                  onPointerDown={handleHoldStart}
+                  onPointerUp={handleHoldEnd}
+                  onPointerLeave={handleHoldEnd}
+                  onContextMenu={(e) => e.preventDefault()}
+                  className="cursor-pointer active:scale-110 transition-transform duration-[3000ms] ease-linear select-none touch-none"
+                >
+                  <Emoji char="🐉" assetKey="TitleIcon" className="w-10 h-10 md:w-24 md:h-24" active={isTitleHovered} />
+                </div>
                 <span className="flex gap-[2vw] md:gap-6 whitespace-nowrap">
                   <span>CRIT</span> <span className="text-rose-500">2048</span>
                 </span>
@@ -568,7 +629,7 @@ function App() {
                 />
               </div>
               <div className="relative z-10 flex items-center justify-between">
-                <div className="flex items-center gap-2 md:gap-3">
+                <div id="hud-boss" className="flex items-center gap-2 md:gap-3">
                   <span className="text-xl md:text-2xl bg-slate-950 p-1.5 md:p-2 rounded-xl border border-slate-800">
                     {useGameStore.getState().activeEncounters?.[encounterIdx]?.icon || (
                       encounterIdx === 0 ? '👺' : 
@@ -602,11 +663,18 @@ function App() {
                   </div>
                   <div className="text-right border-l border-slate-700 pl-4">
                     <p className="text-[8px] md:text-[10px] text-slate-400 uppercase tracking-widest font-bold">Slides</p>
-                    <p className={clsx(
+                    <motion.p 
+                      id="hud-slides"
+                      key={slidesLeft}
+                      initial={{ scale: 1.8, color: '#f43f5e' }}
+                      animate={{ scale: 1, color: 'inherit' }}
+                      className={clsx(
                       "text-xl md:text-3xl font-black font-mono leading-none",
                       slidesLeft <= slideCritical ? "slide-critical" :
                       slidesLeft <= slideDanger   ? "slide-danger" : "text-white"
-                    )}>{slidesLeft}</p>
+                    )}>
+                      <Counter value={slidesLeft} className="font-mono" />
+                    </motion.p>
                   </div>
                 </div>
               </div>

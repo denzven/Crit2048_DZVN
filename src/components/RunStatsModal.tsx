@@ -46,8 +46,26 @@ const RunStatsModal: React.FC<{ onShowLeaderboard: () => void, onShowShare: () =
             {isVictory ? 'VICTORY' : 'RUN OVER'}
           </h2>
           <p className="text-slate-500 mb-6 text-[10px] md:text-xs italic px-4 leading-tight uppercase tracking-widest font-bold">
-            {isVictory ? 'The dungeon has been conquered.' : 'The dungeon claims another soul.'}
+            {isVictory ? 'The dungeon has been conquered.' : 
+             runStats.endReason === 'GRIDLOCK' ? 'The board is locked. No moves remain.' :
+             runStats.endReason === 'OUT_OF_SLIDES' ? 'You have run out of energy to slide.' :
+             runStats.endReason === 'FORFEIT' ? 'You have abandoned the quest.' :
+             'Your journey has come to an end.'}
           </p>
+          
+          {runStats.wasGodModeUsed && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-6 px-4 py-2 bg-indigo-950/40 border border-indigo-500/40 rounded-2xl inline-flex flex-col items-center gap-1 shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+            >
+              <div className="flex items-center gap-2">
+                <span className="animate-pulse text-xs">🛠️</span>
+                <span className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em]">God Mode Active</span>
+              </div>
+              <span className="text-[8px] text-indigo-400/60 uppercase font-bold tracking-widest">Run not submitted to leaderboard</span>
+            </motion.div>
+          )}
           
           {isVictory && (
             <div className="mb-8 animate-bounce">

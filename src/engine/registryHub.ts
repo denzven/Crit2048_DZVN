@@ -61,6 +61,7 @@ export const ArtifactSchema = z.object({
   passiveEffect: z.string().optional(),
   passiveParam: z.any().optional(),
   passiveTriggers: z.record(z.string(), ActionListSchema).optional(),
+  requiredClass: z.string().optional(),
   scripts: z.record(z.string(), z.string()).optional(),
 });
 
@@ -96,6 +97,7 @@ interface RegistryState {
   fates: any;
   presets: Record<string, any>;
   uiDefs: UiDefs | null;
+  isReady: boolean;
   
   // Actions
   registerMonster: (def: any) => void;
@@ -107,6 +109,7 @@ interface RegistryState {
   deepMerge: (base: any, mod: any) => any;
   applyParents: (def: any, defaultParentId: string) => any;
   clear: () => void;
+  setIsReady: (ready: boolean) => void;
 }
 
 export const useRegistry = create<RegistryState>((set, get) => ({
@@ -118,6 +121,7 @@ export const useRegistry = create<RegistryState>((set, get) => ({
   fates: {},
   presets: {},
   uiDefs: null,
+  isReady: false,
 
   deepMerge: (base, mod) => {
     const result = { ...base };
@@ -176,14 +180,19 @@ export const useRegistry = create<RegistryState>((set, get) => ({
   },
 
   loadPresets: async () => {
-    const presetFiles = import.meta.glob('../engine_core/presets/*.json');
+    const modules = import.meta.glob('../engine_core/presets/*.json');
     const presets: Record<string, any> = {};
     
-    for (const path in presetFiles) {
-      const module: any = await presetFiles[path]();
-      const content = module.default || module;
-      const id = content.id || module.id || path.split('/').pop()?.replace('.json', '');
-      presets[id] = content;
+    for (const path in modules) {
+      try {
+        const module: any = await modules[path]();
+        const content = module.default || module;
+        const id = content.id || path.split('/').pop()?.replace('.json', '').toLowerCase();
+        presets[id] = content;
+        console.log(`[RegistryHub] Loaded preset: ${id}`);
+      } catch (e) {
+        console.error(`[RegistryHub] Failed to load preset from ${path}:`, e);
+      }
     }
     
     set({ presets });
@@ -237,5 +246,6 @@ export const useRegistry = create<RegistryState>((set, get) => ({
   },
 
   clear: () => set({ monsters: {}, heroes: {}, artifacts: {}, arsenal: {}, hazards: {}, fates: {} }),
+  setIsReady: (ready: boolean) => set({ isReady: ready }),
   // Note: uiDefs is intentionally NOT cleared on pack reload — it is Mod Priority 0 base game data.
 }));
