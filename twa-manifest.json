@@ -12,9 +12,9 @@
   "navigationDividerColorDark": "#000000",
   "backgroundColor": "#020617",
   "enableNotifications": true,
-  "startUrl": "/Crit2048_DZVN/",
-  "iconUrl": "https://denzven.github.io/Crit2048_DZVN/pwa-512x512.png",
-  "maskableIconUrl": "https://denzven.github.io/Crit2048_DZVN/pwa-512x512.png",
+  "startUrl": "/Crit2048-DZVN/",
+  "iconUrl": "https://denzven.github.io/Crit2048-DZVN/pwa-512x512.png",
+  "maskableIconUrl": "https://denzven.github.io/Crit2048-DZVN/pwa-512x512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./crit2048.keystore",
@@ -24,7 +24,7 @@
   "appVersionCode": 2,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://denzven.github.io/Crit2048_DZVN/manifest.webmanifest",
+  "webManifestUrl": "https://denzven.github.io/Crit2048-DZVN/manifest.webmanifest",
   "fallbackType": "customtabs",
   "features": {
     "locationDelegation": true,

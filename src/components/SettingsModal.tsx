@@ -214,7 +214,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
               onClick={async () => {
                 addLog("Updater: Contacting GitHub for latest build info...");
                 try {
-                  const res = await fetch('https://api.github.com/repos/denzven/Crit2048_DZVN/commits/main');
+                  const res = await fetch('https://api.github.com/repos/denzven/Crit2048-DZVN/commits/main');
                   const data = await res.json();
                   const latestSha = data.sha.substring(0, 7);
                   const lastSha = localStorage.getItem('crit2048_last_sha');

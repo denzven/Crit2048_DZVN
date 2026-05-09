@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Deploy to GitHub Pages](https://github.com/denzven/Crit2048_DZVN/actions/workflows/deploy.yml/badge.svg)](https://github.com/denzven/Crit2048_DZVN/actions/workflows/deploy.yml)
+[![Deploy to GitHub Pages](https://github.com/denzven/Crit2048-DZVN/actions/workflows/deploy.yml/badge.svg)](https://github.com/denzven/Crit2048-DZVN/actions/workflows/deploy.yml)
 ![PWA Ready](https://img.shields.core/badge/PWA-Ready-success?style=flat-square&logo=pwa)
 ![License](https://img.shields.core/badge/License-MIT-rose?style=flat-square)
 ![React 19](https://img.shields.core/badge/React-19-blue?style=flat-square&logo=react)
@@ -10,7 +10,7 @@
 **Merge. Forge. Survive.**
 *A seeded roguelike dungeon crawler powered by 2048 mechanics and deep modding support.*
 
-[**🕹️ ENTER THE DUNGEON**](https://denzven.github.io/Crit2048_DZVN/)
+[**🕹️ ENTER THE DUNGEON**](https://denzven.github.io/Crit2048-DZVN/)
 
 </div>
 
@@ -62,8 +62,8 @@ Crit 2048 is built to be a **First-Class Mobile Experience**.
 
 ### Installation
 ```bash
-git clone https://github.com/denzven/Crit2048_DZVN.git
-cd Crit2048_DZVN
+git clone https://github.com/denzven/Crit2048-DZVN.git
+cd Crit2048-DZVN
 npm install
 npm run dev
 ```

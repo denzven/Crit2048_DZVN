@@ -3,7 +3,7 @@
   <ShortName>Crit 2048</ShortName>
   <Description>Search items, monsters, and mods in Crit 2048</Description>
   <InputEncoding>UTF-8</InputEncoding>
-  <Image width="16" height="16" type="image/png">https://denzven.github.io/Crit2048_DZVN/app_icon.png</Image>
-  <Url type="text/html" method="get" template="https://denzven.github.io/Crit2048_DZVN/?q={searchTerms}"/>
-  <moz:SearchForm>https://denzven.github.io/Crit2048_DZVN/</moz:SearchForm>
+  <Image width="16" height="16" type="image/png">https://denzven.github.io/Crit2048-DZVN/app_icon.png</Image>
+  <Url type="text/html" method="get" template="https://denzven.github.io/Crit2048-DZVN/?q={searchTerms}"/>
+  <moz:SearchForm>https://denzven.github.io/Crit2048-DZVN/</moz:SearchForm>
 </OpenSearchDescription>
