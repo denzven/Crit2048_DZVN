@@ -99,6 +99,7 @@ export const GameStorage = {
    * Migration from Legacy LocalStorage
    */
   async migrateFromLegacy(): Promise<boolean> {
+    if (typeof localStorage === 'undefined') return false;
     const legacyIndex = localStorage.getItem('crit2048_pack_index');
     const legacySave = localStorage.getItem('crit2048_save');
     const legacyLeaderboard = localStorage.getItem('crit2048_leaderboard');
