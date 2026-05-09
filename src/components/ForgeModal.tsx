@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
 import { clsx } from 'clsx';
-import { motion } from 'framer-motion';
-import type { 
-  PackData, 
-  EnemyDef, 
-  ClassDef, 
-  ArtifactDef, 
-  WeaponDef, 
-  HazardDef 
-} from '../types/pack';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { PackData } from '../types/pack';
 import { GameStorage } from '../engine/storage';
+import { useRegistry } from '../engine/registryHub';
 
 const INITIAL_PACK: PackData = {
   id: '',
@@ -38,18 +32,48 @@ const INITIAL_PACK: PackData = {
 
 const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void }> = ({ initialData, onClose }) => {
   const [step, setStep] = useState(1);
-  const [activeSubTab, setActiveSubTab] = useState<'artifacts' | 'monsters' | 'heroes' | 'arsenal' | 'fates' | 'themes' | 'tunes' | 'hazards'>('monsters');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [pack, setPack] = useState<PackData>(initialData || INITIAL_PACK);
   const [editorMode, setEditorMode] = useState<'visual' | 'source'>('visual');
   const [logicMode, setLogicMode] = useState<'visual' | 'code'>('visual');
+  const [exportSealed, setExportSealed] = useState(false);
+
+  // Read content types & hooks from registry (Mod Priority 0 — no hardcoded arrays)
+  const uiDefs = useRegistry(s => s.uiDefs);
+  const contentTypes = uiDefs?.contentTypes || [
+    { key: 'monsters', label: 'Monsters', icon: '👹', color: '#f43f5e' },
+    { key: 'hazards',  label: 'Hazards',  icon: '⚠️', color: '#f97316' },
+    { key: 'artifacts',label: 'Artifacts',icon: '💎', color: '#eab308' },
+    { key: 'heroes',   label: 'Heroes',   icon: '🧙', color: '#3b82f6' },
+    { key: 'arsenal',  label: 'Arsenal',  icon: '⚔️', color: '#a855f7' },
+    { key: 'fates',    label: 'Fates',    icon: '🎲', color: '#ec4899' },
+    { key: 'themes',   label: 'Themes',   icon: '🎨', color: '#8b5cf6' },
+  ];
+  const hookDefs = uiDefs?.hooks || [
+    { id: 'onSlide',          label: 'On Slide',        icon: '↔️' },
+    { id: 'onMerge',          label: 'On Merge',        icon: '💎' },
+    { id: 'onDamage',         label: 'On Damage',       icon: '💥' },
+    { id: 'onD20',            label: 'On D20 Roll',     icon: '🎲' },
+    { id: 'onEncounterStart', label: 'On Battle Start', icon: '⚔️' },
+  ];
+
+  // Active sub-tab — default to first content type key
+  const [activeSubTab, setActiveSubTab] = useState<string>(contentTypes[0]?.key || 'monsters');
+
   const totalSteps = 4;
   const steps = [
-    { id: 1, title: 'Meta', icon: '📝' },
+    { id: 1, title: 'Meta',    icon: '📝' },
     { id: 2, title: 'Content', icon: '👹' },
     { id: 3, title: 'Visuals', icon: '🎨' },
-    { id: 4, title: 'Export', icon: '💾' }
+    { id: 4, title: 'Export',  icon: '💾' }
   ];
+
+  // Step completion checks
+  const stepDone = (s: number) => {
+    if (s === 1) return !!(pack.id && pack.name);
+    if (s === 2) return contentTypes.some(ct => ((pack as any)[ct.key] || []).length > 0);
+    return false;
+  };
 
   const updatePack = (updates: Partial<PackData>) => {
     setPack(prev => ({ ...prev, ...updates }));
@@ -62,11 +86,13 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
     }));
   };
 
-  const exportPack = () => {
+  const exportPack = async () => {
     if (!pack.id || !pack.name) {
       alert("Please enter at least a Pack ID and Name.");
       return;
     }
+    setExportSealed(true);
+    await new Promise(r => setTimeout(r, 600));
     const blob = new Blob([JSON.stringify(pack, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -74,6 +100,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
     a.download = `${pack.id || 'pack'}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    setTimeout(() => setExportSealed(false), 1500);
   };
 
   const playPack = async () => {
@@ -121,7 +148,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
         {/* Header */}
         <div className="p-4 border-b border-slate-800 flex justify-between items-center shrink-0 bg-slate-900/80 backdrop-blur-md z-10">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">⚒️</span>
+            <span className="text-2xl forge-spark">⚒️</span>
             <div>
               <h2 className="text-xl font-black tracking-widest text-white uppercase font-serif leading-none">The Forge</h2>
               <p className="text-slate-400 text-[10px] uppercase tracking-wider mt-1 font-bold">Content Pack Creator</p>
@@ -138,21 +165,30 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
           </div>
         </div>
 
-        {/* Wizard Progress */}
+        {/* Wizard Progress — numbered circles with checkmarks */}
         <div className="flex border-b border-slate-800 shrink-0 bg-slate-950/50 p-2 gap-2 overflow-x-auto no-scrollbar">
-          {steps.map(s => (
-            <button 
-              key={s.id}
-              onClick={() => setStep(s.id)}
-              className={clsx(
-                "flex-1 min-w-[120px] py-2.5 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 border",
-                step === s.id ? "bg-indigo-600 text-white border-indigo-400 shadow-inner" : "bg-slate-800 text-slate-500 border-slate-700 hover:text-slate-300"
-              )}
-            >
-              <span>{s.icon}</span>
-              <span className="truncate">{s.title}</span>
-            </button>
-          ))}
+          {steps.map((s, idx) => {
+            const done = stepDone(s.id);
+            const active = step === s.id;
+            return (
+              <button 
+                key={s.id}
+                onClick={() => setStep(s.id)}
+                className={clsx(
+                  "flex-1 min-w-[100px] py-2.5 px-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 border",
+                  active ? "bg-indigo-600 text-white border-indigo-400 shadow-inner" : "bg-slate-800 text-slate-500 border-slate-700 hover:text-slate-300"
+                )}
+              >
+                <span className={clsx(
+                  "w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black border transition-all shrink-0",
+                  done    ? "bg-emerald-500 border-emerald-400 text-white animate-check-pop" :
+                  active  ? "bg-indigo-400 border-indigo-300 text-white" :
+                            "bg-slate-700 border-slate-600 text-slate-400"
+                )}>{done ? '✓' : s.id}</span>
+                <span className="truncate">{s.title}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Content Area */}
@@ -226,21 +262,22 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
 
             {step === 2 && (
               <div className="space-y-6">
-                {/* SUB-TABS FOR CONTENT TYPES */}
-                <div className="grid grid-cols-5 gap-2">
-                  {['monsters', 'hazards', 'artifacts', 'heroes', 'arsenal', 'fates', 'themes'].map(t => (
+                {/* SUB-TABS — from registry contentTypes (Mod Priority 0) */}
+                <div className="flex flex-wrap gap-2">
+                  {contentTypes.map(ct => (
                     <button 
-                      key={t}
+                      key={ct.key}
                       onClick={() => {
-                        setActiveSubTab(t as any);
+                        setActiveSubTab(ct.key);
                         setEditingIndex(null);
                       }}
                       className={clsx(
                         "py-2 px-3 rounded-lg font-black text-[9px] uppercase tracking-widest border transition-all",
-                        activeSubTab === t ? "bg-rose-600 border-rose-400 text-white" : "bg-slate-800 border-slate-700 text-slate-400"
+                        activeSubTab === ct.key ? "text-white shadow-lg" : "bg-slate-800 border-slate-700 text-slate-400"
                       )}
+                      style={activeSubTab === ct.key ? { background: ct.color, borderColor: `${ct.color}80` } : {}}
                     >
-                      {t.charAt(0).toUpperCase() + t.slice(1)} ({Array.isArray(pack[t as keyof PackData]) ? (pack[t as keyof PackData] as any[]).length : 0})
+                      {ct.icon} {ct.label} ({Array.isArray((pack as any)[ct.key]) ? ((pack as any)[ct.key] as any[]).length : 0})
                     </button>
                   ))}
                 </div>
@@ -595,15 +632,10 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                               </div>
                            </div>
 
-                           {logicMode === 'visual' ? (
+                         {logicMode === 'visual' ? (
                              <div className="space-y-3">
-                               {[
-                                 { id: 'onSlide', label: 'On Slide', icon: '↔️' },
-                                 { id: 'onMerge', label: 'On Merge', icon: '💎' },
-                                 { id: 'onDamage', label: 'On Damage', icon: '💥' },
-                                 { id: 'onD20', label: 'On D20 Roll', icon: '🎲' },
-                                 { id: 'onEncounterStart', label: 'On Battle Start', icon: '⚔️' }
-                               ].map(hook => {
+                               {/* Hook list from registry (Mod Priority 0) */}
+                               {hookDefs.map(hook => {
                                  const current = (pack[activeSubTab as keyof PackData] as any[])[editingIndex];
                                  const scripts = current.passiveTriggers || {};
                                  const script = scripts[hook.id] ? JSON.stringify(scripts[hook.id], null, 2) : "";
@@ -855,9 +887,18 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
 
             {step === 4 && (
               <div className="text-center space-y-6">
-                <div className="w-20 h-20 bg-indigo-600/20 rounded-full flex items-center justify-center mx-auto border-4 border-indigo-500/30 animate-pulse">
-                  <span className="text-4xl">💾</span>
-                </div>
+                <motion.div
+                  animate={exportSealed ? { scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] } : {}}
+                  transition={{ duration: 0.5 }}
+                  className={clsx(
+                    "w-20 h-20 rounded-full flex items-center justify-center mx-auto border-4 transition-all",
+                    exportSealed
+                      ? "bg-emerald-600/30 border-emerald-400 animate-seal-pulse"
+                      : "bg-indigo-600/20 border-indigo-500/30 animate-pulse"
+                  )}
+                >
+                  <span className="text-4xl">{exportSealed ? '✅' : '💾'}</span>
+                </motion.div>
                 <div>
                   <h3 className="text-xl font-black text-white uppercase tracking-widest">Ready for Export</h3>
                   <p className="text-[10px] text-slate-500 uppercase font-bold mt-2 tracking-widest">Verify your pack data before sealing the grimoire</p>
@@ -871,16 +912,28 @@ const ForgeModal: React.FC<{ initialData?: PackData | null, onClose: () => void 
                     <span className="text-slate-500">Name:</span>
                     <span className="text-white">{pack.name || 'none'}</span>
                   </div>
-                  <div className="flex justify-between text-[10px] uppercase tracking-widest font-black">
-                    <span className="text-slate-500">Entries:</span>
-                    <span className="text-white">{(pack.monsters?.length || 0) + (pack.artifacts?.length || 0)} Total</span>
+                  {/* Entry counts from registry contentTypes */}
+                  <div className="flex gap-4 flex-wrap pt-1">
+                    {contentTypes.filter(ct => ((pack as any)[ct.key] || []).length > 0).map(ct => (
+                      <div key={ct.key} className="flex items-center gap-1 text-[10px] font-black">
+                        <span>{ct.icon}</span>
+                        <span style={{ color: ct.color }}>{((pack as any)[ct.key] || []).length}</span>
+                        <span className="text-slate-500">{ct.label}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
                 <button 
                   onClick={exportPack}
-                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-sm uppercase tracking-widest shadow-2xl shadow-indigo-900/50 transition-all border border-indigo-400/30 active:scale-95"
+                  disabled={exportSealed}
+                  className={clsx(
+                    "w-full py-4 text-white font-black rounded-2xl text-sm uppercase tracking-widest shadow-2xl transition-all border active:scale-95 disabled:cursor-wait",
+                    exportSealed
+                      ? "bg-emerald-600 border-emerald-400/30 shadow-emerald-900/50"
+                      : "bg-indigo-600 hover:bg-indigo-500 border-indigo-400/30 shadow-indigo-900/50"
+                  )}
                 >
-                  Export Pack as JSON
+                  {exportSealed ? '✅ Pack Sealed!' : 'Export Pack as JSON'}
                 </button>
               </div>
             )}

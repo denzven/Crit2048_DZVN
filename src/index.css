@@ -329,3 +329,172 @@ h1 img.emoji, h2 img.emoji, h3 img.emoji {
   box-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
   animation: descendBar 2.5s linear forwards; 
 }
+
+/* =====================================================
+   JUICE PASS — Registry-driven UI animations
+   All thresholds are read from uiDefs.hud
+   ===================================================== */
+
+/* Dice / Spell result slam-in */
+@keyframes result-slam {
+  0%   { transform: scale(0) rotate(-8deg); opacity: 0; }
+  55%  { transform: scale(1.35) rotate(2deg); opacity: 1; }
+  75%  { transform: scale(0.92) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.result-slam {
+  animation: result-slam 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Crit success radial flash */
+@keyframes crit-flash {
+  0%   { opacity: 0; transform: scale(0.5); }
+  30%  { opacity: 1; transform: scale(1.8); }
+  100% { opacity: 0; transform: scale(2.5); }
+}
+.crit-flash {
+  animation: crit-flash 0.8s ease-out forwards;
+}
+
+/* Failure vignette pulse */
+@keyframes fail-vignette {
+  0%, 100% { box-shadow: inset 0 0 0 rgba(244,63,94,0); }
+  40%       { box-shadow: inset 0 0 80px rgba(244,63,94,0.5); }
+}
+.fail-vignette {
+  animation: fail-vignette 0.7s ease-out forwards;
+}
+
+/* Slides warning — low slide pulse */
+@keyframes slide-warn {
+  0%, 100% { color: #f87171; text-shadow: 0 0 0 rgba(248,113,113,0); }
+  50%       { color: #ef4444; text-shadow: 0 0 12px rgba(239,68,68,0.8); }
+}
+.slide-danger {
+  animation: slide-warn 0.9s ease-in-out infinite;
+}
+
+/* Critical slide pulse — 1 slide left */
+@keyframes slide-critical {
+  0%, 100% { color: #fca5a5; transform: scale(1); }
+  50%       { color: #ef4444; transform: scale(1.15); text-shadow: 0 0 20px rgba(239,68,68,1); }
+}
+.slide-critical {
+  animation: slide-critical 0.5s ease-in-out infinite;
+}
+
+/* Multiplier high — golden shimmer */
+@keyframes mult-high {
+  0%, 100% { color: #fbbf24; text-shadow: 0 0 8px rgba(251,191,36,0.4); }
+  50%       { color: #f59e0b; text-shadow: 0 0 20px rgba(245,158,11,0.9); }
+}
+.mult-high {
+  animation: mult-high 1.5s ease-in-out infinite;
+}
+
+/* Multiplier rage — intense gold pulse */
+@keyframes mult-rage {
+  0%, 100% { color: #fef08a; text-shadow: 0 0 15px rgba(254,240,138,0.6); transform: scale(1); }
+  40%       { color: #fde047; text-shadow: 0 0 35px rgba(253,224,71,1); transform: scale(1.05); }
+}
+.mult-rage {
+  animation: mult-rage 0.8s ease-in-out infinite;
+}
+
+/* HP near-death shimmer on bar */
+@keyframes hp-near-death {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; filter: brightness(1.5); }
+}
+.hp-near-death {
+  animation: hp-near-death 0.7s ease-in-out infinite;
+}
+
+/* Forge header spark */
+@keyframes forge-spark {
+  0%, 90%, 100% { filter: drop-shadow(0 0 0 transparent); }
+  95%            { filter: drop-shadow(0 0 12px #f97316) drop-shadow(0 0 4px #fbbf24); }
+}
+.forge-spark {
+  animation: forge-spark 3s ease-in-out infinite;
+}
+
+/* Grimoire pulse — slow breathing glow */
+@keyframes grimoire-pulse {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(139,92,246,0.3)); }
+  50%       { filter: drop-shadow(0 0 12px rgba(139,92,246,0.8)); }
+}
+.grimoire-pulse {
+  animation: grimoire-pulse 3s ease-in-out infinite;
+}
+
+/* Rarity ping — outward ring on legendary items */
+@keyframes rarity-ping {
+  0%   { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(2); opacity: 0; }
+}
+.rarity-ping::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid currentColor;
+  animation: rarity-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Float-up-fade — purchase confirmation particle */
+@keyframes float-up-fade {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-60px) scale(1.4); opacity: 0; }
+}
+.float-up-fade {
+  animation: float-up-fade 0.8s ease-out forwards;
+  pointer-events: none;
+}
+
+/* Roll button pulse ring */
+@keyframes roll-pulse-ring {
+  0%   { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+.roll-pulse::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid currentColor;
+  animation: roll-pulse-ring 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Respin spin animation */
+@keyframes respin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-respin {
+  animation: respin 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Export seal — checkmark pulse */
+@keyframes seal-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(99,102,241,0); }
+  50%       { box-shadow: 0 0 40px rgba(99,102,241,0.6); }
+}
+.animate-seal-pulse {
+  animation: seal-pulse 1.2s ease-in-out infinite;
+}
+
+/* Step wizard checkmark pop */
+@keyframes check-pop {
+  0%   { transform: scale(0) rotate(-45deg); }
+  60%  { transform: scale(1.3) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.animate-check-pop {
+  animation: check-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Scroll X helper (for tab bars) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+

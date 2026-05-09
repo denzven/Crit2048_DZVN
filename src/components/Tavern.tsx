@@ -1,45 +1,61 @@
 import React from 'react';
 import { useGameStore } from '../engine/gameStore';
+import { useRegistry } from '../engine/registryHub';
 import { SeededRNG } from '../engine/prng';
 import { clsx } from 'clsx';
 import { PackEngine } from '../engine/packEngine';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Tavern: React.FC = () => {
-  const { gold, shopItems, buyArtifact, nextEncounter, restoreSpells, upgradeSpell, usesLeft, playerClass, addLog } = useGameStore();
-  const [focusedIndex, setFocusedIndex] = React.useState(0); // 0-1: Services, 2: Oracle, 3: Respin, 4+: Shop Items, Last: Continue
+  const { gold, shopItems, buyArtifact, nextEncounter, restoreSpells, upgradeSpell, usesLeft, playerClass, addLog, addFloatingText } = useGameStore();
+  const [focusedIndex, setFocusedIndex] = React.useState(0);
+  const [isRespinning, setIsRespinning] = React.useState(false);
+
+  // Read tavern service definitions from registry (Mod Priority 0)
+  const uiDefs = useRegistry(s => s.uiDefs);
+  const svc = uiDefs?.tavernServices;
+  const rarityColors = uiDefs?.rarityColors || {};
 
   const upgradeCost = 100 * (playerClass?.ability?.count || 1);
   const totalOptions = 5 + shopItems.length;
 
   const respinTavern = () => {
-    if (gold >= 5) {
-      useGameStore.getState().addGold(-5);
+    if (gold >= (svc?.respin?.cost ?? 5)) {
+      setIsRespinning(true);
+      useGameStore.getState().addGold(-(svc?.respin?.cost ?? 5));
       useGameStore.getState().generateShop();
-      addLog("Merchant: Collection respun (💰5)");
+      addLog(`Merchant: Collection respun (💰${svc?.respin?.cost ?? 5})`);
+      setTimeout(() => setIsRespinning(false), 600);
     }
+  };
+
+  const handleBuyArtifact = (id: string, itemName: string) => {
+    buyArtifact(id);
+    // Purchase sparkle via addFloatingText (no DOM manipulation)
+    addFloatingText('✨', 'gold', 50, 50);
   };
 
   const handleAction = () => {
     if (focusedIndex === 0) restoreSpells();
     else if (focusedIndex === 1) upgradeSpell();
     else if (focusedIndex === 2) {
-      if (gold >= 50) {
+      if (gold >= (svc?.oracle?.cost ?? 50)) {
         const { activeArtifacts } = useGameStore.getState();
         const legendaries = activeArtifacts.filter(a => a.rarity?.toLowerCase() === 'legendary' || a.rarity?.toLowerCase() === 'artifact');
         if (legendaries.length > 0) {
-          useGameStore.setState({ gold: gold - 50 });
+          useGameStore.setState({ gold: gold - (svc?.oracle?.cost ?? 50) });
           const pick = legendaries[Math.floor(SeededRNG.random() * legendaries.length)];
-          buyArtifact(pick.id);
+          handleBuyArtifact(pick.id, pick.name);
           addLog(`Oracle: The legendary ${pick.name} has been bestowed!`);
         } else {
-          addLog("Oracle: No legendary artifacts found in this realm...");
+          addLog(svc?.oracle?.emptyMessage ?? "Oracle: No legendary artifacts found in this realm...");
         }
       }
     }
     else if (focusedIndex === 3) respinTavern();
     else if (focusedIndex < 4 + shopItems.length) {
-      buyArtifact(shopItems[focusedIndex - 4].id);
+      const item = shopItems[focusedIndex - 4];
+      handleBuyArtifact(item.id, item.name);
     }
     else nextEncounter();
   };
@@ -58,6 +74,27 @@ const Tavern: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [focusedIndex, shopItems, gold]);
 
+  const getRarityStyles = (rarity: string) => {
+    const r = rarity?.toLowerCase();
+    const def = rarityColors[r] || rarityColors['common'];
+    if (def) return { 
+      color: def.text, 
+      border: `border-[${def.border}]`, 
+      bg: `bg-[${def.bg}]`, 
+      glow: r === 'legendary' ? 'glow-legendary' : r === 'epic' ? 'glow-epic' : r === 'rare' ? 'glow-rare' : r === 'artifact' ? 'glow-artifact' : '' 
+    };
+    // Fallback if registry not yet loaded
+    if (r === 'legendary') return { color: 'text-amber-400', border: 'border-amber-600/50', bg: 'bg-amber-950/30', glow: 'glow-legendary' };
+    if (r === 'epic')      return { color: 'text-purple-400', border: 'border-purple-600/50', bg: 'bg-purple-950/30', glow: 'glow-epic' };
+    if (r === 'rare')      return { color: 'text-blue-400',   border: 'border-blue-600/50',   bg: 'bg-blue-950/30',   glow: 'glow-rare' };
+    if (r === 'artifact')  return { color: 'text-rose-400',   border: 'border-rose-600/50',   bg: 'bg-rose-950/30',   glow: 'glow-artifact' };
+    return                         { color: 'text-slate-400', border: 'border-slate-600/50', bg: 'bg-slate-950/30',   glow: '' };
+  };
+
+  const restCost = svc?.rest?.cost ?? 30;
+  const oracleCost = svc?.oracle?.cost ?? 50;
+  const respinCost = svc?.respin?.cost ?? 5;
+
   return (
     <div id="screen-tavern" className="w-full flex flex-col h-full relative z-10 px-4">
       <div id="tavern-scroll-area" className="flex-grow overflow-y-auto pb-6 space-y-6 flex flex-col min-h-0 custom-scrollbar">
@@ -73,71 +110,77 @@ const Tavern: React.FC = () => {
           </motion.div>
             
           <div className="grid grid-cols-2 gap-4 shrink-0 mb-6">
-            {/* Services Card */}
+            {/* Services Card — text from registry */}
             <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-4 md:p-5 shadow-2xl backdrop-blur-xl">
               <h3 className="text-slate-500 font-black uppercase tracking-widest text-[9px] mb-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-emerald-500/50 rounded-full"></span>
+                <span className="w-1.5 h-1.5 bg-emerald-500/50 rounded-full" />
                 Services
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 <button 
                   onClick={restoreSpells}
                   onMouseEnter={() => setFocusedIndex(0)}
-                  disabled={gold < 30 || usesLeft >= (playerClass?.ability?.maxUses || 0)}
+                  disabled={gold < restCost || usesLeft >= (playerClass?.ability?.maxUses || 0)}
+                  title={gold < restCost ? `Need ${restCost} gold` : usesLeft >= (playerClass?.ability?.maxUses || 0) ? (svc?.rest?.disabledReason ?? 'Already at max') : (svc?.rest?.description ?? 'Restore spell uses')}
                   className={clsx(
                     "py-4 bg-slate-950/40 text-emerald-400 font-bold rounded-2xl transition-all flex flex-col items-center justify-center gap-1 border hover:border-emerald-500/30 group active:scale-95 disabled:grayscale disabled:opacity-50 disabled:cursor-not-allowed",
                     focusedIndex === 0 ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-slate-800"
                   )}
                 >
-                  <span className="text-xl group-hover:scale-110 transition-transform">💤</span>
-                  <span className="text-xs uppercase tracking-widest font-black">Rest</span>
-                  <span className="text-[9px] text-slate-500 font-mono">💰30</span>
+                  <span className="text-xl group-hover:scale-110 transition-transform">{svc?.rest?.icon ?? '💤'}</span>
+                  <span className="text-xs uppercase tracking-widest font-black">{svc?.rest?.label ?? 'Rest'}</span>
+                  <span className="text-[9px] text-slate-500 font-mono">💰{restCost}</span>
                 </button>
                 <button 
                   onClick={upgradeSpell}
                   onMouseEnter={() => setFocusedIndex(1)}
                   disabled={gold < upgradeCost || !playerClass?.ability}
+                  title={gold < upgradeCost ? `Need ${upgradeCost} gold` : !playerClass?.ability ? (svc?.enhance?.disabledReason ?? 'No spell') : (svc?.enhance?.description ?? 'Upgrade spell')}
                   className={clsx(
                     "py-4 bg-slate-950/40 text-blue-400 font-bold rounded-2xl transition-all flex flex-col items-center justify-center gap-1 border hover:border-blue-500/30 group active:scale-95 disabled:grayscale disabled:opacity-50 disabled:cursor-not-allowed",
                     focusedIndex === 1 ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-800"
                   )}
                 >
-                  <span className="text-xl group-hover:scale-110 transition-transform">🔮</span>
-                  <span className="text-xs uppercase tracking-widest font-black">Enhance</span>
+                  <span className="text-xl group-hover:scale-110 transition-transform">{svc?.enhance?.icon ?? '🔮'}</span>
+                  <span className="text-xs uppercase tracking-widest font-black">{svc?.enhance?.label ?? 'Enhance'}</span>
                   <span className="text-[9px] text-slate-500 font-mono">💰{upgradeCost}</span>
                 </button>
               </div>
             </div>
 
-             {/* AI Oracle Card */}
+            {/* Oracle Card — text from registry */}
             <div className={clsx(
               "bg-slate-900/60 border rounded-3xl p-4 md:p-5 shadow-2xl backdrop-blur-xl transition-all",
               focusedIndex === 2 ? "border-indigo-500 ring-2 ring-indigo-500/20" : "border-slate-800"
             )}>
                <h3 className="text-slate-500 font-black uppercase tracking-widest text-[9px] mb-4 flex items-center gap-2">
-                 <span className="w-1.5 h-1.5 bg-indigo-500/50 rounded-full"></span>
-                 The AI Oracle
+                 <span className="w-1.5 h-1.5 bg-indigo-500/50 rounded-full" />
+                 The Oracle
                </h3>
                <div className="flex flex-col justify-between h-[calc(100%-2rem)]">
-                  <p className="text-[9px] md:text-[10px] text-indigo-400/80 leading-relaxed mb-4 font-medium italic">Seek the wisdom of the machine to forge artifacts of immense power.</p>
+                  <p className="text-[9px] md:text-[10px] text-indigo-400/80 leading-relaxed mb-4 font-medium italic">
+                    {svc?.oracle?.description ?? 'Receive a legendary artifact from the pool.'}
+                  </p>
                   <button 
                     onClick={() => {
-                      if (gold >= 50) {
+                      if (gold >= oracleCost) {
                         const { activeArtifacts } = useGameStore.getState();
                         const legendaries = activeArtifacts.filter(a => a.rarity?.toLowerCase() === 'legendary' || a.rarity?.toLowerCase() === 'artifact');
                         if (legendaries.length > 0) {
-                          useGameStore.setState({ gold: gold - 50 });
+                          useGameStore.setState({ gold: gold - oracleCost });
                           const pick = legendaries[Math.floor(SeededRNG.random() * legendaries.length)];
-                          buyArtifact(pick.id);
+                          handleBuyArtifact(pick.id, pick.name);
                           addLog(`Oracle: The legendary ${pick.name} has been bestowed!`);
+                        } else {
+                          addLog(svc?.oracle?.emptyMessage ?? "Oracle: No legendary artifacts found in this realm...");
                         }
                       }
                     }}
                     onMouseEnter={() => setFocusedIndex(2)}
-                    disabled={gold < 50}
+                    disabled={gold < oracleCost}
                     className="w-full py-4 bg-indigo-600/90 hover:bg-indigo-500 disabled:opacity-50 disabled:grayscale text-white font-black rounded-2xl transition-all uppercase tracking-widest text-[10px] border border-indigo-400/20 shadow-lg shadow-indigo-950/40 active:scale-95"
                   >
-                    Forge Legend (💰50)
+                    {svc?.oracle?.label ?? 'Forge Legend'} (💰{oracleCost})
                   </button>
                </div>
             </div>
@@ -146,17 +189,19 @@ const Tavern: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between shrink-0 px-2">
               <h3 className="text-slate-500 font-black uppercase tracking-[0.2em] text-[10px]">Merchant's Collection</h3>
-              <button 
+              <motion.button 
                 onClick={respinTavern}
                 onMouseEnter={() => setFocusedIndex(3)}
-                disabled={gold < 5}
+                disabled={gold < respinCost}
+                animate={isRespinning ? { rotate: 360 } : { rotate: 0 }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
                 className={clsx(
-                  "shrink-0 px-4 py-2 bg-slate-900/80 hover:bg-slate-800 text-amber-500 font-black rounded-xl transition-all uppercase tracking-widest text-[9px] border active:scale-95 disabled:opacity-50",
+                  "shrink-0 px-4 py-2 bg-slate-900/80 hover:bg-slate-800 text-amber-500 font-black rounded-xl transition-colors uppercase tracking-widest text-[9px] border active:scale-95 disabled:opacity-50",
                   focusedIndex === 3 ? "border-amber-500 ring-2 ring-amber-500/20" : "border-slate-800"
                 )}
               >
-                Respin (💰5)
-              </button>
+                {svc?.respin?.icon ?? '🔄'} Respin (💰{respinCost})
+              </motion.button>
             </div>
             
             <motion.div 
@@ -177,15 +222,6 @@ const Tavern: React.FC = () => {
                 const currentCost = item.basePrice * (level + 1);
                 const isLegendary = item.rarity === 'legendary' || item.rarity === 'artifact';
                 
-                const getRarityStyles = (rarity: string) => {
-                  const r = rarity?.toLowerCase();
-                  if (r === 'legendary') return { color: 'text-amber-400', border: 'border-amber-600/50', bg: 'bg-amber-950/30', glow: 'glow-legendary' };
-                  if (r === 'epic') return { color: 'text-purple-400', border: 'border-purple-600/50', bg: 'bg-purple-950/30', glow: 'glow-epic' };
-                  if (r === 'rare') return { color: 'text-blue-400', border: 'border-blue-600/50', bg: 'bg-blue-950/30', glow: 'glow-rare' };
-                  if (r === 'artifact') return { color: 'text-rose-400', border: 'border-rose-600/50', bg: 'bg-rose-950/30', glow: 'glow-artifact' };
-                  return { color: 'text-slate-400', border: 'border-slate-600/50', bg: 'bg-slate-950/30', glow: 'glow-common' };
-                };
-
                 const styles = getRarityStyles(item.rarity);
 
                 return (
@@ -208,7 +244,7 @@ const Tavern: React.FC = () => {
                     )}
                   >
                     {isLegendary && (
-                      <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 -translate-x-full animate-shimmer pointer-events-none"></div>
+                      <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 -translate-x-full animate-shimmer pointer-events-none" />
                     )}
 
                     <div className="flex justify-between items-center z-10">
@@ -244,14 +280,14 @@ const Tavern: React.FC = () => {
                         
                         <div className="flex gap-2">
                           <button 
-                            onClick={() => addLog(`Item Info: ${item.name} - ${item.desc}`)}
+                            onClick={() => addLog(`Item Info: ${item.name} — ${item.desc}`)}
                             className="w-12 h-12 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl border border-slate-700 transition-all active:scale-95"
                             title="Stats"
                           >
                             📈
                           </button>
                           <button 
-                            onClick={() => buyArtifact(item.id)}
+                            onClick={() => handleBuyArtifact(item.id, item.name)}
                             disabled={gold < currentCost}
                             className={clsx(
                               "flex-grow py-3 font-black rounded-xl transition-all uppercase tracking-widest text-[10px] border shadow-lg active:scale-95 disabled:opacity-40 disabled:grayscale disabled:cursor-not-allowed",

@@ -7,6 +7,7 @@ import monsterData from '../engine_core/base_game/data/monsters.json';
 import classData from '../engine_core/base_game/data/classes.json';
 import arsenalData from '../engine_core/base_game/data/arsenal.json';
 import artifactData from '../engine_core/base_game/data/artifacts.json';
+import uiDefsData from '../engine_core/base_game/data/ui_defs.json';
 
 // --- SCHEMAS ---
 
@@ -75,6 +76,17 @@ export const WeaponSchema = z.object({
 
 // --- REGISTRY STORE ---
 
+/** UI Definitions — loaded from ui_defs.json (Mod Priority 0). */
+export interface UiDefs {
+  packTypes: Record<string, { label: string; color: string; icon: string }>;
+  contentTypes: Array<{ key: string; label: string; icon: string; color: string }>;
+  hooks: Array<{ id: string; label: string; icon: string }>;
+  d20Tiers: Array<{ min: number; max: number; type: string; label: string; sublabel: string; color: string; bgColor: string }>;
+  tavernServices: Record<string, { label: string; icon: string; cost?: number; description: string; disabledReason?: string; emptyMessage?: string }>;
+  hud: { slideDangerThreshold: number; slideCriticalThreshold: number; multiplierHighThreshold: number; multiplierRageThreshold: number; hpNearDeathPercent: number };
+  rarityColors: Record<string, { text: string; border: string; bg: string; glow: string }>;
+}
+
 interface RegistryState {
   monsters: Record<string, EnemyDef>;
   heroes: Record<string, ClassDef>;
@@ -83,6 +95,7 @@ interface RegistryState {
   hazards: Record<string, HazardDef>;
   fates: any;
   presets: Record<string, any>;
+  uiDefs: UiDefs | null;
   
   // Actions
   registerMonster: (def: any) => void;
@@ -104,6 +117,7 @@ export const useRegistry = create<RegistryState>((set, get) => ({
   hazards: {},
   fates: {},
   presets: {},
+  uiDefs: null,
 
   deepMerge: (base, mod) => {
     const result = { ...base };
@@ -181,6 +195,10 @@ export const useRegistry = create<RegistryState>((set, get) => ({
       const cData = (classData as any).default || classData;
       const arData = (arsenalData as any).default || arsenalData;
       const afData = (artifactData as any).default || artifactData;
+      const uiData = (uiDefsData as any).default || uiDefsData;
+
+      // Load UI Definitions (Mod Priority 0)
+      if (uiData) set({ uiDefs: uiData as UiDefs });
 
       if (Array.isArray(mData)) {
         mData.forEach(m => {
@@ -219,4 +237,5 @@ export const useRegistry = create<RegistryState>((set, get) => ({
   },
 
   clear: () => set({ monsters: {}, heroes: {}, artifacts: {}, arsenal: {}, hazards: {}, fates: {} }),
+  // Note: uiDefs is intentionally NOT cleared on pack reload — it is Mod Priority 0 base game data.
 }));

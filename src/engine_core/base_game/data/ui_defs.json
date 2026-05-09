@@ -1,0 +1,95 @@
+{
+  "_comment": "UI Definitions — Mod Priority 0. All UI chrome is driven by this file. Mods can override via pack themes.cssVars or by providing a replacement ui_defs pack.",
+
+  "packTypes": {
+    "mega":      { "label": "Mega Bundle",   "color": "#f43f5e", "icon": "📦" },
+    "dungeon":   { "label": "Dungeon",        "color": "#f97316", "icon": "🗺️" },
+    "class":     { "label": "Hero Class",     "color": "#3b82f6", "icon": "🧙" },
+    "heroes":    { "label": "Hero Class",     "color": "#3b82f6", "icon": "🧙" },
+    "weapon":    { "label": "Weapon Pack",    "color": "#a855f7", "icon": "⚔️" },
+    "arsenal":   { "label": "Arsenal",        "color": "#a855f7", "icon": "⚔️" },
+    "skin":      { "label": "Visual Skin",    "color": "#8b5cf6", "icon": "🎨" },
+    "themes":    { "label": "Visual Theme",   "color": "#8b5cf6", "icon": "🎨" },
+    "artifacts": { "label": "Artifact Set",   "color": "#eab308", "icon": "💎" },
+    "hazard":    { "label": "Hazard Pack",    "color": "#10b981", "icon": "⚠️" },
+    "hazards":   { "label": "Hazard Pack",    "color": "#10b981", "icon": "⚠️" },
+    "fates":     { "label": "Fate Rules",     "color": "#ec4899", "icon": "🎲" },
+    "tunes":     { "label": "Soundpack",      "color": "#06b6d4", "icon": "🎵" }
+  },
+
+  "contentTypes": [
+    { "key": "monsters",  "label": "Monsters",   "icon": "👹", "color": "#f43f5e" },
+    { "key": "hazards",   "label": "Hazards",    "icon": "⚠️", "color": "#f97316" },
+    { "key": "artifacts", "label": "Artifacts",  "icon": "💎", "color": "#eab308" },
+    { "key": "heroes",    "label": "Heroes",     "icon": "🧙", "color": "#3b82f6" },
+    { "key": "arsenal",   "label": "Arsenal",    "icon": "⚔️", "color": "#a855f7" },
+    { "key": "fates",     "label": "Fates",      "icon": "🎲", "color": "#ec4899" },
+    { "key": "themes",    "label": "Themes",     "icon": "🎨", "color": "#8b5cf6" }
+  ],
+
+  "hooks": [
+    { "id": "onSlide",          "label": "On Slide",       "icon": "↔️" },
+    { "id": "onMerge",          "label": "On Merge",       "icon": "💎" },
+    { "id": "onDamage",         "label": "On Damage",      "icon": "💥" },
+    { "id": "onD20",            "label": "On D20 Roll",    "icon": "🎲" },
+    { "id": "onEncounterStart", "label": "On Battle Start","icon": "⚔️" },
+    { "id": "onPurchase",       "label": "On Purchase",    "icon": "💰" },
+    { "id": "onCast",           "label": "On Spell Cast",  "icon": "✨" },
+    { "id": "onTavern",         "label": "On Tavern",      "icon": "🍺" },
+    { "id": "onGameOver",       "label": "On Game Over",   "icon": "💀" }
+  ],
+
+  "d20Tiers": [
+    { "min": 20, "max": 99, "type": "crit",      "label": "NATURAL 20!",       "sublabel": "Critical Hit! Multiplier +1 & tile doubled.", "color": "#f59e0b", "bgColor": "rgba(245,158,11,0.15)" },
+    { "min": 15, "max": 19, "type": "great",     "label": "GREAT SUCCESS!",    "sublabel": "Magic Staff spawned on the board.",             "color": "#ffffff", "bgColor": "rgba(255,255,255,0.05)" },
+    { "min": 10, "max": 14, "type": "success",   "label": "SUCCESS!",          "sublabel": "Crossbow spawned on the board.",                "color": "#ffffff", "bgColor": "rgba(255,255,255,0.05)" },
+    { "min": 2,  "max":  9, "type": "fail",      "label": "MISS!",             "sublabel": "A Slime blocked your path.",                    "color": "#10b981", "bgColor": "rgba(16,185,129,0.1)" },
+    { "min": 0,  "max":  1, "type": "crit-fail", "label": "CRITICAL FAILURE!", "sublabel": "Necromancy rises. Three skeletons summoned.", "color": "#f43f5e", "bgColor": "rgba(244,63,94,0.15)" }
+  ],
+
+  "tavernServices": {
+    "rest": {
+      "label": "Rest",
+      "icon": "💤",
+      "cost": 30,
+      "description": "Restore all spell uses.",
+      "disabledReason": "Already at full spell charges."
+    },
+    "enhance": {
+      "label": "Enhance",
+      "icon": "🔮",
+      "description": "Upgrade your active spell's power.",
+      "disabledReason": "No spell to enhance, or insufficient gold."
+    },
+    "oracle": {
+      "label": "Forge Legend",
+      "icon": "🌟",
+      "cost": 50,
+      "description": "Receive a legendary artifact from the pool.",
+      "disabledReason": "No legendary artifacts available in this realm.",
+      "emptyMessage": "No legendary artifacts found in this realm..."
+    },
+    "respin": {
+      "label": "Respin",
+      "icon": "🔄",
+      "cost": 5,
+      "description": "Refresh the merchant's wares."
+    }
+  },
+
+  "hud": {
+    "slideDangerThreshold": 3,
+    "slideCriticalThreshold": 1,
+    "multiplierHighThreshold": 3.0,
+    "multiplierRageThreshold": 5.0,
+    "hpNearDeathPercent": 0.2
+  },
+
+  "rarityColors": {
+    "common":    { "text": "#94a3b8", "border": "#475569", "bg": "rgba(71,85,105,0.3)",   "glow": "rgba(148,163,184,0.2)" },
+    "rare":      { "text": "#60a5fa", "border": "#3b82f6", "bg": "rgba(59,130,246,0.15)", "glow": "rgba(59,130,246,0.3)" },
+    "epic":      { "text": "#c084fc", "border": "#a855f7", "bg": "rgba(168,85,247,0.2)",  "glow": "rgba(168,85,247,0.4)" },
+    "legendary": { "text": "#fbbf24", "border": "#f59e0b", "bg": "rgba(245,158,11,0.2)",  "glow": "rgba(245,158,11,0.5)" },
+    "artifact":  { "text": "#fb7185", "border": "#f43f5e", "bg": "rgba(244,63,94,0.2)",   "glow": "rgba(244,63,94,0.6)" }
+  }
+}

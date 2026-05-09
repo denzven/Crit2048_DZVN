@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useGameStore } from './engine/gameStore'
+import { useRegistry } from './engine/registryHub'
 import { SFX } from './engine/audio'
 import { Native } from './engine/native'
 
@@ -68,6 +69,15 @@ function App() {
   const [showExitToast, setShowExitToast] = React.useState(false)
   const [showIOSInstall, setShowIOSInstall] = React.useState(false)
   const [isHUDHovered, setIsHUDHovered] = React.useState(false)
+
+  // Read HUD danger thresholds from registry (Mod Priority 0 — no hardcoded numbers)
+  const uiDefs = useRegistry(s => s.uiDefs);
+  const hudDefs = uiDefs?.hud;
+  const slideDanger   = hudDefs?.slideDangerThreshold   ?? 3;
+  const slideCritical = hudDefs?.slideCriticalThreshold ?? 1;
+  const multHigh      = hudDefs?.multiplierHighThreshold ?? 3.0;
+  const multRage      = hudDefs?.multiplierRageThreshold ?? 5.0;
+  const hpNearDeath   = hudDefs?.hpNearDeathPercent      ?? 0.2;
 
   const {
     needRefresh: [needRefresh, setNeedRefresh],
@@ -280,8 +290,16 @@ function App() {
                 <span className="flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm">
                   💰 <span className="font-mono">{gold}</span>
                 </span>
-                <span className="flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm text-rose-400">
-                  ⚔️ <span className="font-mono">{multiplier.toFixed(1)}</span>
+                <span className={clsx(
+                  "flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm",
+                  multiplier >= multRage ? "border-amber-500/50" :
+                  multiplier >= multHigh ? "border-amber-500/20" : ""
+                )}>
+                  ⚔️ <span className={clsx(
+                    "font-mono",
+                    multiplier >= multRage ? "mult-rage" :
+                    multiplier >= multHigh ? "mult-high" : "text-rose-400"
+                  )}>{multiplier.toFixed(1)}</span>
                 </span>
               </div>
               
@@ -543,7 +561,10 @@ function App() {
                   initial={false}
                   animate={{ width: `${(monsterHp / monsterMaxHp) * 100}%` }}
                   transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-                  className="h-full bg-rose-600/80" 
+                  className={clsx(
+                    "h-full bg-rose-600/80",
+                    monsterMaxHp > 0 && (monsterHp / monsterMaxHp) < hpNearDeath && "hp-near-death"
+                  )}
                 />
               </div>
               <div className="relative z-10 flex items-center justify-between">
@@ -581,7 +602,11 @@ function App() {
                   </div>
                   <div className="text-right border-l border-slate-700 pl-4">
                     <p className="text-[8px] md:text-[10px] text-slate-400 uppercase tracking-widest font-bold">Slides</p>
-                    <p className="text-xl md:text-3xl font-black font-mono text-white leading-none">{slidesLeft}</p>
+                    <p className={clsx(
+                      "text-xl md:text-3xl font-black font-mono leading-none",
+                      slidesLeft <= slideCritical ? "slide-critical" :
+                      slidesLeft <= slideDanger   ? "slide-danger" : "text-white"
+                    )}>{slidesLeft}</p>
                   </div>
                 </div>
               </div>
