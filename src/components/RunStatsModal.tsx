@@ -66,9 +66,11 @@ const RunStatsModal: React.FC<{ onShowLeaderboard: () => void, onShowShare: () =
     };
     const url = ChallengeUtils.generateUrl(data);
 
-    const text = didWinChallenge 
+    const text = didWinChallenge && rivalData
       ? `🏆 I beat your Crit 2048 score! I got ${score} (vs ${rivalData.score}). Try to reclaim your throne! ${url}`
-      : `💀 You're still the boss. I scored ${score} (vs ${rivalData.score}). I'll be back!`;
+      : (isChallengeMode && rivalData 
+          ? `💀 You're still the boss. I scored ${score} (vs ${rivalData.score}). I'll be back! ${url}`
+          : `🎮 I just finished an Ante ${encounterIdx + 1} run with ${score} points! Check it out: ${url}`);
     
     if (navigator.share) {
       navigator.share({ title: 'Crit 2048 Result', text }).catch(console.error);

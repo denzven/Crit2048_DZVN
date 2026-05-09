@@ -311,9 +311,7 @@ function App() {
                   mass: 1
                 }}
                 onClick={() => {
-                  if (gameState !== 'START') {
-                    showConfirm("Abandon Run?", "Are you sure you want to end this run and view your progress?", forfeitRun);
-                  }
+                  showConfirm("Abandon Run?", "Are you sure you want to end this run and view your progress?", forfeitRun);
                 }}
                 onMouseEnter={() => setIsTitleHovered(true)}
                 onMouseLeave={() => setIsTitleHovered(false)}
