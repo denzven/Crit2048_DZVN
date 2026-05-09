@@ -172,17 +172,15 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       activeArtifacts: artifacts 
     });
     // Retention Notification
-    if (typeof localStorage !== 'undefined') {
-      const lastPlayed = localStorage.getItem('crit2048_last_played');
-      const now = Date.now();
-      if (lastPlayed) {
-        const diff = now - parseInt(lastPlayed);
-        if (diff > 1000 * 60 * 60 * 20) { // More than 20 hours
-          Native.notify("Welcome Back, Hero!", "The dungeon has missed you. A new daily seed is waiting!", "🐉");
-        }
+    const lastPlayed = localStorage.getItem('crit2048_last_played');
+    const now = Date.now();
+    if (lastPlayed) {
+      const diff = now - parseInt(lastPlayed);
+      if (diff > 1000 * 60 * 60 * 20) { // More than 20 hours
+        Native.notify("Welcome Back, Hero!", "The dungeon has missed you. A new daily seed is waiting!", "🐉");
       }
-      localStorage.setItem('crit2048_last_played', now.toString());
     }
+    localStorage.setItem('crit2048_last_played', now.toString());
     await get().checkSave();
   },
 
@@ -199,13 +197,11 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       const updated = { ...state.settings, ...newSettings };
       
       // Apply Scaling
-      if (typeof document !== 'undefined') {
-        if (newSettings.uiScale !== undefined) {
-          document.documentElement.style.setProperty('--ui-scale', updated.uiScale.toString());
-        }
-        if (newSettings.fontScale !== undefined) {
-          document.documentElement.style.setProperty('--font-scale', updated.fontScale.toString());
-        }
+      if (newSettings.uiScale !== undefined) {
+        document.documentElement.style.setProperty('--ui-scale', updated.uiScale.toString());
+      }
+      if (newSettings.fontScale !== undefined) {
+        document.documentElement.style.setProperty('--font-scale', updated.fontScale.toString());
       }
       
       return { settings: updated };
@@ -259,7 +255,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
   triggerScreenShake: (intensity = 1.0) => {
     if (!get().settings.screenshake) return;
-    const container = typeof document !== 'undefined' ? document.getElementById('grid-container') : null;
+    const container = document.getElementById('grid-container');
     if (!container) return;
     
     container.style.setProperty('--shake-intensity', (intensity * get().settings.shakeIntensity).toString());
@@ -268,9 +264,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     container.classList.add('shake-active');
     
     setTimeout(() => {
-      if (typeof document !== 'undefined') {
-        container.classList.remove('shake-active');
-      }
+      container.classList.remove('shake-active');
     }, 450);
   },
 

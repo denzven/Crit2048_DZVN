@@ -195,7 +195,7 @@ export class PackEngine {
    * Skin System
    */
   static applySkin(skin: any) {
-    if (!skin || typeof document === 'undefined') return;
+    if (!skin) return;
     const root = document.documentElement.style;
     
     if (skin.cssVars) {
@@ -208,7 +208,7 @@ export class PackEngine {
     if (skin.bgImage)      root.setProperty('--pack-bg-image', `url('${skin.bgImage}')`);
     if (skin.fontFamily)   root.setProperty('--pack-font', skin.fontFamily);
     
-    if (skin.customCss && typeof document !== 'undefined') {
+    if (skin.customCss) {
       let style = document.getElementById('pack-css-skin');
       if (!style) {
         style = document.createElement('style');
@@ -220,12 +220,10 @@ export class PackEngine {
   }
 
   static resetSkin() {
-    if (typeof document !== 'undefined') {
-      const root = document.documentElement.style;
-      const vars = ['--pack-primary', '--pack-accent', '--pack-bg', '--pack-bg-image', '--pack-font'];
-      vars.forEach(v => root.removeProperty(v));
-      document.getElementById('pack-css-skin')?.remove();
-    }
+    const root = document.documentElement.style;
+    const vars = ['--pack-primary', '--pack-accent', '--pack-bg', '--pack-bg-image', '--pack-font'];
+    vars.forEach(v => root.removeProperty(v));
+    document.getElementById('pack-css-skin')?.remove();
   }
 
   /**
@@ -258,7 +256,6 @@ export class PackEngine {
         }
       }
 
-      if (typeof window === 'undefined') return;
       const store = (window as any).useGameStore?.getState();
       if (!store) return;
 
@@ -467,10 +464,11 @@ export class PackEngine {
   }
 
   private static buildGameAPI(state: any): GameAPI {
-    if (typeof window === 'undefined') {
+    const storeObj = (window as any).useGameStore;
+    if (!storeObj) {
+        // Return dummy API to prevent crash
         return { log: (m: any) => console.log(m), prng: () => Math.random() } as any;
     }
-    const storeObj = (window as any).useGameStore;
     const store = storeObj.getState();
     return {
       slides: state.slidesLeft,
@@ -564,7 +562,6 @@ export class PackEngine {
         store.setState?.({ hunterMarkLeft: n });
       },
       injectCss: (id, css) => {
-        if (typeof document === 'undefined') return;
         let el = document.getElementById(`pack-css-${id}`);
         if (!el) {
           el = document.createElement('style');
@@ -574,7 +571,6 @@ export class PackEngine {
         el.textContent = css;
       },
       removeCss: (id) => {
-        if (typeof document === 'undefined') return;
         document.getElementById(`pack-css-${id}`)?.remove();
       },
       sfx: (name) => (SFX as any)[name]?.(),

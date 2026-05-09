@@ -1,15 +1,12 @@
 import { defineConfig } from 'vite'
-import { resolve } from 'path'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import { vitePrerenderPlugin } from 'vite-prerender-plugin'
 
 // https://vite.dev/config/
 export default defineConfig({
   base: '/Crit2048-DZVN/', // Use relative paths for better compatibility (Electron + GitHub Pages)
   plugins: [
-    vitePrerenderPlugin({ renderTarget: '#root', prerenderScript: resolve(process.cwd(), 'src/prerender.tsx') }),
     react(),
     tailwindcss(),
     VitePWA({

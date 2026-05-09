@@ -71,7 +71,7 @@ export const Native = {
    * Web Notifications
    */
   async notify(title: string, body: string, icon: string = '/app_icon.png') {
-    if (typeof window === 'undefined' || !("Notification" in window)) return;
+    if (!("Notification" in window)) return;
 
     if (Notification.permission === "granted") {
       new Notification(title, { body, icon });
