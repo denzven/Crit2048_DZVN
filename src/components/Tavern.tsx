@@ -422,7 +422,7 @@ const Tavern: React.FC = () => {
                             📈
                           </button>
                           <button
-                            onClick={() => handleBuyArtifact(item.id, item.name)}
+                            onClick={() => handleBuyArtifact(item.id)}
                             disabled={gold < currentCost}
                             className={clsx(
                               'flex-grow py-3 font-black rounded-xl transition-all uppercase tracking-widest text-[10px] border shadow-lg active:scale-95 disabled:opacity-40 disabled:grayscale disabled:cursor-not-allowed',
