@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.gradle
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +23,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build and coverage
+dist
+dist-ssr
+build
+coverage
+*.apk
+*.idsig
+
+# Reports
+eslint_out.json
+eslint_report.txt
