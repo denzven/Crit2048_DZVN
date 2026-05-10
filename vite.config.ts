@@ -12,7 +12,14 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['app_icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+      includeAssets: [
+        'app_icon.png',
+        'pwa-192x192.png',
+        'pwa-512x512.png',
+        'sitemap.xml',
+        'robots.txt',
+        'humans.txt',
+      ],
       manifest: {
         name: 'Crit2048 - a D&D inspired 2048 roguelike dungeon-crawler',
         short_name: 'Crit2048',
@@ -82,6 +89,12 @@ export default defineConfig({
         clientsClaim: true,
         skipWaiting: true,
         navigateFallback: 'index.html',
+        navigateFallbackDenylist: [
+          /^\/sitemap\.xml$/,
+          /^\/robots\.txt$/,
+          /^\/humans\.txt$/,
+          /^\/404$/,
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
