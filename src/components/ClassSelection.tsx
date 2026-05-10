@@ -6,7 +6,7 @@ import { useGameStore } from '../engine/gameStore';
 import { Emoji } from './Emoji';
 
 const ClassSelection: React.FC = () => {
-  const { initEncounter, spawnRandomTile, addLog, activeClasses } = useGameStore();
+  const { initEncounter, addLog, activeClasses } = useGameStore();
   const [focusedIndex, setFocusedIndex] = React.useState(0);
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
   const cardRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
@@ -165,7 +165,7 @@ const ClassSelection: React.FC = () => {
             </p>
           </div>
         )}
-        {activeClasses.map((hero, idx) => (
+        {activeClasses.map((hero: any, idx: number) => (
           <motion.button
             key={hero.id}
             ref={(el) => {
