@@ -9,9 +9,9 @@ import {
   CRIT2048_SHADOWFELL_THEMES_PACK,
 } from '../engine_core/packs';
 import type { GameStoreState, Tile } from '../types/game';
-import type { ArtifactDef, ClassDef, EnemyDef, PackData, SkinDef } from '../types/pack';
+import type { EnemyDef, PackData, SkinDef } from '../types/pack';
 import { SFX } from './audio';
-import { CLASSES, ENEMIES, MASTER_ARTIFACTS } from './data';
+import { ENEMIES } from './data';
 import { SeededRNG } from './prng';
 import { useRegistry } from './registryHub';
 import { GameStorage } from './storage';
@@ -94,12 +94,9 @@ const BLOCKED_KEYWORDS = [
 
 export class PackEngine {
   private static baseEncounters: EnemyDef[] = [];
-  private static baseClasses: ClassDef[] = [];
-  private static baseArtifacts: ArtifactDef[] = [];
 
   private static weaponOverrides: Record<number, unknown> = {};
   private static hazardOverrides: Record<number, unknown> = {};
-  private static customHazards: Record<string, unknown> = {};
   private static activeSkin: SkinDef | null = null;
   private static runState: Record<string, unknown> = {};
 
@@ -109,8 +106,6 @@ export class PackEngine {
   static init() {
     if (this.baseEncounters.length === 0) {
       this.baseEncounters = [...ENEMIES];
-      this.baseClasses = [...CLASSES];
-      this.baseArtifacts = [...MASTER_ARTIFACTS];
     }
   }
 
@@ -123,7 +118,6 @@ export class PackEngine {
     // Reset registry data
     this.weaponOverrides = {};
     this.hazardOverrides = {};
-    this.customHazards = {};
     const dbPacks = await GameStorage.getPackIndex();
     const defaultIds = [
       'crit2048-default',
@@ -194,10 +188,10 @@ export class PackEngine {
       }
 
       // Register Pack Content into Registry Hub (always append now as we cleared above if needed)
-      pack.monsters?.forEach((e) => registry.registerMonster(e));
-      pack.heroes?.forEach((c) => registry.registerHero(c));
-      pack.artifacts?.forEach((a) => registry.registerArtifact(a));
-      pack.arsenal?.forEach((w) => registry.registerArsenal(w));
+      pack.monsters?.forEach((e) => registry.registerMonster(e as any));
+      pack.heroes?.forEach((c) => registry.registerHero(c as any));
+      pack.artifacts?.forEach((a) => registry.registerArtifact(a as any));
+      pack.arsenal?.forEach((w) => registry.registerArsenal(w as any));
 
       if (pack.themes) {
         this.activeSkin = pack.themes;
@@ -266,7 +260,7 @@ export class PackEngine {
     let actions = actionsOrString;
     if (typeof actionsOrString === 'string') {
       const presets = useRegistry.getState().presets || {};
-      actions = presets[actionsOrString]?.actions || [];
+      actions = (presets[actionsOrString] as any)?.actions || [];
     }
 
     if (!Array.isArray(actions)) return;
@@ -286,9 +280,7 @@ export class PackEngine {
         }
       }
 
-      const store = (
-        window as unknown as { useGameStore?: { getState: () => GameStoreState } }
-      ).useGameStore?.getState();
+      const store = (window as any).useGameStore?.getState();
       if (!store) return;
 
       const p = action.amount || 0;
@@ -371,7 +363,9 @@ export class PackEngine {
 
     // Advanced Scripts
     if (enemy.scripts?.onSlide || enemy.script?.onSlide) {
-      this.runScript(enemy.scripts?.onSlide || enemy.script.onSlide, state, { dir: direction });
+      this.runScript((enemy.scripts?.onSlide || enemy.script?.onSlide) as string, state, {
+        dir: direction,
+      });
     }
 
     // Action Queue
@@ -423,7 +417,11 @@ export class PackEngine {
     const G = this.buildGameAPI(state);
 
     if (enemy.scripts?.onEncounterStart || enemy.script?.onEncounterStart) {
-      this.runScript(enemy.scripts?.onEncounterStart || enemy.script.onEncounterStart, state, {});
+      this.runScript(
+        (enemy.scripts?.onEncounterStart || enemy.script?.onEncounterStart) as string,
+        state,
+        {},
+      );
     }
 
     if (enemy.passiveTriggers?.onEncounterStart) {
@@ -441,7 +439,7 @@ export class PackEngine {
     const G = this.buildGameAPI(state);
 
     if (enemy && (enemy.scripts?.onMerge || enemy.script?.onMerge)) {
-      this.runScript(enemy.scripts?.onMerge || enemy.script.onMerge, state, {
+      this.runScript((enemy.scripts?.onMerge || enemy.script?.onMerge) as string, state, {
         val: newVal,
         pos,
         x,
@@ -594,15 +592,7 @@ export class PackEngine {
         prng: () => Math.random(),
       } as unknown as GameAPI;
     }
-    const store = storeObj.getState() as unknown as GameStoreState & {
-      addLog?: (m: string) => void;
-      triggerScreenShake?: () => void;
-      spawnRandomTile?: (v: number | string | null) => void;
-      setState: (p: Record<string, unknown>) => void;
-      nextEncounter?: () => void;
-      endGame?: (r: string) => void;
-      triggerFX?: (n: string, p: unknown) => void;
-    };
+    const store = storeObj.getState() as any;
     return {
       state: state,
       slides: state.slidesLeft,
@@ -644,22 +634,22 @@ export class PackEngine {
           .filter((i): i is number => i !== null);
         if (validIndices.length === 0) return;
 
-        let targetIdx = validIndices[0];
+        let targetIdx = validIndices[0]!;
         if (criteria === 'random') {
-          targetIdx = validIndices[Math.floor(SeededRNG.random() * validIndices.length)];
+          targetIdx = validIndices[Math.floor(SeededRNG.random() * validIndices.length)]!;
         } else if (criteria === 'weakest') {
           targetIdx = validIndices.reduce(
             (min, i) => (grid[i]!.val < grid[min]!.val ? i : min),
-            validIndices[0],
+            validIndices[0]!,
           );
         } else if (criteria === 'best') {
           targetIdx = validIndices.reduce(
             (max, i) => (grid[i]!.val > grid[max]!.val ? i : max),
-            validIndices[0],
+            validIndices[0]!,
           );
         }
 
-        grid[targetIdx] = null;
+        grid[targetIdx!] = null;
         store.setState({ grid });
       },
       degradeWeapon: (criteria) => {
@@ -669,20 +659,20 @@ export class PackEngine {
           .filter((i): i is number => i !== null);
         if (validIndices.length === 0) return;
 
-        let targetIdx = validIndices[0];
+        let targetIdx = validIndices[0]!;
         if (criteria === 'random') {
-          targetIdx = validIndices[Math.floor(SeededRNG.random() * validIndices.length)];
+          targetIdx = validIndices[Math.floor(SeededRNG.random() * validIndices.length)]!;
         } else if (criteria === 'best') {
           targetIdx = validIndices.reduce(
             (max, i) => (grid[i]!.val > grid[max]!.val ? i : max),
-            validIndices[0],
+            validIndices[0]!,
           );
         }
 
-        if (grid[targetIdx]) {
-          grid[targetIdx] = {
-            ...grid[targetIdx],
-            val: Math.max(2, grid[targetIdx].val / 2),
+        if (grid[targetIdx!]) {
+          grid[targetIdx!] = {
+            ...grid[targetIdx!]!,
+            val: Math.max(2, grid[targetIdx!]!.val / 2),
             pop: true,
           };
           store.setState({ grid });
@@ -697,9 +687,11 @@ export class PackEngine {
 
         for (let i = 0; i < validIndices.length; i++) {
           const j = Math.floor(SeededRNG.random() * validIndices.length);
-          const temp = grid[validIndices[i]];
-          grid[validIndices[i]] = grid[validIndices[j]];
-          grid[validIndices[j]] = temp;
+          const iIdx = validIndices[i]!;
+          const jIdx = validIndices[j]!;
+          const temp = grid[iIdx];
+          (grid as any)[iIdx] = grid[jIdx];
+          (grid as any)[jIdx] = temp;
         }
         store.setState({ grid });
       },
@@ -725,7 +717,7 @@ export class PackEngine {
         return art ? art.level : 0;
       },
       addSpellUses: (n) => {
-        store.setState?.({ usesLeft: (state.usesLeft || 0) + n });
+        store.setState?.({ usesLeft: ((state as any).usesLeft || 0) + n });
       },
       setHunterMark: (n) => {
         store.setState?.({ hunterMarkLeft: n });
@@ -742,16 +734,16 @@ export class PackEngine {
       removeCss: (id) => {
         document.getElementById(`pack-css-${id}`)?.remove();
       },
-      sfx: (name) => (SFX as Record<string, () => void>)[name]?.(),
+      sfx: (name) => (SFX as unknown as Record<string, () => void>)[name]?.(),
       utils: {
         wait: (ms) => new Promise((r) => setTimeout(r, ms)),
         onInterval: (cb, ms) => setInterval(cb, ms),
       },
-      onTavernLeave: () => {
+      onTavernLeave: (_state) => {
         store.nextEncounter?.();
       },
-      onGameOver: (reason) => {
-        store.endGame?.(reason);
+      onGameOver: (_state, reason: any) => {
+        (store as any).endGame?.(reason);
       },
       triggerFX: (name, params) => {
         store.triggerFX?.(name, params);
@@ -807,7 +799,7 @@ export class PackEngine {
     if (!enemy) return 0;
 
     if (enemy.mode === 'simple' && enemy.passiveAbility?.effect === 'damage_reduction') {
-      return enemy.passiveAbility.effectParam || 0;
+      return (enemy.passiveAbility.effectParam as number) || 0;
     }
     // Advanced mode can't easily return a value via async scripts in the middle of a loop,
     // so we stick to simple mode for % reduction or use onMergeDamage for artifacts.
@@ -871,7 +863,7 @@ export class PackEngine {
     if (!desc) return '';
     let d = desc;
 
-    const baseParam = parseFloat(entry?.passiveParam || 0);
+    const baseParam = parseFloat(String(entry?.passiveParam || 0));
 
     // Replace complex expressions like ${30 * lvl}
     d = d.replace(/\${([^}]+)}/g, (match, expr) => {

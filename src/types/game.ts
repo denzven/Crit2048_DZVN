@@ -9,6 +9,10 @@ export interface Tile {
   y?: number;
 }
 
+export interface ArtifactEntry extends ArtifactDef {
+  level: number;
+}
+
 export interface RunStats {
   maxDamage: number;
   totalDamageDealt: number;
@@ -90,7 +94,7 @@ export interface GameStoreState {
   multiplier: number;
   score: number;
   playerClass: ClassDef | null;
-  artifacts: ArtifactDef[];
+  artifacts: ArtifactEntry[];
   logs: string[];
 
   // Transient flags

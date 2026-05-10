@@ -263,7 +263,9 @@ export const useRegistry = create<RegistryState>((set, get) => ({
 
     for (const path in modules) {
       try {
-        const module = (await modules[path]()) as { default?: Record<string, unknown> };
+        const module = (await (modules[path] as () => Promise<any>)()) as {
+          default?: Record<string, unknown>;
+        };
         const content = (module.default || module) as {
           id?: string;
           defaults: Record<string, unknown>;
@@ -284,7 +286,8 @@ export const useRegistry = create<RegistryState>((set, get) => ({
     try {
       const mData = (monsterData as unknown as { default?: unknown }).default || monsterData;
       const cData = (classData as unknown as { default?: unknown }).default || classData;
-      const arData = (arsenalData as unknown as { default?: unknown }).default || arsenalData;
+      const arData = ((arsenalData as unknown as { default?: unknown }).default ||
+        arsenalData) as any;
       const afData = (artifactData as unknown as { default?: unknown }).default || artifactData;
       const uiData = (uiDefsData as unknown as { default?: unknown }).default || uiDefsData;
 
@@ -292,7 +295,7 @@ export const useRegistry = create<RegistryState>((set, get) => ({
       if (uiData) set({ uiDefs: uiData as UiDefs });
 
       if (Array.isArray(mData)) {
-        mData.forEach((m) => {
+        mData.forEach((m: any) => {
           try {
             get().registerMonster(m);
           } catch (e) {
@@ -301,7 +304,7 @@ export const useRegistry = create<RegistryState>((set, get) => ({
         });
       }
       if (Array.isArray(cData)) {
-        cData.forEach((c) => {
+        cData.forEach((c: any) => {
           try {
             get().registerHero(c);
           } catch (e) {
@@ -310,7 +313,7 @@ export const useRegistry = create<RegistryState>((set, get) => ({
         });
       }
       if (Array.isArray(afData)) {
-        afData.forEach((a) => {
+        afData.forEach((a: any) => {
           try {
             get().registerArtifact(a);
           } catch (e) {

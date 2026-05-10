@@ -475,7 +475,7 @@ export class AudioEngine {
       [46, 50, 53, 58], // Bb
       [45, 49, 52, 57], // A
     ];
-    const chord = chords[bar % 4];
+    const chord: any = chords[bar % 4]!;
 
     if (step === 0) this.synthAcousticBass(this.midiToFreq(chord[0] - 12), t, 0.1 * fade);
 
@@ -494,7 +494,7 @@ export class AudioEngine {
       [50, 53, 57, 62], // Dm
       [46, 50, 53, 58], // Bb
     ];
-    const chord = chords[bar % 4];
+    const chord: any = chords[bar % 4]!;
 
     if (step === 0 || step === 8)
       this.synthAcousticBass(this.midiToFreq(chord[0] - 12), t, 0.1 * fade);
@@ -515,7 +515,7 @@ export class AudioEngine {
       [55, 62, 67], // Gm
       [48, 55, 60], // C
     ];
-    const chord = chords[bar % 4];
+    const chord: any = chords[bar % 4]!;
 
     // Steady, syncopated chugging bass
     if (step === 0 || step === 6 || step === 8) {
@@ -543,7 +543,7 @@ export class AudioEngine {
       [51, 55, 58, 62], // Ebmaj7 (Super mysterious Phrygian shift)
       [51, 55, 58, 62],
     ];
-    const chord = chords[bar % 4];
+    const chord: any = chords[bar % 4]!;
 
     // Slow, thought-provoking bass (only on the downbeat)
     if (step === 0) {
@@ -573,11 +573,11 @@ export class AudioEngine {
       [43, 46, 50, 55], // Gm
       [45, 49, 52, 57], // A7
     ];
-    const chord = chords[bar % 4];
+    const chord: any = chords[bar % 4]!;
 
     if (step === 0) {
-      this.synthAcousticBass(this.midiToFreq(chord[0] - 12), t, 0.12 * fade);
-      this.synthChoir(this.midiToFreq(chord[0]), t, 2.0, 0.03 * fade);
+      this.synthAcousticBass(this.midiToFreq(chord![0] - 12), t, 0.12 * fade);
+      this.synthChoir(this.midiToFreq(chord![0]), t, 2.0, 0.03 * fade);
     }
     if (step === 0 || step === 6) {
       this.synthKick(t, 0.12 * fade);
@@ -586,25 +586,25 @@ export class AudioEngine {
     if (this.intensity >= 1) {
       if (step % 2 === 0) {
         const pattern = [0, 2, 3, 2, 0, 2, 3, 2];
-        const noteIdx = pattern[step / 2];
+        const noteIdx = pattern[step / 2]!;
         const vol = step === 0 || step === 8 ? 0.08 : 0.05;
-        this.synthLute(this.midiToFreq(chord[noteIdx]), t, vol * fade);
+        this.synthLute(this.midiToFreq(chord![noteIdx]), t, vol * fade);
       }
     }
 
     if (this.intensity >= 2) {
       if (step === 4 || step === 12) this.synthPercussion(t, 0.08 * fade, 'SNARE');
       if (step % 4 === 2) this.synthPercussion(t, 0.04 * fade, 'SHAKER');
-      if (step === 14) this.synthLute(this.midiToFreq(chord[3] + 12), t, 0.08 * fade);
+      if (step === 14) this.synthLute(this.midiToFreq(chord![3] + 12), t, 0.08 * fade);
     }
 
     if (this.intensity >= 3) {
       if (step === 0 || step === 8) {
-        this.synthBrassStab(this.midiToFreq(chord[0]), t, 0.1 * fade, false);
+        this.synthBrassStab(this.midiToFreq(chord![0]), t, 0.1 * fade, false);
       }
       if (bar % 2 === 0) {
-        if (step === 0) this.synthTubularBell(this.midiToFreq(chord[3] + 12), t, 0.06 * fade);
-        if (step === 6) this.synthTubularBell(this.midiToFreq(chord[2] + 12), t, 0.04 * fade);
+        if (step === 0) this.synthTubularBell(this.midiToFreq(chord![3] + 12), t, 0.06 * fade);
+        if (step === 6) this.synthTubularBell(this.midiToFreq(chord![2] + 12), t, 0.04 * fade);
       }
     }
   }

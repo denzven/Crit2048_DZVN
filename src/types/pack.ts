@@ -42,6 +42,8 @@ export interface EnemyDef {
     logMessage?: string;
   };
   script?: Record<string, string>;
+  scripts?: Record<string, string>;
+  passiveTriggers?: Record<string, any>;
   lore?: string;
 }
 
@@ -57,6 +59,7 @@ export interface ClassDef {
   passiveParam?: unknown;
   scripts?: Record<string, string>;
   ability?: unknown;
+  passiveTriggers?: Record<string, any>;
   mode?: 'simple' | 'advanced' | 'builtin';
 }
 
@@ -72,6 +75,7 @@ export interface ArtifactDef {
   passiveTrigger?: string;
   passiveEffect?: string;
   passiveParam?: unknown;
+  passiveTriggers?: Record<string, any>;
   scripts?: Record<string, string>;
 }
 

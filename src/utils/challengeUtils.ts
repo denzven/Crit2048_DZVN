@@ -45,14 +45,14 @@ export const ChallengeUtils = {
       const p = raw.split('|');
 
       return {
-        s: p[0],
-        sc: parseInt(p[1]),
-        m: parseInt(p[2]),
-        d: parseInt(p[3]),
-        mx: parseInt(p[4]),
-        mv: parseInt(p[5]),
-        n: p[6],
-        i: p[7],
+        s: p[0] || '',
+        sc: parseInt(p[1] || '0'),
+        m: parseInt(p[2] || '0'),
+        d: parseInt(p[3] || '0'),
+        mx: parseInt(p[4] || '0'),
+        mv: parseInt(p[5] || '0'),
+        n: p[6] || '',
+        i: p[7] || '',
       };
     } catch (e) {
       console.error('Failed to decode challenge data:', e);

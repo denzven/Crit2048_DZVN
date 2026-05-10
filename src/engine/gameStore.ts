@@ -124,12 +124,12 @@ export interface GameActions {
   prevEncounter: () => void;
   checkHazards: (newGrid: (Tile | null)[], damage: number) => (Tile | null)[];
   triggerFX: (name: string, params?: unknown) => void;
-  setState: (partial: Partial<ExtendedGameStoreState & GameActions>) => void;
+  setState: (partial: any) => void;
   toggleDevMode: () => void;
   executeDebugScript: (code: string) => void;
 }
 
-export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, get) => ({
+export const useGameStore = create<any & GameActions>((set, get) => ({
   ...INITIAL_STATE,
   shopItems: [],
   slidesSinceRoll: 0,
@@ -144,33 +144,33 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   isDevMode: false,
   d20Override: null,
 
-  addFloatingText: (text, type, x = 50, y = 50) => {
+  addFloatingText: (text: string, type: any, x = 50, y = 50) => {
     const id = Date.now() + SeededRNG.random();
-    set((state) => ({
+    set((state: any) => ({
       floatingTexts: [...state.floatingTexts, { id, text, type, x, y }],
     }));
     setTimeout(() => {
-      set((state) => ({
-        floatingTexts: state.floatingTexts.filter((t) => t.id !== id),
+      set((state: any) => ({
+        floatingTexts: state.floatingTexts.filter((t: any) => t.id !== id),
       }));
     }, 850);
   },
 
-  triggerFX: (name, params) => {
+  triggerFX: (name: string, params: any) => {
     const id = Math.random().toString(36).substring(7);
-    set((state) => ({
+    set((state: any) => ({
       activeFX: [...state.activeFX, { id, name, params }],
     }));
     setTimeout(() => {
-      set((state) => ({
-        activeFX: state.activeFX.filter((f) => f.id !== id),
+      set((state: any) => ({
+        activeFX: state.activeFX.filter((f: any) => f.id !== id),
       }));
     }, 2000);
   },
 
   toggleDevMode: () => {
     const next = !get().isDevMode;
-    set((s) => ({
+    set((s: any) => ({
       isDevMode: next,
       runStats: { ...s.runStats, wasGodModeUsed: true },
     }));
@@ -250,16 +250,16 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       });
       SeededRNG.setSeed(challenge.s);
     } else {
-      const saved = await GameStorage.loadGame();
+      const saved = (await GameStorage.loadGame()) as any;
       const resumable = saved && saved.gameState !== 'START' && !saved.isGameOver;
       set({ hasSave: !!resumable });
     }
   },
 
-  setState: (partial: Partial<ExtendedGameStoreState & GameActions>) => set(partial),
+  setState: (partial: any) => set(partial),
 
-  updateSettings: (newSettings) => {
-    set((state) => {
+  updateSettings: (newSettings: any) => {
+    set((state: any) => {
       const updated = { ...state.settings, ...newSettings };
 
       // Apply Scaling
@@ -278,7 +278,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     const state = get();
     if (state.gameState === 'START' || state.gameState === 'CLASS_SELECT' || state.isGameOver) {
       SFX.menuEnter();
-      set((s) => ({
+      set((s: any) => ({
         gameState: 'START',
         playerClass: null,
         artifacts: [],
@@ -314,11 +314,11 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     get().saveGame();
   },
 
-  showConfirm: (title, message, onConfirm, onCancel) => {
+  showConfirm: (title: string, message: string, onConfirm: any, onCancel?: any) => {
     set({ confirmation: { title, message, onConfirm, onCancel, type: 'confirm' } });
   },
 
-  showAlert: (title, message) => {
+  showAlert: (title: string, message: string) => {
     set({
       confirmation: { title, message, onConfirm: () => get().closeConfirmation(), type: 'alert' },
     });
@@ -349,7 +349,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   setGameState: (gameState: GameState) => {
     const prevState = get().gameState;
     if (gameState === 'PLAYING' && get().runStats.startTime === 0) {
-      set((s) => ({ runStats: { ...s.runStats, startTime: Date.now() } }));
+      set((s: any) => ({ runStats: { ...s.runStats, startTime: Date.now() } }));
     }
 
     // Trigger SFX on State Change
@@ -362,7 +362,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   },
 
   addLog: (msg: string) =>
-    set((state) => ({
+    set((state: any) => ({
       logs: [msg, ...state.logs].slice(0, 50),
     })),
 
@@ -374,28 +374,28 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   addGold: (amount: number) => {
     const val = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
     if (val > 0) SFX.coin();
-    set((state) => ({
+    set((state: any) => ({
       gold: Math.max(0, (state.gold || 0) + val),
     }));
   },
 
   restoreSlides: (n: number) => {
     const val = typeof n === 'number' && !isNaN(n) ? n : 0;
-    set((state) => ({
+    set((state: any) => ({
       slidesLeft: Math.max(0, (state.slidesLeft || 0) + val),
     }));
   },
 
   addMultiplier: (n: number) => {
     const val = typeof n === 'number' && !isNaN(n) ? n : 0;
-    set((state) => ({
+    set((state: any) => ({
       multiplier: Math.max(0.1, (state.multiplier || 1) + val),
     }));
   },
 
   applyDamage: (n: number) => {
     const val = typeof n === 'number' && !isNaN(n) ? n : 0;
-    set((state) => ({
+    set((state: any) => ({
       monsterHp: Math.max(0, (state.monsterHp || 0) - val),
     }));
   },
@@ -414,8 +414,8 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
     const { grid } = get();
     const emptyIndices = grid
-      .map((v, i) => (v === null ? i : null))
-      .filter((v): v is number => v !== null);
+      .map((v: any, i: number) => (v === null ? i : null))
+      .filter((v: any): v is number => v !== null);
 
     if (emptyIndices.length > 0) {
       const rIdx = emptyIndices[Math.floor(SeededRNG.random() * emptyIndices.length)];
@@ -430,7 +430,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
       set({ grid: newGrid });
       if (val < 0) {
-        set((s) => ({
+        set((s: any) => ({
           runStats: { ...s.runStats, hazardsSpawned: s.runStats.hazardsSpawned + 1 },
         }));
       }
@@ -505,7 +505,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     }
 
     if (clearedCount > 0) {
-      set((s) => ({
+      set((s: any) => ({
         runStats: {
           ...s.runStats,
           totalHazardsCleared: s.runStats.totalHazardsCleared + clearedCount,
@@ -569,7 +569,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       const reduction = PackEngine.getDamageReduction(get());
       const finalDamage = reduction > 0 ? damageDealt * (1 - reduction / 100) : damageDealt;
 
-      set((s) => {
+      set((s: any) => {
         const newMergeCounts = { ...s.runStats.mergeCounts };
         mergeResults.forEach((res) => {
           const val = res.damage / s.multiplier; // Approximation of tile val for stats
@@ -608,14 +608,14 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       if (get().runStats.totalMoves % 10 === 0) {
         const grid = [...get().grid];
         let spreadOccurred = false;
-        grid.forEach((tile, idx) => {
+        grid.forEach((tile: any, idx: number) => {
           if (tile && (tile.val === -1 || tile.val === -7) && SeededRNG.random() < 0.25) {
             // Try to find adjacent empty spot
             const neighbors = [idx - 4, idx + 4, idx - 1, idx + 1].filter(
-              (i) => i >= 0 && i < 16 && grid[i] === null,
+              (i: number) => i >= 0 && i < 16 && grid[i] === null,
             );
             if (neighbors.length > 0) {
-              const targetIdx = neighbors[Math.floor(SeededRNG.random() * neighbors.length)];
+              const targetIdx = neighbors[Math.floor(SeededRNG.random() * neighbors.length)]!;
               grid[targetIdx] = { id: Date.now() + SeededRNG.random(), val: tile.val, pop: true };
               spreadOccurred = true;
             }
@@ -687,7 +687,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     }
   },
 
-  initEncounter: (hp, slides) => {
+  initEncounter: (hp: number, slides: number) => {
     const { playerClass, runStats } = get();
 
     // Seed initialization
@@ -698,7 +698,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       SeededRNG.setSeed(seed);
     }
 
-    set((s) => ({
+    set((s: any) => ({
       grid: Array(16).fill(null),
       monsterHp: hp,
       monsterMaxHp: hp,
@@ -729,7 +729,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     const { activeArtifacts, playerClass } = get();
 
     // Filter by required class if specified
-    const pool = activeArtifacts.filter((a) => {
+    const pool = activeArtifacts.filter((a: any) => {
       if (!a.requiredClass) return true;
       return a.requiredClass.toLowerCase() === playerClass?.id?.toLowerCase();
     });
@@ -794,9 +794,9 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     if (enemy.name.includes('Dragon') && turn > 0 && turn % 10 === 0) {
       let maxV = 0,
         maxI = -1;
-      grid.forEach((t, i) => {
-        if (t && t.val > maxV) {
-          maxV = t.val;
+      grid.forEach((t: any, i: number) => {
+        if (t && (t as any).val > maxV) {
+          maxV = (t as any).val;
           maxI = i;
         }
       });
@@ -813,11 +813,11 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   buyArtifact: (artifactId: string) => {
     const { gold, shopItems, artifacts, activeArtifacts } = get();
     const item =
-      shopItems.find((i) => i.id === artifactId) ||
-      activeArtifacts.find((i) => i.id === artifactId);
+      shopItems.find((i: any) => i.id === artifactId) ||
+      activeArtifacts.find((i: any) => i.id === artifactId);
     if (!item) return;
 
-    const existingIdx = artifacts.findIndex((a) => a.id === artifactId);
+    const existingIdx = artifacts.findIndex((a: any) => a.id === artifactId);
     const level = existingIdx !== -1 ? artifacts[existingIdx].level : 0;
     const cost = item.basePrice * (level + 1);
 
@@ -863,7 +863,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     // Total roll including class mod
     const totalRoll = finalRollVal + mod;
 
-    let result: ExtendedGameStoreState['lastRoll'] = {
+    let result: any = {
       rawVal: rawRoll,
       finalVal: totalRoll,
       modifiers: trace,
@@ -878,7 +878,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     if (totalRoll >= 20) {
       SFX.crit();
       result = { ...result, msg: 'NATURAL 20! Critical Hit!', type: 'crit' };
-      set((s) => ({
+      set((s: any) => ({
         multiplier: s.multiplier + 1.0,
         runStats: {
           ...s.runStats,
@@ -886,8 +886,8 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         },
       }));
       const validIndices = get()
-        .grid.map((c, i) => (c && c.val > 0 ? i : null))
-        .filter((c): c is number => c !== null);
+        .grid.map((c: any, i: number) => (c && (c as any).val > 0 ? i : null))
+        .filter((c: any): c is number => c !== null);
       if (validIndices.length > 0) {
         const idx = validIndices[Math.floor(SeededRNG.random() * validIndices.length)];
         const newGrid = [...get().grid];
@@ -914,7 +914,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
       let maxV = 0,
         maxI = -1;
-      get().grid.forEach((c, i) => {
+      get().grid.forEach((c: any, i: number) => {
         if (c && c.val > maxV) {
           maxV = c.val;
           maxI = i;
@@ -1067,7 +1067,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       url.searchParams.delete('c');
       window.history.replaceState({}, '', url.toString());
     }
-    set((state) => ({
+    set((state: any) => ({
       ...INITIAL_STATE,
       isChallengeMode: false,
       rivalData: null,
@@ -1087,7 +1087,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   },
 
   loadGame: async () => {
-    const saved = await GameStorage.loadGame();
+    const saved = (await GameStorage.loadGame()) as any;
     if (saved) {
       if (saved.rngState !== undefined) SeededRNG.setSeedState(saved.rngState);
 

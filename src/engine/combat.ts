@@ -33,13 +33,13 @@ export const CombatLogic = {
       const combined: (Tile | null)[] = [];
 
       for (let i = 0; i < line.length; i++) {
-        if (i < line.length - 1 && line[i].val > 0 && line[i].val === line[i + 1].val) {
+        if (i < line.length - 1 && line[i]!.val > 0 && line[i]!.val === line[i + 1]!.val) {
           // MERGE DETECTED
-          const tA = line[i];
+          const tA = line[i]!;
           const newVal = tA.val * 2;
 
           combined.push({
-            id: tA.id, // Keep the ID for animation continuity
+            id: tA!.id, // Keep the ID for animation continuity
             val: newVal,
             pop: true,
             merged: true,
@@ -49,10 +49,10 @@ export const CombatLogic = {
           // (mergeResults tracking handled below)
 
           // Pack Hook: onMerge
-          PackEngine.onMerge(state, newVal, lineIndices[i], direction);
+          PackEngine.onMerge(state, newVal, lineIndices[i]!, direction);
 
           // Calculate Damage
-          const baseDmg = WEAPON_STATS[newVal]?.dmg || newVal;
+          const baseDmg = (WEAPON_STATS[newVal] as any)?.dmg || newVal;
 
           // (Class and Artifact bonuses are now handled via PackEngine hooks)
 
@@ -76,13 +76,13 @@ export const CombatLogic = {
           mergeResults.push({
             damage: finalMergeDmg,
             gold: baseGold,
-            pos: lineIndices[i],
+            pos: lineIndices[i]!,
           });
 
           if (state.settings?.haptics) Native.vibrate(20); // Small pulse on merge
           i++; // Skip next tile since it merged
         } else {
-          combined.push(line[i]);
+          combined.push(line[i]!);
         }
       }
 
@@ -91,14 +91,14 @@ export const CombatLogic = {
 
       // 2. Check if anything changed and update newGrid
       for (let i = 0; i < 4; i++) {
-        const targetIdx = lineIndices[i];
+        const targetIdx = lineIndices[i]!;
         if (
           newGrid[targetIdx]?.id !== combined[i]?.id ||
           newGrid[targetIdx]?.val !== combined[i]?.val
         ) {
           changed = true;
         }
-        newGrid[targetIdx] = combined[i];
+        newGrid[targetIdx] = combined[i]!;
       }
     };
 

@@ -215,7 +215,7 @@ function App() {
     // Intercept back button for PWAs/TWAs
     window.history.pushState(null, '', window.location.pathname + window.location.search);
 
-    const handlePopState = (e: PopStateEvent) => {
+    const handlePopState = (_e: PopStateEvent) => {
       // Re-push state to keep intercepting
       window.history.pushState(null, '', window.location.pathname + window.location.search);
 
@@ -713,7 +713,7 @@ function App() {
                           {useGameStore.getState().activeEncounters?.[encounterIdx]?.name ||
                             'Unknown Entity'}
                         </h3>
-                        {useGameStore.getState().grid.some((t) => t?.val === -3) && (
+                        {useGameStore.getState().grid.some((t: Tile | null) => t?.val === -3) && (
                           <span
                             className="text-[10px] bg-slate-800 text-slate-400 px-1 rounded animate-pulse"
                             title="Skeleton blocking merges"
@@ -721,7 +721,7 @@ function App() {
                             💀
                           </span>
                         )}
-                        {useGameStore.getState().grid.some((t) => t?.val === -2) && (
+                        {useGameStore.getState().grid.some((t: Tile | null) => t?.val === -2) && (
                           <span
                             className="text-[10px] bg-amber-900/50 text-amber-500 px-1 rounded animate-pulse"
                             title="Goblin stealing gold"
@@ -790,7 +790,7 @@ function App() {
                     {artifacts.length === 0 ? (
                       <div className="text-[10px] text-slate-600 italic">No artifacts yet...</div>
                     ) : (
-                      artifacts.map((art, idx) => (
+                      artifacts.map((art: any, idx: number) => (
                         <div
                           key={idx}
                           className="bg-slate-900 border border-slate-800 p-2 rounded-xl flex items-center gap-3"
@@ -803,11 +803,12 @@ function App() {
                             <p className="text-[8px] text-slate-500 font-mono">LVL {art.level}</p>
                             <p className="text-[7px] text-slate-400 italic line-clamp-2 mt-0.5 leading-tight">
                               {PackEngine.formatDesc(
-                                useGameStore.getState().activeArtifacts.find((a) => a.id === art.id)
-                                  ?.desc || '',
                                 useGameStore
                                   .getState()
-                                  .activeArtifacts.find((a) => a.id === art.id),
+                                  .activeArtifacts.find((a: any) => a.id === art.id)?.desc || '',
+                                useGameStore
+                                  .getState()
+                                  .activeArtifacts.find((a: any) => a.id === art.id),
                                 art.level,
                               )}
                             </p>

@@ -1,3 +1,4 @@
+import type { ArtifactDef, ClassDef, EnemyDef } from '../types/pack';
 import { useRegistry } from './registryHub';
 
 /**
@@ -35,7 +36,7 @@ export const CLASSES: ClassDef[] = new Proxy([], {
     if (prop === 'filter') return list.filter.bind(list);
     if (prop === 'map') return list.map.bind(list);
     if (prop === 'forEach') return list.forEach.bind(list);
-    return (list as Record<string | symbol, unknown>)[prop];
+    return (list as any)[prop];
   },
 });
 
@@ -47,7 +48,7 @@ export const ENEMIES: EnemyDef[] = new Proxy([], {
     if (prop === 'filter') return list.filter.bind(list);
     if (prop === 'map') return list.map.bind(list);
     if (prop === 'forEach') return list.forEach.bind(list);
-    return (list as Record<string | symbol, unknown>)[prop];
+    return (list as any)[prop];
   },
 });
 
@@ -59,7 +60,7 @@ export const MASTER_ARTIFACTS: ArtifactDef[] = new Proxy([], {
     if (prop === 'filter') return list.filter.bind(list);
     if (prop === 'map') return list.map.bind(list);
     if (prop === 'forEach') return list.forEach.bind(list);
-    return (list as Record<string | symbol, unknown>)[prop];
+    return (list as any)[prop];
   },
 });
 
