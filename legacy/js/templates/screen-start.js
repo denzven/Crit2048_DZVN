@@ -8,7 +8,7 @@
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["screen-start"] = `
+window.ViewTemplates['screen-start'] = `
     <div id="screen-start" class="text-center space-y-8 max-w-4xl mx-auto w-full relative z-10 flex flex-col justify-center h-full overflow-y-auto">
       <div>
         <h2 class="text-5xl md:text-7xl font-black text-white mb-2 tracking-tighter font-serif">CRIT <span class="text-rose-500">2048</span></h2>

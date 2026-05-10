@@ -1,9 +1,10 @@
+import { type ClassValue, clsx } from 'clsx';
+import { AnimatePresence, motion } from 'framer-motion';
 import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useGameStore } from '../engine/gameStore';
-import { getTileStats } from '../engine/data';
-import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+
+import { getTileStats } from '../engine/data';
+import { useGameStore } from '../engine/gameStore';
 import { GridFXLayer } from './FXRenderer';
 
 function cn(...inputs: ClassValue[]) {
@@ -16,9 +17,10 @@ const Grid: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+        return;
       if (gameState !== 'PLAYING') return;
-      
+
       switch (e.key) {
         case 'ArrowLeft':
         case 'a':
@@ -77,16 +79,18 @@ const Grid: React.FC = () => {
   }, [gameState, move]);
 
   return (
-    <div 
-      id="grid-container" 
+    <div
+      id="grid-container"
       className="relative bg-slate-800 p-2 md:p-3 rounded-2xl border border-slate-700 w-full max-w-[min(80vw,80vh,384px)] aspect-square shrink-0 self-center shadow-xl overflow-hidden"
     >
       <div className="relative w-full h-full">
         {/* Background Grid Cells */}
         <div className="grid grid-cols-4 grid-rows-4 gap-[2%] w-full h-full absolute inset-0">
-          {Array(16).fill(null).map((_, i) => (
-            <div key={`bg-${i}`} className="bg-slate-900/80 rounded-xl shadow-inner" />
-          ))}
+          {Array(16)
+            .fill(null)
+            .map((_, i) => (
+              <div key={`bg-${i}`} className="bg-slate-900/80 rounded-xl shadow-inner" />
+            ))}
         </div>
 
         {/* Dynamic Tiles Layer */}
@@ -96,23 +100,23 @@ const Grid: React.FC = () => {
             const stats = getTileStats(tile.val);
             const r = Math.floor(idx / 4);
             const c = idx % 4;
-            
+
             return (
               <div
                 key={tile.id}
                 className={clsx(
-                  "absolute flex flex-col items-center justify-center rounded-xl shadow-lg transition-all duration-100",
+                  'absolute flex flex-col items-center justify-center rounded-xl shadow-lg transition-all duration-100',
                   stats.bg,
-                  stats.text || "text-white",
-                  tile.pop && "animate-tile-pop",
-                  tile.merged && "animate-tile-merge"
+                  stats.text || 'text-white',
+                  tile.pop && 'animate-tile-pop',
+                  tile.merged && 'animate-tile-merge',
                 )}
                 style={{
                   width: '23.5%',
                   height: '23.5%',
                   left: `${c * 25.5}%`,
                   top: `${r * 25.5}%`,
-                  zIndex: tile.merged ? 20 : 10
+                  zIndex: tile.merged ? 20 : 10,
                 }}
               >
                 <span className="text-2xl md:text-3xl">{stats.icon}</span>
@@ -126,13 +130,13 @@ const Grid: React.FC = () => {
           <div
             key={ft.id}
             className={cn(
-              "fx-combat-text text-xl md:text-3xl",
-              ft.type === 'damage' ? "text-damage" : ft.type === 'gold' ? "text-gold" : "text-mult"
+              'fx-combat-text text-xl md:text-3xl',
+              ft.type === 'damage' ? 'text-damage' : ft.type === 'gold' ? 'text-gold' : 'text-mult',
             )}
             style={{
               left: `${ft.x}%`,
               top: `${ft.y}%`,
-              transform: 'translate(-50%, -50%)'
+              transform: 'translate(-50%, -50%)',
             }}
           >
             {ft.text}

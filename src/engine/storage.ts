@@ -1,4 +1,5 @@
-import { get, set, del, keys } from 'idb-keyval';
+import { del, get, set } from 'idb-keyval';
+
 import type { PackData, PackEntry } from '../types/pack';
 
 const KEYS = {
@@ -20,7 +21,7 @@ export const GameStorage = {
   async savePack(pack: PackData): Promise<void> {
     const index = await this.getPackIndex();
     const pos = index.findIndex((p) => p.id === pack.id);
-    
+
     const entry: PackEntry = {
       id: pack.id,
       name: pack.name,
@@ -61,11 +62,11 @@ export const GameStorage = {
   /**
    * Game State Storage
    */
-  async saveGame(data: any): Promise<void> {
+  async saveGame(data: unknown): Promise<void> {
     await set(KEYS.GAME_SAVE, data);
   },
 
-  async loadGame(): Promise<any | null> {
+  async loadGame(): Promise<unknown | null> {
     return (await get(KEYS.GAME_SAVE)) || null;
   },
 
@@ -76,22 +77,22 @@ export const GameStorage = {
   /**
    * Leaderboard Storage
    */
-  async getLeaderboard(): Promise<any[]> {
-    return (await get<any[]>(KEYS.LEADERBOARD)) || [];
+  async getLeaderboard(): Promise<unknown[]> {
+    return (await get<unknown[]>(KEYS.LEADERBOARD)) || [];
   },
 
-  async saveLeaderboard(leaderboard: any[]): Promise<void> {
+  async saveLeaderboard(leaderboard: unknown[]): Promise<void> {
     await set(KEYS.LEADERBOARD, leaderboard);
   },
 
   /**
    * Settings Storage
    */
-  async getSettings(): Promise<any | null> {
+  async getSettings(): Promise<unknown | null> {
     return (await get(KEYS.SETTINGS)) || null;
   },
 
-  async saveSettings(settings: any): Promise<void> {
+  async saveSettings(settings: unknown): Promise<void> {
     await set(KEYS.SETTINGS, settings);
   },
 
@@ -143,5 +144,5 @@ export const GameStorage = {
 
     console.log('✅ Migration complete.');
     return true;
-  }
+  },
 };

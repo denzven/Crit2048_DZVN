@@ -1,0 +1,9 @@
+dist
+node_modules
+build
+.gradle
+gradle
+*.apk
+*.idsig
+package-lock.json
+public

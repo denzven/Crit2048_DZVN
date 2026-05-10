@@ -7,17 +7,17 @@ async function callGeminiOracle() {
   SFX.coin();
   state.gold -= 50;
   renderHUD();
-  el.btnAiOracle.classList.add("hide");
-  el.aiLoading.classList.remove("hide");
+  el.btnAiOracle.classList.add('hide');
+  el.aiLoading.classList.remove('hide');
 
   const prompt = `You are a merchant in a D&D roguelike. The player is a ${state.playerClass.id} and defeated Ante ${state.encounterIdx}. Create a magical artifact. ONLY valid JSON: {"name": "Cool Item Name", "desc": "1-sentence flavor. Grants +1.0 Multiplier."}`;
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
-      responseMimeType: "application/json",
+      responseMimeType: 'application/json',
       responseSchema: {
-        type: "OBJECT",
-        properties: { name: { type: "STRING" }, desc: { type: "STRING" } },
+        type: 'OBJECT',
+        properties: { name: { type: 'STRING' }, desc: { type: 'STRING' } },
       },
     },
   };
@@ -31,17 +31,17 @@ async function callGeminiOracle() {
       resultData = JSON.parse(text);
     }
   } catch (e) {
-    console.error("Gemini API error:", e);
+    console.error('Gemini API error:', e);
   }
 
-  el.aiLoading.classList.add("hide");
-  el.btnAiOracle.classList.remove("hide");
+  el.aiLoading.classList.add('hide');
+  el.btnAiOracle.classList.remove('hide');
   if (resultData && resultData.name) {
     state.artifacts.push({
-      id: "AI_ART_" + Date.now(),
+      id: 'AI_ART_' + Date.now(),
       name: resultData.name,
-      icon: "✨",
-      rarity: "Legendary",
+      icon: '✨',
+      rarity: 'Legendary',
       level: 1,
       basePrice: 0,
       desc: () => resultData.desc,
@@ -52,7 +52,7 @@ async function callGeminiOracle() {
     renderTavern();
   } else {
     state.gold += 50;
-    alert("Oracle asleep (API Error). Gold refunded.", "API Error", "💤");
+    alert('Oracle asleep (API Error). Gold refunded.', 'API Error', '💤');
     renderHUD();
   }
 }

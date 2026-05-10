@@ -5,16 +5,22 @@ const BrowserWarning: React.FC = () => {
 
   useEffect(() => {
     // 1. Don't show if already in standalone mode (PWA/TWA) or Electron
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true;
     const isElectron = /Electron/i.test(navigator.userAgent);
-    
+
     if (isStandalone || isElectron) return;
 
     // 2. Check if it's NOT Chromium-based
     // Note: This is a simple check. Chrome, Edge, Opera, Brave are all Chromium.
-    const isChromium = /Chrome|CriOS|Edg|OPR/i.test(navigator.userAgent) && !/Firefox|Safari/i.test(navigator.userAgent);
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
-    
+    const isChromium =
+      /Chrome|CriOS|Edg|OPR/i.test(navigator.userAgent) &&
+      !/Firefox|Safari/i.test(navigator.userAgent);
+    const isIOS =
+      /iPad|iPhone|iPod/.test(navigator.platform) ||
+      (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
+
     // Specifically target Firefox or Safari users on Web (unless on iOS where Safari is required)
     if (!isChromium && !isIOS) {
       // Check if they've already dismissed it this session
@@ -32,12 +38,15 @@ const BrowserWarning: React.FC = () => {
       <div className="bg-amber-900/90 border border-amber-500/50 backdrop-blur-xl p-4 rounded-2xl shadow-2xl flex items-center gap-4">
         <span className="text-3xl shrink-0">🌐</span>
         <div className="flex-grow">
-          <h4 className="text-amber-200 font-black text-xs uppercase tracking-widest">Browser Optimization</h4>
+          <h4 className="text-amber-200 font-black text-xs uppercase tracking-widest">
+            Browser Optimization
+          </h4>
           <p className="text-amber-100/80 text-[10px] leading-relaxed mt-1">
-            For the best visual effects and performance, we recommend using <strong className="text-white">Google Chrome</strong> or a Chromium-based browser.
+            For the best visual effects and performance, we recommend using{' '}
+            <strong className="text-white">Google Chrome</strong> or a Chromium-based browser.
           </p>
         </div>
-        <button 
+        <button
           onClick={() => {
             setShow(false);
             sessionStorage.setItem('browser-warning-dismissed', 'true');

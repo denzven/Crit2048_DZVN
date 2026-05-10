@@ -16,7 +16,7 @@ function createWindow() {
   // In production, we load the built index.html
   // In development, we could load from localhost
   win.loadFile(path.join(__dirname, 'dist/index.html'));
-  
+
   // Hide menu for cleaner look
   win.setMenuBarVisibility(false);
 }

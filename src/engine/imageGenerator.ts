@@ -1,11 +1,24 @@
 /**
  * IMAGE GENERATOR: Professional Stat Card Composition
- * 
+ *
  * Replaces the buggy html2canvas approach with a high-performance template composition system.
  * Draws run statistics directly onto a canvas for sharing.
  */
 export const ImageGenerator = {
-  async generate(data: any, options: any = {}): Promise<Uint8Array> {
+  async generate(
+    data: {
+      ante: number;
+      classIcon: string;
+      className: string;
+      maxDamage: number;
+      totalMoves: number;
+      totalMerges: number;
+      maxMultiplier: number;
+      artifacts: { icon: string }[];
+      seedUsed: string;
+    },
+    options: { theme?: string; showSeed?: boolean; showArtifacts?: boolean } = {},
+  ): Promise<Uint8Array> {
     const theme = options.theme || 'classic';
     const showSeed = options.showSeed !== false;
     const showArtifacts = options.showArtifacts !== false;
@@ -14,23 +27,33 @@ export const ImageGenerator = {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject('No context');
-      
+
       canvas.width = 1080;
       canvas.height = 1920;
 
       // 1. Theme Configuration
-      let bgStart = '#1e293b', bgEnd = '#020617';
-      let accent1 = 'rgba(244, 63, 94, 0.1)', accent2 = 'rgba(79, 70, 229, 0.1)';
+      let bgStart = '#1e293b',
+        bgEnd = '#020617';
+      const accent1 = 'rgba(244, 63, 94, 0.1)',
+        accent2 = 'rgba(79, 70, 229, 0.1)';
       let primaryColor = '#f43f5e';
-      let particleColors = ['#ffffff', '#f43f5e'];
+      const particleColors = ['#ffffff', '#f43f5e'];
 
       if (theme === 'midnight') {
-        bgStart = '#0f172a'; bgEnd = '#000000';
+        bgStart = '#0f172a';
+        bgEnd = '#000000';
         primaryColor = '#64748b';
       }
 
       // 2. Background Rendering
-      const mainGrad = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width);
+      const mainGrad = ctx.createRadialGradient(
+        canvas.width / 2,
+        canvas.height / 2,
+        0,
+        canvas.width / 2,
+        canvas.height / 2,
+        canvas.width,
+      );
       mainGrad.addColorStop(0, bgStart);
       mainGrad.addColorStop(1, bgEnd);
       ctx.fillStyle = mainGrad;
@@ -51,10 +74,17 @@ export const ImageGenerator = {
 
       // 4. Background Particle Field
       for (let i = 0; i < 120; i++) {
-        const x = Math.random() * canvas.width, y = Math.random() * canvas.height;
-        const size = Math.random() * 2 + 1, alpha = Math.random() * 0.4 + 0.1;
-        ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fillStyle = particleColors[Math.floor(Math.random() * particleColors.length)] + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+        const x = Math.random() * canvas.width,
+          y = Math.random() * canvas.height;
+        const size = Math.random() * 2 + 1,
+          alpha = Math.random() * 0.4 + 0.1;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fillStyle =
+          particleColors[Math.floor(Math.random() * particleColors.length)] +
+          Math.floor(alpha * 255)
+            .toString(16)
+            .padStart(2, '0');
         ctx.fill();
       }
 
@@ -70,12 +100,18 @@ export const ImageGenerator = {
 
       // 6. HERO SECTION
       ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-      ctx.beginPath(); (ctx as any).roundRect(canvas.width / 2 - 300, 450, 600, 300, 48); ctx.fill();
-      
+      ctx.beginPath();
+      (
+        ctx as unknown as {
+          roundRect: (x: number, y: number, w: number, h: number, r: number) => void;
+        }
+      ).roundRect(canvas.width / 2 - 300, 450, 600, 300, 48);
+      ctx.fill();
+
       ctx.fillStyle = primaryColor;
       ctx.font = '900 180px sans-serif';
       ctx.fillText(data.ante.toString(), canvas.width / 2 - 100, 660);
-      
+
       ctx.textAlign = 'left';
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 35px sans-serif';
@@ -92,18 +128,25 @@ export const ImageGenerator = {
 
       // 8. STATS GRID
       const gridY = 1050;
-      const col1X = 300, col2X = 780;
+      const col1X = 300,
+        col2X = 780;
       const rowH = 180;
 
-      const drawStat = (label: string, value: string, x: number, y: number, color = "#ffffff") => {
+      const drawStat = (label: string, value: string, x: number, y: number, color = '#ffffff') => {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-        ctx.beginPath(); (ctx as any).roundRect(x - 210, y - 70, 420, 140, 24); ctx.fill();
-        
+        ctx.beginPath();
+        (
+          ctx as unknown as {
+            roundRect: (x: number, y: number, w: number, h: number, r: number) => void;
+          }
+        ).roundRect(x - 210, y - 70, 420, 140, 24);
+        ctx.fill();
+
         ctx.textAlign = 'center';
         ctx.fillStyle = '#64748b';
         ctx.font = 'bold 24px sans-serif';
         ctx.fillText(label.toUpperCase(), x, y - 10);
-        
+
         ctx.fillStyle = color;
         ctx.font = '900 48px sans-serif';
         ctx.fillText(value, x, y + 45);
@@ -121,13 +164,16 @@ export const ImageGenerator = {
         ctx.fillText('TREASURES ACQUIRED', canvas.width / 2, 1500);
 
         const arts = data.artifacts.slice(0, 5);
-        const aS = 130, gap = 20;
+        const aS = 130,
+          gap = 20;
         const tW = arts.length * aS + (arts.length - 1) * gap;
         let curX = (canvas.width - tW) / 2 + aS / 2;
 
-        arts.forEach((art: any) => {
+        arts.forEach((art) => {
           ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-          ctx.beginPath(); ctx.arc(curX, 1600, aS / 2, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath();
+          ctx.arc(curX, 1600, aS / 2, 0, Math.PI * 2);
+          ctx.fill();
           ctx.font = '65px sans-serif';
           ctx.fillText(art.icon, curX, 1620);
           curX += aS + gap;
@@ -146,9 +192,9 @@ export const ImageGenerator = {
 
       canvas.toBlob(async (blob) => {
         if (!blob) return reject('Blob creation failed');
-        const buffer = await blob.arrayBuffer() as ArrayBuffer;
+        const buffer = (await blob.arrayBuffer()) as ArrayBuffer;
         resolve(new Uint8Array(buffer));
       }, 'image/png');
     });
-  }
+  },
 };

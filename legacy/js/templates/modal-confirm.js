@@ -8,7 +8,7 @@
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["modal-confirm"] = `
+window.ViewTemplates['modal-confirm'] = `
     <!-- CONFIRM HOME MODAL -->
     <div id="modal-confirm" class="hide absolute inset-0 bg-slate-950/95 z-[120] flex items-center justify-center p-4">
       <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center">

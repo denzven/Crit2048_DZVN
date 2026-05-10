@@ -3,7 +3,7 @@
  * Ensures deterministic runs for competition and sharing.
  */
 class PRNG {
-  private currentSeed: number = 1337;
+  private currentSeed = 1337;
 
   setSeed(str?: string) {
     if (!str) str = ((Math.random() * 4294967296) >>> 0).toString();

@@ -1,121 +1,121 @@
 // --- DOM ELEMENT REFERENCES ---
 const el = {
-  mainContainer: document.getElementById("main-container"),
-  modalBackdrop: document.getElementById("modal-backdrop"),
-  headerAnte: document.getElementById("header-ante"),
-  headerStats: document.getElementById("header-stats"),
-  statGold: document.getElementById("stat-gold"),
-  statMult: document.getElementById("stat-mult"),
-  screenStart: document.getElementById("screen-start"),
-  screenClass: document.getElementById("screen-class"),
-  screenPlaying: document.getElementById("screen-playing"),
-  screenTavern: document.getElementById("screen-tavern"),
-  screenEnd: document.getElementById("screen-end"),
-  modalDice: document.getElementById("modal-dice"),
-  classContainer: document.getElementById("class-container"),
-  inputSeed: document.getElementById("input-seed"),
-  hudHpBar: document.getElementById("hud-hp-bar"),
-  hudIcon: document.getElementById("hud-icon"),
-  hudName: document.getElementById("hud-name"),
-  hudHp: document.getElementById("hud-hp"),
-  hudSlides: document.getElementById("hud-slides"),
-  hudPower: document.getElementById("hud-power"),
-  tilesLayer: document.getElementById("tiles-layer"),
-  gridContainer: document.getElementById("grid-container"),
-  sidebarArtifacts: document.getElementById("sidebar-artifacts"),
-  mobileInventory: document.getElementById("mobile-inventory"),
-  sidebarClassIcon: document.getElementById("sidebar-class-icon"),
-  sidebarClassName: document.getElementById("sidebar-class-name"),
-  sidebarClassUses: document.getElementById("sidebar-class-uses"),
-  sidebarSpellInfo: document.getElementById("sidebar-spell-info"),
-  btnAbility: document.getElementById("btn-ability"),
-  btnAbilityMobile: document.getElementById("btn-ability-mobile"),
-  mobileClassIcon: document.getElementById("mobile-class-icon"),
-  mobileSpellUses: document.getElementById("mobile-spell-uses"),
-  combatLogDesktop: document.getElementById("combat-log-desktop"),
-  mobileInventoryModal: document.getElementById("mobile-inventory-modal"),
-  mobileInventoryList: document.getElementById("mobile-inventory-list"),
-  mobileLogModal: document.getElementById("mobile-log-modal"),
-  mobileLogContent: document.getElementById("combat-log-modal-content"),
-  diceAnteLevel: document.getElementById("dice-mod-val"),
-  diceActionBtn: document.getElementById("dice-action-btn"),
-  dicePostRoll: document.getElementById("dice-post-roll"),
-  diceResultMsg: document.getElementById("dice-result-msg"),
-  d20Panel: document.getElementById("d20-panel"),
-  tavernArtifacts: document.getElementById("tavern-artifacts"),
-  btnDescend: document.getElementById("btn-descend"),
-  endTitle: document.getElementById("end-title"),
-  endDesc: document.getElementById("end-desc"),
-  endStatClass: document.getElementById("end-stat-class"),
-  endStatAnte: document.getElementById("end-stat-ante"),
-  endStatDmg: document.getElementById("end-stat-dmg"),
-  endStatMerges: document.getElementById("end-stat-merges"),
-  endStatSeed: document.getElementById("end-stat-seed"),
-  endStatDate: document.getElementById("end-stat-date"),
-  endStatTime: document.getElementById("end-stat-time"),
-  endStatDuration: document.getElementById("end-stat-duration"),
-  endStatLastDmg: document.getElementById("end-stat-last-dmg"),
-  endStatMaxMult: document.getElementById("end-stat-max-mult"),
-  endStatMoves: document.getElementById("end-stat-moves"),
-  endStatSpent: document.getElementById("end-stat-spent"),
-  endArtifactsList: document.getElementById("end-artifacts-list"),
-  endCaptureArea: document.getElementById("end-capture-area"),
-  modalSettings: document.getElementById("modal-settings"),
-  inputSettingTurns: document.getElementById("input-setting-turns"),
-  inputSettingGold: document.getElementById("input-setting-gold"),
-  inputSettingTheme: document.getElementById("input-setting-theme"),
-  inputSettingSFX: document.getElementById("input-setting-sfx"),
-  inputSettingShake: document.getElementById("input-setting-shake"),
-  inputSettingHapticsEnabled: document.getElementById("input-setting-haptics-enabled"),
-  inputSettingHapticsIntensity: document.getElementById("input-setting-haptics-intensity"),
-  inputSettingAtmosphere: document.getElementById("input-setting-atmosphere"),
-  labelSettingTurns: document.getElementById("label-setting-turns"),
-  labelSettingGold: document.getElementById("label-setting-gold"),
-  labelSettingSfx: document.getElementById("label-setting-sfx"),
-  labelSettingShake: document.getElementById("label-setting-shake"),
-  labelSettingHaptics: document.getElementById("label-setting-haptics"),
-  inputSettingUiScale: document.getElementById("input-setting-ui-scale"),
-  labelSettingUiScale: document.getElementById("label-setting-ui-scale"),
-  inputSettingFontScale: document.getElementById("input-setting-font-scale"),
-  labelSettingFontScale: document.getElementById("label-setting-font-scale"),
-  inputSettingDisplayScale: document.getElementById("input-setting-display-scale"),
-  labelSettingDisplayScale: document.getElementById("label-setting-display-scale"),
-  modalAttack: document.getElementById("modal-attack"),
-  attackTitle: document.getElementById("attack-title"),
-  attackDiceContainer: document.getElementById("attack-dice-container"),
-  attackResult: document.getElementById("attack-result"),
-  attackTotal: document.getElementById("attack-total"),
-  btnAiOracle: document.getElementById("btn-ai-oracle"),
-  btnRest: document.getElementById("btn-rest"),
-  btnUpgrade: document.getElementById("btn-upgrade"),
-  aiLoading: document.getElementById("ai-loading"),
-  upgradeCost: document.getElementById("upgrade-cost"),
-  modalHelp: document.getElementById("modal-help"),
-  btnHome: document.getElementById("btn-home"),
-  modalConfirm: document.getElementById("modal-confirm"),
-  modalLeaderboard: document.getElementById("modal-leaderboard"),
-  leaderboardList: document.getElementById("leaderboard-list"),
-  btnStartLeaderboard: document.getElementById("btn-start-leaderboard"),
-  btnResume: document.getElementById("btn-resume"),
-  btnRespin: document.getElementById("btn-respin"),
-  modalAlert: document.getElementById("modal-alert"),
-  alertTitle: document.getElementById("alert-title"),
-  alertMessage: document.getElementById("alert-message"),
-  alertIcon: document.getElementById("alert-icon"),
-  alertBtnOk: document.getElementById("alert-btn-ok"),
-  confirmBtns: document.getElementById("confirm-btns"),
-  confirmBtnOk: document.getElementById("confirm-btn-ok"),
-  confirmBtnCancel: document.getElementById("confirm-btn-cancel"),
-  modalShare: document.getElementById("modal-share"),
-  sharePreviewContainer: document.getElementById("share-preview-container"),
-  shareToggleSeed: document.getElementById("share-toggle-seed"),
-  shareToggleArtifacts: document.getElementById("share-toggle-artifacts"),
-  shareToggleExtra: document.getElementById("share-toggle-extra"),
-  btnGrimoire: document.getElementById("btn-grimoire"),
-  btnForge: document.getElementById("btn-forge"),
-  modalForge: document.getElementById("modal-forge"),
-  modalMarketplace: document.getElementById("modal-marketplace"),
-  victoryCelebration: document.getElementById("victory-celebration"),
+  mainContainer: document.getElementById('main-container'),
+  modalBackdrop: document.getElementById('modal-backdrop'),
+  headerAnte: document.getElementById('header-ante'),
+  headerStats: document.getElementById('header-stats'),
+  statGold: document.getElementById('stat-gold'),
+  statMult: document.getElementById('stat-mult'),
+  screenStart: document.getElementById('screen-start'),
+  screenClass: document.getElementById('screen-class'),
+  screenPlaying: document.getElementById('screen-playing'),
+  screenTavern: document.getElementById('screen-tavern'),
+  screenEnd: document.getElementById('screen-end'),
+  modalDice: document.getElementById('modal-dice'),
+  classContainer: document.getElementById('class-container'),
+  inputSeed: document.getElementById('input-seed'),
+  hudHpBar: document.getElementById('hud-hp-bar'),
+  hudIcon: document.getElementById('hud-icon'),
+  hudName: document.getElementById('hud-name'),
+  hudHp: document.getElementById('hud-hp'),
+  hudSlides: document.getElementById('hud-slides'),
+  hudPower: document.getElementById('hud-power'),
+  tilesLayer: document.getElementById('tiles-layer'),
+  gridContainer: document.getElementById('grid-container'),
+  sidebarArtifacts: document.getElementById('sidebar-artifacts'),
+  mobileInventory: document.getElementById('mobile-inventory'),
+  sidebarClassIcon: document.getElementById('sidebar-class-icon'),
+  sidebarClassName: document.getElementById('sidebar-class-name'),
+  sidebarClassUses: document.getElementById('sidebar-class-uses'),
+  sidebarSpellInfo: document.getElementById('sidebar-spell-info'),
+  btnAbility: document.getElementById('btn-ability'),
+  btnAbilityMobile: document.getElementById('btn-ability-mobile'),
+  mobileClassIcon: document.getElementById('mobile-class-icon'),
+  mobileSpellUses: document.getElementById('mobile-spell-uses'),
+  combatLogDesktop: document.getElementById('combat-log-desktop'),
+  mobileInventoryModal: document.getElementById('mobile-inventory-modal'),
+  mobileInventoryList: document.getElementById('mobile-inventory-list'),
+  mobileLogModal: document.getElementById('mobile-log-modal'),
+  mobileLogContent: document.getElementById('combat-log-modal-content'),
+  diceAnteLevel: document.getElementById('dice-mod-val'),
+  diceActionBtn: document.getElementById('dice-action-btn'),
+  dicePostRoll: document.getElementById('dice-post-roll'),
+  diceResultMsg: document.getElementById('dice-result-msg'),
+  d20Panel: document.getElementById('d20-panel'),
+  tavernArtifacts: document.getElementById('tavern-artifacts'),
+  btnDescend: document.getElementById('btn-descend'),
+  endTitle: document.getElementById('end-title'),
+  endDesc: document.getElementById('end-desc'),
+  endStatClass: document.getElementById('end-stat-class'),
+  endStatAnte: document.getElementById('end-stat-ante'),
+  endStatDmg: document.getElementById('end-stat-dmg'),
+  endStatMerges: document.getElementById('end-stat-merges'),
+  endStatSeed: document.getElementById('end-stat-seed'),
+  endStatDate: document.getElementById('end-stat-date'),
+  endStatTime: document.getElementById('end-stat-time'),
+  endStatDuration: document.getElementById('end-stat-duration'),
+  endStatLastDmg: document.getElementById('end-stat-last-dmg'),
+  endStatMaxMult: document.getElementById('end-stat-max-mult'),
+  endStatMoves: document.getElementById('end-stat-moves'),
+  endStatSpent: document.getElementById('end-stat-spent'),
+  endArtifactsList: document.getElementById('end-artifacts-list'),
+  endCaptureArea: document.getElementById('end-capture-area'),
+  modalSettings: document.getElementById('modal-settings'),
+  inputSettingTurns: document.getElementById('input-setting-turns'),
+  inputSettingGold: document.getElementById('input-setting-gold'),
+  inputSettingTheme: document.getElementById('input-setting-theme'),
+  inputSettingSFX: document.getElementById('input-setting-sfx'),
+  inputSettingShake: document.getElementById('input-setting-shake'),
+  inputSettingHapticsEnabled: document.getElementById('input-setting-haptics-enabled'),
+  inputSettingHapticsIntensity: document.getElementById('input-setting-haptics-intensity'),
+  inputSettingAtmosphere: document.getElementById('input-setting-atmosphere'),
+  labelSettingTurns: document.getElementById('label-setting-turns'),
+  labelSettingGold: document.getElementById('label-setting-gold'),
+  labelSettingSfx: document.getElementById('label-setting-sfx'),
+  labelSettingShake: document.getElementById('label-setting-shake'),
+  labelSettingHaptics: document.getElementById('label-setting-haptics'),
+  inputSettingUiScale: document.getElementById('input-setting-ui-scale'),
+  labelSettingUiScale: document.getElementById('label-setting-ui-scale'),
+  inputSettingFontScale: document.getElementById('input-setting-font-scale'),
+  labelSettingFontScale: document.getElementById('label-setting-font-scale'),
+  inputSettingDisplayScale: document.getElementById('input-setting-display-scale'),
+  labelSettingDisplayScale: document.getElementById('label-setting-display-scale'),
+  modalAttack: document.getElementById('modal-attack'),
+  attackTitle: document.getElementById('attack-title'),
+  attackDiceContainer: document.getElementById('attack-dice-container'),
+  attackResult: document.getElementById('attack-result'),
+  attackTotal: document.getElementById('attack-total'),
+  btnAiOracle: document.getElementById('btn-ai-oracle'),
+  btnRest: document.getElementById('btn-rest'),
+  btnUpgrade: document.getElementById('btn-upgrade'),
+  aiLoading: document.getElementById('ai-loading'),
+  upgradeCost: document.getElementById('upgrade-cost'),
+  modalHelp: document.getElementById('modal-help'),
+  btnHome: document.getElementById('btn-home'),
+  modalConfirm: document.getElementById('modal-confirm'),
+  modalLeaderboard: document.getElementById('modal-leaderboard'),
+  leaderboardList: document.getElementById('leaderboard-list'),
+  btnStartLeaderboard: document.getElementById('btn-start-leaderboard'),
+  btnResume: document.getElementById('btn-resume'),
+  btnRespin: document.getElementById('btn-respin'),
+  modalAlert: document.getElementById('modal-alert'),
+  alertTitle: document.getElementById('alert-title'),
+  alertMessage: document.getElementById('alert-message'),
+  alertIcon: document.getElementById('alert-icon'),
+  alertBtnOk: document.getElementById('alert-btn-ok'),
+  confirmBtns: document.getElementById('confirm-btns'),
+  confirmBtnOk: document.getElementById('confirm-btn-ok'),
+  confirmBtnCancel: document.getElementById('confirm-btn-cancel'),
+  modalShare: document.getElementById('modal-share'),
+  sharePreviewContainer: document.getElementById('share-preview-container'),
+  shareToggleSeed: document.getElementById('share-toggle-seed'),
+  shareToggleArtifacts: document.getElementById('share-toggle-artifacts'),
+  shareToggleExtra: document.getElementById('share-toggle-extra'),
+  btnGrimoire: document.getElementById('btn-grimoire'),
+  btnForge: document.getElementById('btn-forge'),
+  modalForge: document.getElementById('modal-forge'),
+  modalMarketplace: document.getElementById('modal-marketplace'),
+  victoryCelebration: document.getElementById('victory-celebration'),
 };
 
 // --- UI HELPERS ---
@@ -123,11 +123,8 @@ function addLog(msg) {
   state.logs.push(msg);
   if (state.logs.length > 20) state.logs.shift(); // Keep more for the modal
   const html = state.logs
-    .map(
-      (log) =>
-        `<div class="mb-1">> <span class="text-slate-200">${log}</span></div>`,
-    )
-    .join("");
+    .map((log) => `<div class="mb-1">> <span class="text-slate-200">${log}</span></div>`)
+    .join('');
   el.combatLogDesktop.innerHTML = html;
   el.combatLogDesktop.scrollTop = el.combatLogDesktop.scrollHeight;
   if (el.mobileLogContent) {
@@ -150,30 +147,31 @@ function renderHUD() {
   const enc = ENCOUNTERS[state.encounterIdx];
   el.hudIcon.innerText = enc.icon;
   el.hudName.innerText = enc.name;
-  el.hudPower.innerText = enc.lore || enc.power || "";
+  el.hudPower.innerText = enc.lore || enc.power || '';
   el.hudSlides.innerText = state.slidesLeft;
-  el.hudSlides.className = `text-3xl md:text-4xl font-black font-mono drop-shadow-md ${state.slidesLeft < 5 ? "text-red-500 animate-pulse" : "text-white"}`;
+  el.hudSlides.className = `text-3xl md:text-4xl font-black font-mono drop-shadow-md ${state.slidesLeft < 5 ? 'text-red-500 animate-pulse' : 'text-white'}`;
   el.statGold.innerText = state.gold;
   el.statMult.innerText = state.multiplier.toFixed(1);
 }
 
 function renderSidebar() {
   el.sidebarClassIcon.innerText = state.playerClass.icon;
-  el.sidebarClassName.innerText = state.playerClass.id + (state.hunterMarkLeft > 0 ? ` (Mark: ${state.hunterMarkLeft})` : "");
+  el.sidebarClassName.innerText =
+    state.playerClass.id + (state.hunterMarkLeft > 0 ? ` (Mark: ${state.hunterMarkLeft})` : '');
   el.mobileClassIcon.innerText = state.playerClass.icon;
 
   if (state.playerClass.ability) {
-    el.btnAbility.classList.remove("hide");
-    el.btnAbilityMobile.classList.remove("hide");
-    el.sidebarSpellInfo.classList.remove("hide");
-    el.sidebarClassUses.classList.remove("hide");
+    el.btnAbility.classList.remove('hide');
+    el.btnAbilityMobile.classList.remove('hide');
+    el.sidebarSpellInfo.classList.remove('hide');
+    el.sidebarClassUses.classList.remove('hide');
     el.sidebarSpellInfo.innerText = `Spell: ${state.playerClass.ability.count}d${state.playerClass.ability.sides}`;
     el.sidebarClassUses.innerText = `Uses: ${state.usesLeft} / ${state.playerClass.ability.maxUses}`;
     el.mobileSpellUses.innerText = `${state.usesLeft}/${state.playerClass.ability.maxUses}`;
     const dis =
-      "relative z-10 w-full py-3 rounded-xl text-sm font-black bg-slate-700 text-slate-500 cursor-not-allowed uppercase tracking-widest";
+      'relative z-10 w-full py-3 rounded-xl text-sm font-black bg-slate-700 text-slate-500 cursor-not-allowed uppercase tracking-widest';
     const act =
-      "relative z-10 w-full py-3 rounded-xl text-sm font-black transition-all bg-blue-600 hover:bg-blue-500 text-white shadow-lg uppercase tracking-widest";
+      'relative z-10 w-full py-3 rounded-xl text-sm font-black transition-all bg-blue-600 hover:bg-blue-500 text-white shadow-lg uppercase tracking-widest';
     if (state.usesLeft <= 0) {
       el.btnAbility.className = dis;
       el.btnAbilityMobile.disabled = true;
@@ -184,16 +182,16 @@ function renderSidebar() {
       el.btnAbilityMobile.style.opacity = 1;
     }
   } else {
-    el.btnAbility.classList.add("hide");
-    el.btnAbilityMobile.classList.add("hide");
-    el.sidebarClassUses.classList.add("hide");
-    el.sidebarSpellInfo.classList.add("hide");
+    el.btnAbility.classList.add('hide');
+    el.btnAbilityMobile.classList.add('hide');
+    el.sidebarClassUses.classList.add('hide');
+    el.sidebarSpellInfo.classList.add('hide');
   }
 
   el.sidebarArtifacts.innerHTML = state.artifacts.length
-    ? ""
+    ? ''
     : '<p class="text-[10px] text-slate-600">None equipped</p>';
-  if (el.mobileInventoryList) el.mobileInventoryList.innerHTML = "";
+  if (el.mobileInventoryList) el.mobileInventoryList.innerHTML = '';
   state.artifacts.forEach((a) => {
     const html = `<div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 flex items-center gap-3 mb-1" title="${a.desc(a.level)}">
         <span class="text-xl">${a.icon}</span> 
@@ -245,7 +243,7 @@ function renderEndScreenStats() {
   el.endStatTime.innerText = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   el.endStatDuration.innerText = `${mins}m ${secs}s`;
   el.endStatSeed.innerText = rs.seedUsed;
-  
+
   el.endStatDmg.innerText = Math.floor(rs.maxDamage);
   el.endStatLastDmg.innerText = Math.floor(rs.lastRoundDamage);
   el.endStatMaxMult.innerText = `x${rs.maxMultiplier.toFixed(1)}`;
@@ -255,7 +253,9 @@ function renderEndScreenStats() {
 
   // Artifacts list
   if (state.artifacts.length > 0) {
-    el.endArtifactsList.innerHTML = state.artifacts.map(a => `
+    el.endArtifactsList.innerHTML = state.artifacts
+      .map(
+        (a) => `
       <div class="bg-slate-800 px-2 py-1 rounded-lg border border-slate-700 flex items-center gap-1.5 shadow-sm">
         <span class="text-sm">${a.icon}</span>
         <div class="flex flex-col">
@@ -263,17 +263,20 @@ function renderEndScreenStats() {
           <span class="text-[7px] text-amber-400 font-mono">LVL ${a.level}</span>
         </div>
       </div>
-    `).join("");
+    `,
+      )
+      .join('');
   } else {
-    el.endArtifactsList.innerHTML = '<p class="text-[10px] text-slate-600 italic">No artifacts found.</p>';
+    el.endArtifactsList.innerHTML =
+      '<p class="text-[10px] text-slate-600 italic">No artifacts found.</p>';
   }
 }
 
 function copySeed() {
   const seed = state.runStats.seedUsed;
   navigator.clipboard.writeText(seed).then(() => {
-    addLog("Seed copied to clipboard!");
-    alert("Seed copied to clipboard!", "Success", "📋");
+    addLog('Seed copied to clipboard!');
+    alert('Seed copied to clipboard!', 'Success', '📋');
   });
 }
 
@@ -297,7 +300,7 @@ function closeShareModal() {
 function updateShareTheme(theme) {
   currentShareTheme = theme;
   // Update UI active state
-  document.querySelectorAll('.share-theme-btn').forEach(btn => {
+  document.querySelectorAll('.share-theme-btn').forEach((btn) => {
     const dot = btn.querySelector('div');
     const label = btn.querySelector('span');
     if (dot) {
@@ -321,14 +324,14 @@ function updateShareTheme(theme) {
     activeLabel.classList.add('text-white', 'opacity-100');
     activeLabel.classList.remove('text-slate-500', 'opacity-60');
   }
-  
+
   refreshSharePreview();
 }
 
 async function refreshSharePreview() {
   const container = el.sharePreviewContainer;
   if (!container) return;
-  
+
   // Show loading
   const loading = document.getElementById('share-preview-loading');
   if (loading) loading.classList.remove('hide');
@@ -359,25 +362,25 @@ async function refreshSharePreview() {
       duration: `${mins}m ${secs}s`,
       startTime: rs.startTime,
       seedUsed: rs.seedUsed,
-      artifacts: state.artifacts
+      artifacts: state.artifacts,
     };
 
     const options = {
       theme: currentShareTheme,
       showSeed: el.shareToggleSeed?.checked,
       showArtifacts: el.shareToggleArtifacts?.checked,
-      showExtraStats: el.shareToggleExtra?.checked
+      showExtraStats: el.shareToggleExtra?.checked,
     };
 
     currentShareBytes = await ImageGenerator.generate(shareData, options);
-    
+
     // Create preview image
     const blob = new Blob([currentShareBytes], { type: 'image/png' });
     const url = URL.createObjectURL(blob);
-    
+
     container.innerHTML = `<img src="${url}" class="w-full h-full object-contain fx-entrance-pop">`;
   } catch (e) {
-    console.error("Preview failed", e);
+    console.error('Preview failed', e);
   } finally {
     if (loading) loading.classList.add('hide');
   }
@@ -385,10 +388,10 @@ async function refreshSharePreview() {
 
 async function executeFinalShare() {
   if (!currentShareBytes) {
-    alert("Nothing to share yet — please wait for the preview to load.", "Not Ready", "⏳");
+    alert('Nothing to share yet — please wait for the preview to load.', 'Not Ready', '⏳');
     return;
   }
-  
+
   const btn = event.currentTarget;
   const originalText = btn.innerHTML;
   btn.disabled = true;
@@ -399,18 +402,18 @@ async function executeFinalShare() {
       title: 'Crit 2048 Run Summary',
       text: `Check out my ${state.playerClass.id} run in Crit 2048! 🐉`,
       files: [currentShareBytes],
-      fileName: `crit2048_share_${state.runStats.seedUsed || Date.now()}.png`
+      fileName: `crit2048_share_${state.runStats.seedUsed || Date.now()}.png`,
     });
   } catch (e) {
     if (e && (e.name === 'AbortError' || String(e).includes('AbortError'))) {
       console.log('Share cancelled by user');
     } else {
-      console.warn("Share failed, falling back to save:", e);
+      console.warn('Share failed, falling back to save:', e);
       // Graceful degradation: try to save instead
       try {
         await executeFinalSave();
       } catch (saveErr) {
-        alert("Share failed: " + (e.message || e), "Error", "❌");
+        alert('Share failed: ' + (e.message || e), 'Error', '❌');
       }
     }
   } finally {
@@ -421,18 +424,18 @@ async function executeFinalShare() {
 
 async function executeFinalSave() {
   if (!currentShareBytes) {
-    alert("Nothing to save yet — please wait for the preview to load.", "Not Ready", "⏳");
+    alert('Nothing to save yet — please wait for the preview to load.', 'Not Ready', '⏳');
     return;
   }
-  
+
   const fileName = `crit2048_run_${state.runStats.seedUsed || Date.now()}.png`;
 
   try {
     await window.Plugins.saveImage(currentShareBytes, fileName);
   } catch (e) {
     if (e && (e.name === 'AbortError' || String(e).includes('AbortError'))) return;
-    console.error("Save failed:", e);
-    alert("Save failed: " + (e.message || e), "Error", "❌");
+    console.error('Save failed:', e);
+    alert('Save failed: ' + (e.message || e), 'Error', '❌');
   }
 }
 
@@ -441,16 +444,18 @@ function renderLeaderboard() {
   if (!el.leaderboardList) return;
 
   if (leaderboard.length === 0) {
-    el.leaderboardList.innerHTML = '<p class="text-slate-600 italic text-center py-10">No legends recorded yet. Descend into the dungeon to make history!</p>';
+    el.leaderboardList.innerHTML =
+      '<p class="text-slate-600 italic text-center py-10">No legends recorded yet. Descend into the dungeon to make history!</p>';
     return;
   }
 
-  el.leaderboardList.innerHTML = leaderboard.map((entry, index) => {
-    const date = new Date(entry.date).toLocaleDateString();
-    const durationMins = Math.floor(entry.duration / 60000);
-    const durationSecs = Math.floor((entry.duration % 60000) / 1000);
-    
-    return `
+  el.leaderboardList.innerHTML = leaderboard
+    .map((entry, index) => {
+      const date = new Date(entry.date).toLocaleDateString();
+      const durationMins = Math.floor(entry.duration / 60000);
+      const durationSecs = Math.floor((entry.duration % 60000) / 1000);
+
+      return `
       <div class="bg-slate-950/50 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3 relative group hover:border-indigo-500/50 transition-all shadow-inner">
         <div class="flex justify-between items-start">
           <div class="flex items-center gap-3">
@@ -482,14 +487,15 @@ function renderLeaderboard() {
         </div>
 
         <div class="flex justify-between items-center pt-1">
-          <span class="text-[8px] text-slate-600 font-mono italic truncate max-w-[70%]">Reason: ${entry.reason || "Unknown"}</span>
+          <span class="text-[8px] text-slate-600 font-mono italic truncate max-w-[70%]">Reason: ${entry.reason || 'Unknown'}</span>
           <button onclick="removeLeaderboardEntry(${entry.id})" class="text-slate-700 hover:text-rose-500 transition-colors text-[10px] font-black uppercase tracking-widest">
             Remove
           </button>
         </div>
       </div>
     `;
-  }).join("");
+    })
+    .join('');
 }
 
 /**
@@ -529,7 +535,7 @@ async function downloadRunSummary() {
       duration: `${mins}m ${secs}s`,
       startTime: rs.startTime,
       seedUsed: rs.seedUsed,
-      artifacts: state.artifacts
+      artifacts: state.artifacts,
     };
 
     // ImageGenerator uses only standard Canvas 2D colours — no oklab, no html2canvas
@@ -558,4 +564,3 @@ window.updateShareTheme = updateShareTheme;
 window.refreshSharePreview = refreshSharePreview;
 window.executeFinalShare = executeFinalShare;
 window.executeFinalSave = executeFinalSave;
-

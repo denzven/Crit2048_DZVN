@@ -1,14 +1,14 @@
 import { create } from 'zustand';
-import type { GameStoreState, GameState, Tile, RunStats, ConfirmationState } from '../types/game';
-import { GameStorage } from './storage';
-import { CombatLogic } from './combat';
-import { Native } from './native';
-import { MASTER_ARTIFACTS, ENEMIES, CLASSES } from './data';
+
+import type { GameState, GameStoreState, RunStats, Tile } from '../types/game';
 import { SFX } from './audio';
+import { CombatLogic } from './combat';
 import { LeaderboardLogic } from './leaderboard';
-import { SeededRNG } from './prng';
+import { Native } from './native';
 import { PackEngine } from './packEngine';
+import { SeededRNG } from './prng';
 import { useRegistry } from './registryHub';
+import { GameStorage } from './storage';
 
 const DEFAULT_RUN_STATS: RunStats = {
   maxDamage: 0,
@@ -68,7 +68,7 @@ const INITIAL_STATE: GameStoreState = {
     movesPerRoll: 5,
     startingGold: 0,
     diceTheme: 'default',
-    customSeed: ''
+    customSeed: '',
   },
   floatingTexts: [],
   confirmation: null,
@@ -106,7 +106,12 @@ export interface GameActions {
   addFloatingText: (text: string, type: 'damage' | 'gold' | 'mult', x?: number, y?: number) => void;
   updateSettings: (settings: Partial<GameStoreState['settings']>) => void;
   forfeitRun: () => void;
-  showConfirm: (title: string, message: string, onConfirm: () => void, onCancel?: () => void) => void;
+  showConfirm: (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    onCancel?: () => void,
+  ) => void;
   showAlert: (title: string, message: string) => void;
   triggerScreenShake: (intensity?: number) => void;
   closeConfirmation: () => void;
@@ -118,43 +123,10 @@ export interface GameActions {
   setMultiplier: (n: number) => void;
   prevEncounter: () => void;
   checkHazards: (newGrid: (Tile | null)[], damage: number) => (Tile | null)[];
-  triggerFX: (name: string, params?: any) => void;
-  setState: (partial: any) => void;
+  triggerFX: (name: string, params?: unknown) => void;
+  setState: (partial: Partial<ExtendedGameStoreState & GameActions>) => void;
   toggleDevMode: () => void;
   executeDebugScript: (code: string) => void;
-}
-
-export interface ExtendedGameStoreState extends GameStoreState {
-  shopItems: any[];
-  slidesSinceRoll: number;
-  lastRoll: {
-    rawVal: number;
-    finalVal: number;
-    modifiers: { label: string; val: number; id: string; type: 'add' | 'multiply' | 'set' }[];
-    msg: string;
-    type: 'crit' | 'success' | 'fail' | 'crit-fail';
-  } | null;
-  usesLeft: number;
-  spellRoll: {
-    results: number[];
-    sum: number;
-  } | null;
-  lastDirection: 'LEFT' | 'RIGHT' | 'UP' | 'DOWN' | null;
-  hunterMarkLeft: number;
-  isChallengeMode: boolean;
-  rivalData: { 
-    score: number; 
-    merges: number; 
-    damage: number; 
-    maxDamage: number;
-    moves: number;
-    name?: string; 
-    icon?: string;
-    seed: string 
-  } | null;
-  activeFX: { id: string; name: string; params?: any }[];
-  isDevMode: boolean;
-  d20Override: number | null;
 }
 
 export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, get) => ({
@@ -175,11 +147,11 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   addFloatingText: (text, type, x = 50, y = 50) => {
     const id = Date.now() + SeededRNG.random();
     set((state) => ({
-      floatingTexts: [...state.floatingTexts, { id, text, type, x, y }]
+      floatingTexts: [...state.floatingTexts, { id, text, type, x, y }],
     }));
     setTimeout(() => {
       set((state) => ({
-        floatingTexts: state.floatingTexts.filter((t) => t.id !== id)
+        floatingTexts: state.floatingTexts.filter((t) => t.id !== id),
       }));
     }, 850);
   },
@@ -187,54 +159,56 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   triggerFX: (name, params) => {
     const id = Math.random().toString(36).substring(7);
     set((state) => ({
-      activeFX: [...state.activeFX, { id, name, params }]
+      activeFX: [...state.activeFX, { id, name, params }],
     }));
     setTimeout(() => {
       set((state) => ({
-        activeFX: state.activeFX.filter((f) => f.id !== id)
+        activeFX: state.activeFX.filter((f) => f.id !== id),
       }));
     }, 2000);
   },
 
   toggleDevMode: () => {
     const next = !get().isDevMode;
-    set((s) => ({ 
+    set((s) => ({
       isDevMode: next,
-      runStats: { ...s.runStats, wasGodModeUsed: true }
+      runStats: { ...s.runStats, wasGodModeUsed: true },
     }));
-    get().addLog(next ? "🛠️ DEV MODE ENABLED" : "🛠️ DEV MODE DISABLED");
+    get().addLog(next ? '🛠️ DEV MODE ENABLED' : '🛠️ DEV MODE DISABLED');
     if (next) SFX.menuEnter();
   },
 
   executeDebugScript: (code: string) => {
     try {
       PackEngine.runScript(code, get());
-      get().addLog("🛠️ DEBUG SCRIPT EXECUTED");
+      get().addLog('🛠️ DEBUG SCRIPT EXECUTED');
     } catch (e) {
-      console.error("Debug Script Error:", e);
-      get().addLog("❌ DEBUG SCRIPT FAILED");
+      console.error('Debug Script Error:', e);
+      get().addLog('❌ DEBUG SCRIPT FAILED');
     }
   },
 
   initializeRegistry: async () => {
     // 1. Load Presets (the "Foundation")
     await useRegistry.getState().loadPresets();
-    
+
     // 2. Load Base Game (Mod Priority 0)
     await useRegistry.getState().loadBaseGame();
-    
+
     // 3. Load Packs (User Mods)
-    const { encounters, classes, artifacts } = await PackEngine.applyPacks(get().runStats.activePackIds);
-    
-    set({ 
-      activeEncounters: encounters, 
-      activeClasses: classes, 
-      activeArtifacts: artifacts 
+    const { encounters, classes, artifacts } = await PackEngine.applyPacks(
+      get().runStats.activePackIds,
+    );
+
+    set({
+      activeEncounters: encounters,
+      activeClasses: classes,
+      activeArtifacts: artifacts,
     });
-    console.log("[GameStore] Registry initialized with", { 
-      encounters: encounters.length, 
-      classes: classes.length, 
-      artifacts: artifacts.length 
+    console.log('[GameStore] Registry initialized with', {
+      encounters: encounters.length,
+      classes: classes.length,
+      artifacts: artifacts.length,
     });
     useRegistry.getState().setIsReady(true);
     // Retention Notification
@@ -242,8 +216,13 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     const now = Date.now();
     if (lastPlayed) {
       const diff = now - parseInt(lastPlayed);
-      if (diff > 1000 * 60 * 60 * 20) { // More than 20 hours
-        Native.notify("Welcome Back, Hero!", "The dungeon has missed you. A new daily seed is waiting!", "🐉");
+      if (diff > 1000 * 60 * 60 * 20) {
+        // More than 20 hours
+        Native.notify(
+          'Welcome Back, Hero!',
+          'The dungeon has missed you. A new daily seed is waiting!',
+          '🐉',
+        );
       }
     }
     localStorage.setItem('crit2048_last_played', now.toString());
@@ -255,8 +234,8 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     const { ChallengeUtils } = await import('../utils/challengeUtils');
     const challenge = ChallengeUtils.parseUrl();
     if (challenge) {
-      set({ 
-        isChallengeMode: true, 
+      set({
+        isChallengeMode: true,
         rivalData: {
           seed: challenge.s,
           score: challenge.sc,
@@ -265,9 +244,9 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
           maxDamage: challenge.mx,
           moves: challenge.mv,
           name: challenge.n,
-          icon: challenge.i
+          icon: challenge.i,
         },
-        hasSave: false
+        hasSave: false,
       });
       SeededRNG.setSeed(challenge.s);
     } else {
@@ -277,12 +256,12 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     }
   },
 
-  setState: (partial: any) => set(partial),
+  setState: (partial: Partial<ExtendedGameStoreState & GameActions>) => set(partial),
 
   updateSettings: (newSettings) => {
     set((state) => {
       const updated = { ...state.settings, ...newSettings };
-      
+
       // Apply Scaling
       if (newSettings.uiScale !== undefined) {
         document.documentElement.style.setProperty('--ui-scale', updated.uiScale.toString());
@@ -290,7 +269,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       if (newSettings.fontScale !== undefined) {
         document.documentElement.style.setProperty('--font-scale', updated.fontScale.toString());
       }
-      
+
       return { settings: updated };
     });
   },
@@ -299,34 +278,37 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     const state = get();
     if (state.gameState === 'START' || state.gameState === 'CLASS_SELECT' || state.isGameOver) {
       SFX.menuEnter();
-      set((s) => ({ 
-        gameState: 'START', 
-        playerClass: null, 
-        artifacts: [], 
-        logs: [], 
-        grid: Array(16).fill(null), 
-        monsterHp: 0, 
+      set((s) => ({
+        gameState: 'START',
+        playerClass: null,
+        artifacts: [],
+        logs: [],
+        grid: Array(16).fill(null),
+        monsterHp: 0,
         monsterMaxHp: 0,
         encounterIdx: 0,
         score: 0,
         multiplier: 1.0,
         slidesLeft: 0,
         isGameOver: false,
-        runStats: { ...DEFAULT_RUN_STATS, activePackIds: s.runStats.activePackIds }
+        runStats: { ...DEFAULT_RUN_STATS, activePackIds: s.runStats.activePackIds },
       }));
       return;
     }
-    
+
     const stats = { ...state.runStats, endTime: Date.now(), endReason: 'FORFEIT' };
     SFX.gameOver();
-    set({ 
-      gameState: 'GAME_OVER', 
+    set({
+      gameState: 'GAME_OVER',
       isGameOver: true,
-      runStats: stats
+      runStats: stats,
     });
-    
+
     // Only save to leaderboard if the player has actually engaged in combat and NOT in god mode
-    if (!state.runStats.wasGodModeUsed && (state.runStats.totalMoves > 0 || state.monsterHp < state.monsterMaxHp)) {
+    if (
+      !state.runStats.wasGodModeUsed &&
+      (state.runStats.totalMoves > 0 || state.monsterHp < state.monsterMaxHp)
+    ) {
       LeaderboardLogic.saveRun(stats, state.playerClass, state.encounterIdx);
     }
     get().saveGame();
@@ -337,19 +319,24 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   },
 
   showAlert: (title, message) => {
-    set({ confirmation: { title, message, onConfirm: () => get().closeConfirmation(), type: 'alert' } });
+    set({
+      confirmation: { title, message, onConfirm: () => get().closeConfirmation(), type: 'alert' },
+    });
   },
 
   triggerScreenShake: (intensity = 1.0) => {
     if (!get().settings.screenshake) return;
     const container = document.getElementById('grid-container');
     if (!container) return;
-    
-    container.style.setProperty('--shake-intensity', (intensity * get().settings.shakeIntensity).toString());
+
+    container.style.setProperty(
+      '--shake-intensity',
+      (intensity * get().settings.shakeIntensity).toString(),
+    );
     container.classList.remove('shake-active');
     void container.offsetWidth;
     container.classList.add('shake-active');
-    
+
     setTimeout(() => {
       container.classList.remove('shake-active');
     }, 450);
@@ -374,40 +361,42 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     set({ gameState });
   },
 
-  addLog: (msg: string) => set((state) => ({ 
-    logs: [msg, ...state.logs].slice(0, 50) 
-  })),
+  addLog: (msg: string) =>
+    set((state) => ({
+      logs: [msg, ...state.logs].slice(0, 50),
+    })),
 
-  updateMonsterHp: (monsterHp: number) => set({ 
-    monsterHp: Math.max(0, monsterHp) 
-  }),
+  updateMonsterHp: (monsterHp: number) =>
+    set({
+      monsterHp: Math.max(0, monsterHp),
+    }),
 
   addGold: (amount: number) => {
     const val = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
     if (val > 0) SFX.coin();
-    set((state) => ({ 
-      gold: Math.max(0, (state.gold || 0) + val) 
+    set((state) => ({
+      gold: Math.max(0, (state.gold || 0) + val),
     }));
   },
 
   restoreSlides: (n: number) => {
     const val = typeof n === 'number' && !isNaN(n) ? n : 0;
-    set((state) => ({ 
-      slidesLeft: Math.max(0, (state.slidesLeft || 0) + val) 
+    set((state) => ({
+      slidesLeft: Math.max(0, (state.slidesLeft || 0) + val),
     }));
   },
 
   addMultiplier: (n: number) => {
     const val = typeof n === 'number' && !isNaN(n) ? n : 0;
-    set((state) => ({ 
-      multiplier: Math.max(0.1, (state.multiplier || 1) + val) 
+    set((state) => ({
+      multiplier: Math.max(0.1, (state.multiplier || 1) + val),
     }));
   },
 
   applyDamage: (n: number) => {
     const val = typeof n === 'number' && !isNaN(n) ? n : 0;
-    set((state) => ({ 
-      monsterHp: Math.max(0, (state.monsterHp || 0) - val) 
+    set((state) => ({
+      monsterHp: Math.max(0, (state.monsterHp || 0) - val),
     }));
   },
 
@@ -416,7 +405,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     set({ monsterHp: Math.max(0, val) });
   },
 
-  spawnRandomTile: (valOverride: any = null) => {
+  spawnRandomTile: (valOverride: number | string | null = null) => {
     let overrideVal: number | null = null;
     if (valOverride !== null && valOverride !== undefined) {
       overrideVal = typeof valOverride === 'string' ? parseInt(valOverride) : valOverride;
@@ -431,17 +420,19 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     if (emptyIndices.length > 0) {
       const rIdx = emptyIndices[Math.floor(SeededRNG.random() * emptyIndices.length)];
       const val = overrideVal !== null ? overrideVal : SeededRNG.random() > 0.9 ? 4 : 2;
-      
+
       const newGrid = [...grid];
-      newGrid[rIdx] = { 
-        id: Date.now() + SeededRNG.random(), 
-        val: val, 
-        pop: true 
+      newGrid[rIdx] = {
+        id: Date.now() + SeededRNG.random(),
+        val: val,
+        pop: true,
       };
 
       set({ grid: newGrid });
       if (val < 0) {
-        set((s) => ({ runStats: { ...s.runStats, hazardsSpawned: s.runStats.hazardsSpawned + 1 } }));
+        set((s) => ({
+          runStats: { ...s.runStats, hazardsSpawned: s.runStats.hazardsSpawned + 1 },
+        }));
       }
     }
   },
@@ -451,13 +442,13 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     if (encounterIdx <= 0) return;
     const prevIdx = encounterIdx - 1;
     const nextE = activeEncounters[prevIdx];
-    set({ 
+    set({
       encounterIdx: prevIdx,
       monsterHp: nextE.hp,
       monsterMaxHp: nextE.hp,
       slidesLeft: nextE.slides,
       isTransitioning: false,
-      isGameOver: false
+      isGameOver: false,
     });
     get().addLog(`⏪ BACKTRACKED TO ANTE ${prevIdx + 1}`);
   },
@@ -474,38 +465,52 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   checkHazards: (newGrid: (Tile | null)[], damage: number) => {
     let clearedCount = 0;
     let grid = [...newGrid];
-    
+
     // Slime (100+)
     if (damage >= 100) {
-      grid = grid.map(t => {
-        if (t && t.val === -1) { clearedCount++; return null; }
+      grid = grid.map((t) => {
+        if (t && t.val === -1) {
+          clearedCount++;
+          return null;
+        }
         return t;
       });
     }
     // Web (75+)
     if (damage >= 75) {
-      grid = grid.map(t => {
-        if (t && t.val === -5) { clearedCount++; return null; }
+      grid = grid.map((t) => {
+        if (t && t.val === -5) {
+          clearedCount++;
+          return null;
+        }
         return t;
       });
     }
     // Goblin (50+)
     if (damage >= 50) {
-      grid = grid.map(t => {
-        if (t && t.val === -2) { clearedCount++; return null; }
+      grid = grid.map((t) => {
+        if (t && t.val === -2) {
+          clearedCount++;
+          return null;
+        }
         return t;
       });
     }
 
     // Curse (-6) - Drain extra slide if it exists on board
-    const curseCount = grid.filter(t => t && t.val === -6).length;
+    const curseCount = grid.filter((t) => t && t.val === -6).length;
     if (curseCount > 0) {
       get().restoreSlides(-curseCount);
       get().addLog(`🔮 Curse drained ${curseCount} extra slide!`);
     }
 
     if (clearedCount > 0) {
-      set((s) => ({ runStats: { ...s.runStats, totalHazardsCleared: s.runStats.totalHazardsCleared + clearedCount } }));
+      set((s) => ({
+        runStats: {
+          ...s.runStats,
+          totalHazardsCleared: s.runStats.totalHazardsCleared + clearedCount,
+        },
+      }));
     }
 
     return grid;
@@ -514,30 +519,36 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   move: (direction: 'LEFT' | 'RIGHT' | 'UP' | 'DOWN') => {
     if (get().isGameOver || get().isTransitioning || get().isRolling) return;
 
-    const { newGrid, changed, damageDealt, merges, goldEarned, multIncrease, mergeResults } = CombatLogic.processMove(get(), direction);
+    const { newGrid, changed, damageDealt, merges, goldEarned, multIncrease, mergeResults } =
+      CombatLogic.processMove(get(), direction);
 
     if (changed) {
       if (damageDealt > 0) {
         SFX.hit();
         get().triggerScreenShake(merges > 1 ? 1.2 : 0.6);
-        
+
         // Calculate Board Power contribution for logging
         const boardSum = newGrid.reduce((sum, t) => sum + (t && t.val > 0 ? t.val : 0), 0);
         const boardPowerDmg = Math.floor(boardSum * 0.05);
-        
+
         if (merges > 0) {
           get().addLog(`Combo: Dealt ${Math.ceil(damageDealt)} damage!`);
         } else if (boardPowerDmg > 0) {
           get().addLog(`Board Power: Dealt ${boardPowerDmg} passive damage!`);
         }
-        
+
         // Individualized floating text
-        mergeResults.forEach(res => {
+        mergeResults.forEach((res) => {
           const r = Math.floor(res.pos / 4);
           const c = res.pos % 4;
           const xOff = (SeededRNG.random() - 0.5) * 5;
           const yOff = (SeededRNG.random() - 0.5) * 5;
-          get().addFloatingText(`-${Math.ceil(res.damage)}`, 'damage', c * 25 + 12.5 + xOff, r * 25 + 12.5 + yOff);
+          get().addFloatingText(
+            `-${Math.ceil(res.damage)}`,
+            'damage',
+            c * 25 + 12.5 + xOff,
+            r * 25 + 12.5 + yOff,
+          );
         });
       } else if (merges > 0) {
         SFX.merge();
@@ -550,7 +561,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         if (goldEarned < 0) get().addLog(`👺 Goblins stole ${Math.abs(goldEarned)} gold!`);
       }
 
-      const highestVal = Math.max(...newGrid.map(t => t?.val || 0));
+      const highestVal = Math.max(...newGrid.map((t) => t?.val || 0));
 
       // Check Hazards and return updated grid
       const finalGrid = get().checkHazards(newGrid, damageDealt);
@@ -560,7 +571,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
       set((s) => {
         const newMergeCounts = { ...s.runStats.mergeCounts };
-        mergeResults.forEach(res => {
+        mergeResults.forEach((res) => {
           const val = res.damage / s.multiplier; // Approximation of tile val for stats
           newMergeCounts[val] = (newMergeCounts[val] || 0) + 1;
         });
@@ -583,8 +594,8 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
             totalMerges: s.runStats.totalMerges + merges,
             highestTileValue: Math.max(s.runStats.highestTileValue, highestVal),
             maxMultiplier: Math.max(s.runStats.maxMultiplier, s.multiplier + multIncrease),
-            mergeCounts: newMergeCounts
-          }
+            mergeCounts: newMergeCounts,
+          },
         };
       });
 
@@ -600,7 +611,9 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         grid.forEach((tile, idx) => {
           if (tile && (tile.val === -1 || tile.val === -7) && SeededRNG.random() < 0.25) {
             // Try to find adjacent empty spot
-            const neighbors = [idx - 4, idx + 4, idx - 1, idx + 1].filter(i => i >= 0 && i < 16 && grid[i] === null);
+            const neighbors = [idx - 4, idx + 4, idx - 1, idx + 1].filter(
+              (i) => i >= 0 && i < 16 && grid[i] === null,
+            );
             if (neighbors.length > 0) {
               const targetIdx = neighbors[Math.floor(SeededRNG.random() * neighbors.length)];
               grid[targetIdx] = { id: Date.now() + SeededRNG.random(), val: tile.val, pop: true };
@@ -610,18 +623,18 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         });
         if (spreadOccurred) {
           set({ grid });
-          get().addLog("⚠️ Hazards are spreading!");
+          get().addLog('⚠️ Hazards are spreading!');
         }
       }
       // Post-move check
       const updatedState = get();
       if (updatedState.monsterHp <= 0) {
         get().triggerScreenShake(3.5);
-        
+
         set({ gold: (updatedState.gold || 0) + 50 });
 
         set({ isTransitioning: true });
-        
+
         // Trigger SFX immediately with the UI splash
         if (get().encounterIdx >= get().activeEncounters.length - 1) {
           SFX.victory();
@@ -632,11 +645,11 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         setTimeout(() => {
           if (get().encounterIdx >= get().activeEncounters.length - 1) {
             PackEngine.onGameOver(get(), 'VICTORY');
-            set({ 
-              gameState: 'VICTORY', 
-              isGameOver: true, 
+            set({
+              gameState: 'VICTORY',
+              isGameOver: true,
               isTransitioning: false,
-              runStats: { ...get().runStats, endTime: Date.now(), endReason: 'VICTORY' }
+              runStats: { ...get().runStats, endTime: Date.now(), endReason: 'VICTORY' },
             });
           } else {
             get().generateShop();
@@ -645,20 +658,26 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
             get().saveGame();
           }
         }, 2000);
-      } else if (updatedState.monsterHp > 0 && (updatedState.slidesLeft <= 0 || CombatLogic.checkGridlock(updatedState.grid))) {
+      } else if (
+        updatedState.monsterHp > 0 &&
+        (updatedState.slidesLeft <= 0 || CombatLogic.checkGridlock(updatedState.grid))
+      ) {
         const reason = updatedState.slidesLeft <= 0 ? 'OUT_OF_SLIDES' : 'GRIDLOCK';
         const stats = { ...get().runStats, endTime: Date.now(), endReason: reason };
         PackEngine.onGameOver(get(), reason);
         SFX.gameOver();
-        set({ 
-          gameState: 'GAME_OVER', 
+        set({
+          gameState: 'GAME_OVER',
           isGameOver: true,
-          runStats: stats
+          runStats: stats,
         });
         if (!stats.wasGodModeUsed) {
           LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
         }
-      } else if (updatedState.monsterHp > 0 && updatedState.slidesSinceRoll >= get().settings.movesPerRoll) {
+      } else if (
+        updatedState.monsterHp > 0 &&
+        updatedState.slidesSinceRoll >= get().settings.movesPerRoll
+      ) {
         setTimeout(() => {
           if (get().gameState === 'PLAYING') set({ gameState: 'DICE' });
         }, 600);
@@ -670,7 +689,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
   initEncounter: (hp, slides) => {
     const { playerClass, runStats } = get();
-    
+
     // Seed initialization
     let seed = runStats.seedUsed || get().settings.customSeed;
     if (!seed) {
@@ -690,13 +709,13 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       isTransitioning: false,
       slidesSinceRoll: 0,
       usesLeft: playerClass?.ability?.maxUses || 0,
-      runStats: { 
-        ...runStats, 
+      runStats: {
+        ...runStats,
         startTime: runStats.startTime === 0 ? Date.now() : runStats.startTime,
-        seedUsed: seed
-      }
+        seedUsed: seed,
+      },
     }));
-    
+
     // Spawn initial tiles
     get().spawnRandomTile();
     get().spawnRandomTile();
@@ -708,9 +727,9 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
   generateShop: () => {
     const { activeArtifacts, playerClass } = get();
-    
+
     // Filter by required class if specified
-    const pool = activeArtifacts.filter(a => {
+    const pool = activeArtifacts.filter((a) => {
       if (!a.requiredClass) return true;
       return a.requiredClass.toLowerCase() === playerClass?.id?.toLowerCase();
     });
@@ -723,14 +742,15 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   nextEncounter: () => {
     const { encounterIdx, activeEncounters } = get();
     const nextEnemy = activeEncounters[Math.min(encounterIdx + 1, activeEncounters.length - 1)];
-    
+
     PackEngine.onTavernLeave(get());
     SFX.descend();
     set({ isTransitioning: true }); // Show loading screen
-    
+
     setTimeout(() => {
-      const hp = parseInt(nextEnemy.hp as any) || 100;
-      const slides = parseInt(nextEnemy.slides as any) || 20;
+      const hp = typeof nextEnemy.hp === 'string' ? parseInt(nextEnemy.hp) : nextEnemy.hp || 100;
+      const slides =
+        typeof nextEnemy.slides === 'string' ? parseInt(nextEnemy.slides) : nextEnemy.slides || 20;
       get().initEncounter(hp, slides);
       set({ encounterIdx: encounterIdx + 1, isTransitioning: false });
     }, 2500);
@@ -742,43 +762,49 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     if (!enemy) return;
 
     const turn = runStats.totalMoves;
-    
+
     // Regeneration
-    if (enemy.name.includes("Troll") && monsterHp > 0 && turn % 5 === 0) {
+    if (enemy.name.includes('Troll') && monsterHp > 0 && turn % 5 === 0) {
       set({ monsterHp: Math.min(monsterMaxHp, monsterHp + 30) });
       SFX.enemyPower();
     }
 
     // Slime Spawning
-    if (enemy.name.includes("Slime") && turn > 0 && turn % 8 === 0) {
-      get().addLog("Boss Power: Slime spawned!");
+    if (enemy.name.includes('Slime') && turn > 0 && turn % 8 === 0) {
+      get().addLog('Boss Power: Slime spawned!');
       get().spawnRandomTile(-1);
       SFX.enemyPower();
     }
 
     // Goblin Ambush
-    if (enemy.name.includes("Goblin") && turn > 0 && turn % 12 === 0) {
-      get().addLog("Ambush: Goblin spawned!");
+    if (enemy.name.includes('Goblin') && turn > 0 && turn % 12 === 0) {
+      get().addLog('Ambush: Goblin spawned!');
       get().spawnRandomTile(-2);
       SFX.enemyPower();
     }
 
     // Lich Necromancy
-    if (enemy.name.includes("Lich") && turn > 0 && turn % 12 === 0) {
-      get().addLog("Necromancy: Skeleton raised!");
+    if (enemy.name.includes('Lich') && turn > 0 && turn % 12 === 0) {
+      get().addLog('Necromancy: Skeleton raised!');
       get().spawnRandomTile(-3);
       SFX.enemyPower();
     }
 
     // Dragon Inferno
-    if (enemy.name.includes("Dragon") && turn > 0 && turn % 10 === 0) {
-      let maxV = 0, maxI = -1;
-      grid.forEach((t, i) => { if (t && t.val > maxV) { maxV = t.val; maxI = i; } });
+    if (enemy.name.includes('Dragon') && turn > 0 && turn % 10 === 0) {
+      let maxV = 0,
+        maxI = -1;
+      grid.forEach((t, i) => {
+        if (t && t.val > maxV) {
+          maxV = t.val;
+          maxI = i;
+        }
+      });
       if (maxI !== -1) {
         const newGrid = [...grid];
         newGrid[maxI] = null;
         set({ grid: newGrid });
-        get().addLog("Boss Power: Inferno burned highest weapon!");
+        get().addLog('Boss Power: Inferno burned highest weapon!');
         SFX.enemyPower();
       }
     }
@@ -786,10 +812,12 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
   buyArtifact: (artifactId: string) => {
     const { gold, shopItems, artifacts, activeArtifacts } = get();
-    const item = shopItems.find(i => i.id === artifactId) || activeArtifacts.find(i => i.id === artifactId);
+    const item =
+      shopItems.find((i) => i.id === artifactId) ||
+      activeArtifacts.find((i) => i.id === artifactId);
     if (!item) return;
 
-    const existingIdx = artifacts.findIndex(a => a.id === artifactId);
+    const existingIdx = artifacts.findIndex((a) => a.id === artifactId);
     const level = existingIdx !== -1 ? artifacts[existingIdx].level : 0;
     const cost = item.basePrice * (level + 1);
 
@@ -807,7 +835,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       set({
         gold: gold - cost,
         artifacts: newArtifacts,
-        runStats: { ...get().runStats, totalCoinsSpent: get().runStats.totalCoinsSpent + cost }
+        runStats: { ...get().runStats, totalCoinsSpent: get().runStats.totalCoinsSpent + cost },
       });
       PackEngine.onPurchase(get(), artifactId, level + 1);
     }
@@ -820,26 +848,27 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     set({ isRolling: true });
     if (get().settings.haptics) Native.vibrate(100);
 
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 800));
 
-    const rawRoll = get().d20Override !== null ? get().d20Override as number : Math.floor(SeededRNG.random() * 20) + 1;
+    const rawRoll =
+      get().d20Override !== null ? get().d20Override : Math.floor(SeededRNG.random() * 20) + 1;
     set({ d20Override: null });
-    
+
     // Call PackEngine to get modifiers
     const { val: finalRollVal, trace } = PackEngine.onD20(get(), rawRoll);
 
     let mod = playerClass?.d20Mod || 0;
     if (typeof mod !== 'number' || isNaN(mod)) mod = 0;
-    
+
     // Total roll including class mod
     const totalRoll = finalRollVal + mod;
 
-    let result: ExtendedGameStoreState['lastRoll'] = { 
+    let result: ExtendedGameStoreState['lastRoll'] = {
       rawVal: rawRoll,
       finalVal: totalRoll,
       modifiers: trace,
-      msg: '', 
-      type: 'success' 
+      msg: '',
+      type: 'success',
     };
 
     if (mod !== 0) {
@@ -849,12 +878,21 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     if (totalRoll >= 20) {
       SFX.crit();
       result = { ...result, msg: 'NATURAL 20! Critical Hit!', type: 'crit' };
-      set((s) => ({ multiplier: s.multiplier + 1.0, runStats: { ...s.runStats, maxMultiplier: Math.max(s.runStats.maxMultiplier, s.multiplier + 1.0) } }));
-      const validIndices = get().grid.map((c, i) => (c && c.val > 0 ? i : null)).filter((c): c is number => c !== null);
+      set((s) => ({
+        multiplier: s.multiplier + 1.0,
+        runStats: {
+          ...s.runStats,
+          maxMultiplier: Math.max(s.runStats.maxMultiplier, s.multiplier + 1.0),
+        },
+      }));
+      const validIndices = get()
+        .grid.map((c, i) => (c && c.val > 0 ? i : null))
+        .filter((c): c is number => c !== null);
       if (validIndices.length > 0) {
         const idx = validIndices[Math.floor(SeededRNG.random() * validIndices.length)];
         const newGrid = [...get().grid];
-        if (newGrid[idx]) newGrid[idx] = { ...newGrid[idx]!, val: newGrid[idx]!.val * 2, pop: true };
+        if (newGrid[idx])
+          newGrid[idx] = { ...newGrid[idx]!, val: newGrid[idx]!.val * 2, pop: true };
         set({ grid: newGrid });
       }
     } else if (totalRoll >= 15) {
@@ -873,9 +911,15 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       get().spawnRandomTile(-3);
       get().spawnRandomTile(-3);
       get().spawnRandomTile(-3);
-      
-      let maxV = 0, maxI = -1;
-      get().grid.forEach((c, i) => { if (c && c.val > maxV) { maxV = c.val; maxI = i; } });
+
+      let maxV = 0,
+        maxI = -1;
+      get().grid.forEach((c, i) => {
+        if (c && c.val > maxV) {
+          maxV = c.val;
+          maxI = i;
+        }
+      });
       if (maxI !== -1) {
         const newGrid = [...get().grid];
         newGrid[maxI] = null;
@@ -906,10 +950,12 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     set({ isRolling: true });
     if (get().settings.haptics) Native.vibrate(100);
 
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 800));
 
     const ab = playerClass.ability;
-    const results = Array(ab.count).fill(0).map(() => Math.floor(SeededRNG.random() * ab.sides) + 1);
+    const results = Array(ab.count)
+      .fill(0)
+      .map(() => Math.floor(SeededRNG.random() * ab.sides) + 1);
     const sum = results.reduce((a, b) => a + b, 0);
 
     set({
@@ -920,7 +966,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         ...get().runStats,
         abilityUses: get().runStats.abilityUses + 1,
         totalSpellsCast: get().runStats.totalSpellsCast + 1,
-      }
+      },
     });
   },
 
@@ -934,12 +980,12 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       PackEngine.onCast(get(), dmgObj);
       const dmg = dmgObj.val;
 
-      set({ 
+      set({
         monsterHp: Math.max(0, monsterHp - dmg),
         runStats: {
           ...get().runStats,
-          spellDamageDealt: get().runStats.spellDamageDealt + dmg
-        }
+          spellDamageDealt: get().runStats.spellDamageDealt + dmg,
+        },
       });
       get().addLog(`Spell: ${ab.name} dealt ${Math.ceil(dmg)} damage!`);
       get().triggerScreenShake(2.0);
@@ -951,11 +997,11 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     }
 
     set({ gameState: 'PLAYING', spellRoll: null });
-    
+
     if (get().monsterHp <= 0) {
-      get().addLog("BOSS DEFEATED! Gold +50.");
+      get().addLog('BOSS DEFEATED! Gold +50.');
       set({ isTransitioning: true, gold: get().gold + 50 });
-      
+
       // Trigger SFX immediately with the UI splash
       if (get().encounterIdx >= get().activeEncounters.length - 1) {
         SFX.victory();
@@ -965,11 +1011,11 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 
       if (get().encounterIdx >= get().activeEncounters.length - 1) {
         const stats = { ...get().runStats, endTime: Date.now(), endReason: 'VICTORY' };
-        set({ 
-          gameState: 'VICTORY', 
-          isGameOver: true, 
+        set({
+          gameState: 'VICTORY',
+          isGameOver: true,
           isTransitioning: false,
-          runStats: stats
+          runStats: stats,
         });
         LeaderboardLogic.saveRun(stats, get().playerClass, get().encounterIdx);
       } else {
@@ -989,13 +1035,13 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     const { gold, playerClass } = get();
     if (!playerClass?.ability) return;
     const cost = 100 * (playerClass.ability.count || 1);
-    
+
     if (gold >= cost) {
       const newAbility = { ...playerClass.ability, count: playerClass.ability.count + 1 };
       set({
         gold: gold - cost,
         playerClass: { ...playerClass, ability: newAbility },
-        runStats: { ...get().runStats, totalCoinsSpent: get().runStats.totalCoinsSpent + cost }
+        runStats: { ...get().runStats, totalCoinsSpent: get().runStats.totalCoinsSpent + cost },
       });
       get().addLog(`Spell Enhanced: Now rolls ${newAbility.count}d${newAbility.sides}!`);
     }
@@ -1008,9 +1054,9 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     set({
       gold: gold - 30,
       usesLeft: playerClass.ability.maxUses,
-      runStats: { ...get().runStats, totalCoinsSpent: get().runStats.totalCoinsSpent + 30 }
+      runStats: { ...get().runStats, totalCoinsSpent: get().runStats.totalCoinsSpent + 30 },
     });
-    get().addLog("Merchant: Spell uses restored.");
+    get().addLog('Merchant: Spell uses restored.');
   },
 
   resetGame: () => {
@@ -1021,22 +1067,22 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       url.searchParams.delete('c');
       window.history.replaceState({}, '', url.toString());
     }
-    set((state) => ({ 
-      ...INITIAL_STATE, 
+    set((state) => ({
+      ...INITIAL_STATE,
       isChallengeMode: false,
       rivalData: null,
       activeEncounters: state.activeEncounters,
       activeClasses: state.activeClasses,
       activeArtifacts: state.activeArtifacts,
-      shopItems: [], 
-      slidesSinceRoll: 0, 
-      lastRoll: null, 
-      usesLeft: 0, 
-      spellRoll: null, 
+      shopItems: [],
+      slidesSinceRoll: 0,
+      lastRoll: null,
+      usesLeft: 0,
+      spellRoll: null,
       lastDirection: null,
       hunterMarkLeft: 0,
       hasSave: false,
-      runStats: { ...DEFAULT_RUN_STATS, activePackIds: state.runStats.activePackIds } 
+      runStats: { ...DEFAULT_RUN_STATS, activePackIds: state.runStats.activePackIds },
     }));
   },
 
@@ -1044,7 +1090,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     const saved = await GameStorage.loadGame();
     if (saved) {
       if (saved.rngState !== undefined) SeededRNG.setSeedState(saved.rngState);
-      
+
       // Legacy Parity: If saved in PLAYING with 0 hp, promote to TAVERN/VICTORY
       if (saved.gameState === 'PLAYING' && saved.monsterHp <= 0) {
         if (saved.encounterIdx >= (saved.activeEncounters?.length || 0) - 1) {
@@ -1056,14 +1102,14 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         }
       }
 
-      set({ 
-        ...saved, 
-        isTransitioning: false, 
-        isGameOver: saved.gameState === 'GAME_OVER' || saved.gameState === 'VICTORY', 
-        isRolling: false, 
-        lastRoll: null, 
+      set({
+        ...saved,
+        isTransitioning: false,
+        isGameOver: saved.gameState === 'GAME_OVER' || saved.gameState === 'VICTORY',
+        isRolling: false,
+        lastRoll: null,
         spellRoll: null,
-        hasSave: true 
+        hasSave: true,
       });
       await get().initializeRegistry();
 
@@ -1107,7 +1153,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       shopItems: state.shopItems,
     };
     await GameStorage.saveGame(persistentData);
-    
+
     // Update hasSave flag
     const resumable = state.gameState !== 'START' && !state.isGameOver;
     set({ hasSave: resumable });
@@ -1115,5 +1161,5 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
 }));
 
 if (typeof window !== 'undefined') {
-  (window as any).useGameStore = useGameStore;
+  (window as unknown as { useGameStore: unknown }).useGameStore = useGameStore;
 }

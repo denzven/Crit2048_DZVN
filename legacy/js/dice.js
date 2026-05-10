@@ -4,7 +4,7 @@ const FixedDiceEngine = (function () {
 
   function clear(containerId) {
     const el = document.getElementById(containerId);
-    if (el) el.innerHTML = "";
+    if (el) el.innerHTML = '';
     if (activeRenderers[containerId]) {
       activeRenderers[containerId].dispose();
       delete activeRenderers[containerId];
@@ -77,11 +77,7 @@ const FixedDiceEngine = (function () {
     // Fast-forward physics simulation (up to 1000 steps just in case)
     for (let i = 0; i < 1000; i++) {
       applyPhysics(mesh, widthBounds, heightBounds);
-      if (
-        mesh.userData.vel.lengthSq() === 0 &&
-        mesh.userData.avel.lengthSq() === 0
-      )
-        break;
+      if (mesh.userData.vel.lengthSq() === 0 && mesh.userData.avel.lengthSq() === 0) break;
     }
 
     mesh.updateMatrixWorld();
@@ -145,11 +141,7 @@ const FixedDiceEngine = (function () {
       12 + Math.random() * 5 + idx * 2,
       (Math.random() - 0.5) * spreadZ,
     );
-    mesh.rotation.set(
-      Math.random() * Math.PI,
-      Math.random() * Math.PI,
-      Math.random() * Math.PI,
-    );
+    mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
 
     const force = 0.5;
     mesh.userData.vel = new THREE.Vector3(
@@ -205,26 +197,16 @@ const FixedDiceEngine = (function () {
       let edge2 = new THREE.Vector3().subVectors(v2, v0);
       localNormal = new THREE.Vector3().crossVectors(edge1, edge2).normalize();
 
-      let midBottom = new THREE.Vector3()
-        .addVectors(v0, v1)
-        .multiplyScalar(0.5);
+      let midBottom = new THREE.Vector3().addVectors(v0, v1).multiplyScalar(0.5);
       localUp = new THREE.Vector3().subVectors(v2, midBottom).normalize();
     }
 
     // We want localNormal mapped to +Y, and localUp mapped to -Z (Up on screen)
-    let localRight = new THREE.Vector3()
-      .crossVectors(localUp, localNormal)
-      .normalize();
+    let localRight = new THREE.Vector3().crossVectors(localUp, localNormal).normalize();
     let localBack = new THREE.Vector3().copy(localUp).negate();
-    let basisMat = new THREE.Matrix4().makeBasis(
-      localRight,
-      localNormal,
-      localBack,
-    );
+    let basisMat = new THREE.Matrix4().makeBasis(localRight, localNormal, localBack);
     // The inverse matrix aligns the local face to exactly point towards the camera upright
-    mesh.userData.targetQuat = new THREE.Quaternion()
-      .setFromRotationMatrix(basisMat)
-      .invert();
+    mesh.userData.targetQuat = new THREE.Quaternion().setFromRotationMatrix(basisMat).invert();
 
     // Restore pre-simulation state
     mesh.position.copy(initPos);
@@ -235,16 +217,13 @@ const FixedDiceEngine = (function () {
     const numMats = sides === 6 ? 6 : sides === 8 ? 8 : 20;
     const materials = [];
     for (let i = 0; i < numMats; i++) {
-      let num =
-        i === topMatIndex
-          ? targetResult
-          : Math.floor(Math.random() * sides) + 1;
+      let num = i === topMatIndex ? targetResult : Math.floor(Math.random() * sides) + 1;
       if (i !== topMatIndex && num === targetResult) num = (num % sides) + 1;
 
-      const canvas = document.createElement("canvas");
+      const canvas = document.createElement('canvas');
       canvas.width = 256;
       canvas.height = 256;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext('2d');
 
       // Solid dark background matching UI
       ctx.fillStyle = bgColor;
@@ -256,10 +235,10 @@ const FixedDiceEngine = (function () {
         ctx.lineWidth = 6;
         ctx.strokeRect(6, 6, 244, 244);
         ctx.fillStyle = color;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         // Extremely bold, large font for maximum readability
-        ctx.font = "900 160px sans-serif";
+        ctx.font = '900 160px sans-serif';
         ctx.fillText(num, 128, 140);
       } else {
         ctx.beginPath();
@@ -274,9 +253,9 @@ const FixedDiceEngine = (function () {
         ctx.lineWidth = 6;
         ctx.stroke();
         ctx.fillStyle = color;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = "900 110px sans-serif";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '900 110px sans-serif';
         ctx.fillText(num, 128, 165);
         if (num === 6 || num === 9) {
           ctx.fillRect(100, 220, 56, 8);
@@ -306,14 +285,7 @@ const FixedDiceEngine = (function () {
       const scene = new THREE.Scene();
       const aspect = width / height;
       const d = 3.2;
-      const camera = new THREE.OrthographicCamera(
-        -d * aspect,
-        d * aspect,
-        d,
-        -d,
-        1,
-        100,
-      );
+      const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 100);
       camera.position.set(0, 15, 0);
       camera.lookAt(0, 0, 0);
 
@@ -346,11 +318,7 @@ const FixedDiceEngine = (function () {
       const spreadZ = Math.max(1, d - 1.5);
 
       // Tray matching theme bg
-      const trayGeo = new THREE.BoxGeometry(
-        spreadX * 2 + 2,
-        10,
-        spreadZ * 2 + 2,
-      );
+      const trayGeo = new THREE.BoxGeometry(spreadX * 2 + 2, 10, spreadZ * 2 + 2);
       const theme = DICE_THEMES[config.diceTheme] || DICE_THEMES.default;
       const trayMat = new THREE.MeshToonMaterial({
         color: theme.tray,
@@ -363,14 +331,7 @@ const FixedDiceEngine = (function () {
 
       const diceObjects = [];
       diceArray.forEach((sides, idx) => {
-        const die = createDice(
-          sides,
-          results[idx],
-          idx,
-          diceArray.length,
-          spreadX,
-          spreadZ,
-        );
+        const die = createDice(sides, results[idx], idx, diceArray.length, spreadX, spreadZ);
         scene.add(die);
         diceObjects.push(die);
       });
@@ -394,10 +355,7 @@ const FixedDiceEngine = (function () {
               SFX.diceClatter();
               if (window.Plugins) window.Plugins.vibrate('impactLight');
             }
-            if (
-              mesh.userData.vel.lengthSq() > 0 ||
-              mesh.userData.avel.lengthSq() > 0
-            )
+            if (mesh.userData.vel.lengthSq() > 0 || mesh.userData.avel.lengthSq() > 0)
               moving = true;
           });
 
@@ -425,16 +383,8 @@ const FixedDiceEngine = (function () {
           let ease = 1 - Math.pow(1 - t, 3); // Cubic ease out
 
           diceObjects.forEach((mesh) => {
-            mesh.position.lerpVectors(
-              mesh.userData.startPos,
-              mesh.userData.targetPos,
-              ease,
-            );
-            mesh.scale.lerpVectors(
-              mesh.userData.startScale,
-              mesh.userData.targetScale,
-              ease,
-            );
+            mesh.position.lerpVectors(mesh.userData.startPos, mesh.userData.targetPos, ease);
+            mesh.scale.lerpVectors(mesh.userData.startScale, mesh.userData.targetScale, ease);
             // Slerp rotation towards mathematically perfect upright face
             mesh.quaternion.slerpQuaternions(
               mesh.userData.startQuat,

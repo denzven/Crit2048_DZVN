@@ -1,24 +1,140 @@
 {
   "weapons": [
-    { "id": "2", "name": "Dagger", "icon": "🗡️", "bg": "bg-slate-300", "text": "text-slate-900", "dmg": 2 },
-    { "id": "4", "name": "Shortsword", "icon": "⚔️", "bg": "bg-slate-400", "text": "text-slate-900", "dmg": 6 },
-    { "id": "8", "name": "Longsword", "icon": "⚔️", "bg": "bg-amber-600", "text": "text-white", "dmg": 15 },
-    { "id": "16", "name": "Battleaxe", "icon": "🪓", "bg": "bg-orange-600", "text": "text-white", "dmg": 40 },
-    { "id": "32", "name": "Warhammer", "icon": "🔨", "bg": "bg-red-600", "text": "text-white", "dmg": 100 },
-    { "id": "64", "name": "Greatsword", "icon": "⚔️", "bg": "bg-purple-600", "text": "text-white", "dmg": 250 },
-    { "id": "128", "name": "Magic Staff", "icon": "🪄", "bg": "bg-indigo-700", "text": "text-white", "dmg": 600 },
-    { "id": "256", "name": "Holy Avenger", "icon": "✨", "bg": "bg-cyan-600", "text": "text-white", "dmg": 1500 },
-    { "id": "512", "name": "Demon Blade", "icon": "😈", "bg": "bg-gradient-to-r from-indigo-600 to-purple-600", "dmg": 4000 },
-    { "id": "1024", "name": "Dragon Slayer", "icon": "🐉", "bg": "bg-gradient-to-r from-red-600 to-orange-600", "dmg": 10000 },
-    { "id": "2048", "name": "Crit 2048", "icon": "💎", "bg": "bg-gradient-to-r from-rose-600 via-purple-600 to-indigo-600", "dmg": 50000 }
+    {
+      "id": "2",
+      "name": "Dagger",
+      "icon": "🗡️",
+      "bg": "bg-slate-300",
+      "text": "text-slate-900",
+      "dmg": 2
+    },
+    {
+      "id": "4",
+      "name": "Shortsword",
+      "icon": "⚔️",
+      "bg": "bg-slate-400",
+      "text": "text-slate-900",
+      "dmg": 6
+    },
+    {
+      "id": "8",
+      "name": "Longsword",
+      "icon": "⚔️",
+      "bg": "bg-amber-600",
+      "text": "text-white",
+      "dmg": 15
+    },
+    {
+      "id": "16",
+      "name": "Battleaxe",
+      "icon": "🪓",
+      "bg": "bg-orange-600",
+      "text": "text-white",
+      "dmg": 40
+    },
+    {
+      "id": "32",
+      "name": "Warhammer",
+      "icon": "🔨",
+      "bg": "bg-red-600",
+      "text": "text-white",
+      "dmg": 100
+    },
+    {
+      "id": "64",
+      "name": "Greatsword",
+      "icon": "⚔️",
+      "bg": "bg-purple-600",
+      "text": "text-white",
+      "dmg": 250
+    },
+    {
+      "id": "128",
+      "name": "Magic Staff",
+      "icon": "🪄",
+      "bg": "bg-indigo-700",
+      "text": "text-white",
+      "dmg": 600
+    },
+    {
+      "id": "256",
+      "name": "Holy Avenger",
+      "icon": "✨",
+      "bg": "bg-cyan-600",
+      "text": "text-white",
+      "dmg": 1500
+    },
+    {
+      "id": "512",
+      "name": "Demon Blade",
+      "icon": "😈",
+      "bg": "bg-gradient-to-r from-indigo-600 to-purple-600",
+      "dmg": 4000
+    },
+    {
+      "id": "1024",
+      "name": "Dragon Slayer",
+      "icon": "🐉",
+      "bg": "bg-gradient-to-r from-red-600 to-orange-600",
+      "dmg": 10000
+    },
+    {
+      "id": "2048",
+      "name": "Crit 2048",
+      "icon": "💎",
+      "bg": "bg-gradient-to-r from-rose-600 via-purple-600 to-indigo-600",
+      "dmg": 50000
+    }
   ],
   "hazards": [
-    { "id": "-1", "name": "Slime", "icon": "🟢", "bg": "bg-lime-600", "lore": "Spreads every 10 turns." },
-    { "id": "-2", "name": "Goblin", "icon": "👺", "bg": "bg-emerald-700", "lore": "Steals 10 gold on contact." },
-    { "id": "-3", "name": "Skeleton", "icon": "💀", "bg": "bg-gray-700", "lore": "Blocks merges in its column." },
-    { "id": "-4", "name": "Mimic", "icon": "📦", "bg": "bg-yellow-700", "lore": "Looks like a weapon until touched." },
-    { "id": "-5", "name": "Web", "icon": "🕸️", "bg": "bg-neutral-600", "lore": "Slows adjacent tile movement." },
-    { "id": "-6", "name": "Curse", "icon": "🔮", "bg": "bg-violet-800", "lore": "Reduces D20 luck by 2." },
-    { "id": "-7", "name": "Spore", "icon": "🍄", "bg": "bg-green-800", "lore": "Explodes into 2 slimes." }
+    {
+      "id": "-1",
+      "name": "Slime",
+      "icon": "🟢",
+      "bg": "bg-lime-600",
+      "lore": "Spreads every 10 turns."
+    },
+    {
+      "id": "-2",
+      "name": "Goblin",
+      "icon": "👺",
+      "bg": "bg-emerald-700",
+      "lore": "Steals 10 gold on contact."
+    },
+    {
+      "id": "-3",
+      "name": "Skeleton",
+      "icon": "💀",
+      "bg": "bg-gray-700",
+      "lore": "Blocks merges in its column."
+    },
+    {
+      "id": "-4",
+      "name": "Mimic",
+      "icon": "📦",
+      "bg": "bg-yellow-700",
+      "lore": "Looks like a weapon until touched."
+    },
+    {
+      "id": "-5",
+      "name": "Web",
+      "icon": "🕸️",
+      "bg": "bg-neutral-600",
+      "lore": "Slows adjacent tile movement."
+    },
+    {
+      "id": "-6",
+      "name": "Curse",
+      "icon": "🔮",
+      "bg": "bg-violet-800",
+      "lore": "Reduces D20 luck by 2."
+    },
+    {
+      "id": "-7",
+      "name": "Spore",
+      "icon": "🍄",
+      "bg": "bg-green-800",
+      "lore": "Explodes into 2 slimes."
+    }
   ]
 }

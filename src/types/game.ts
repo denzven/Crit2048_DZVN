@@ -1,3 +1,5 @@
+import type { ArtifactDef, ClassDef, EnemyDef } from './pack';
+
 export interface Tile {
   id: number;
   val: number;
@@ -36,7 +38,15 @@ export interface RunStats {
   wasGodModeUsed?: boolean;
 }
 
-export type GameState = 'START' | 'CLASS_SELECT' | 'PLAYING' | 'DICE' | 'SPELL' | 'TAVERN' | 'GAME_OVER' | 'VICTORY';
+export type GameState =
+  | 'START'
+  | 'CLASS_SELECT'
+  | 'PLAYING'
+  | 'DICE'
+  | 'SPELL'
+  | 'TAVERN'
+  | 'GAME_OVER'
+  | 'VICTORY';
 
 export interface FloatingText {
   id: number;
@@ -79,21 +89,53 @@ export interface GameStoreState {
   gold: number;
   multiplier: number;
   score: number;
-  playerClass: any | null;
-  artifacts: any[];
+  playerClass: ClassDef | null;
+  artifacts: ArtifactDef[];
   logs: string[];
-  
+
   // Transient flags
   isTransitioning: boolean;
   isGameOver: boolean;
   isRolling: boolean;
-  
+
   hasSave: boolean;
   runStats: RunStats;
   settings: Settings;
   floatingTexts: FloatingText[];
   confirmation: ConfirmationState | null;
-  activeEncounters: any[];
-  activeClasses: any[];
-  activeArtifacts: any[];
+  activeEncounters: EnemyDef[];
+  activeClasses: ClassDef[];
+  activeArtifacts: ArtifactDef[];
+}
+export interface ExtendedGameStoreState extends GameStoreState {
+  shopItems: ArtifactDef[];
+  slidesSinceRoll: number;
+  lastRoll: {
+    rawVal: number;
+    finalVal: number;
+    modifiers: { label: string; val: number; id: string; type: 'add' | 'multiply' | 'set' }[];
+    msg: string;
+    type: 'crit' | 'success' | 'fail' | 'crit-fail';
+  } | null;
+  usesLeft: number;
+  spellRoll: {
+    results: number[];
+    sum: number;
+  } | null;
+  lastDirection: 'LEFT' | 'RIGHT' | 'UP' | 'DOWN' | null;
+  hunterMarkLeft: number;
+  isChallengeMode: boolean;
+  rivalData: {
+    score: number;
+    merges: number;
+    damage: number;
+    maxDamage: number;
+    moves: number;
+    name?: string;
+    icon?: string;
+    seed: string;
+  } | null;
+  activeFX: { id: string; name: string; params?: unknown }[];
+  isDevMode: boolean;
+  d20Override: number | null;
 }

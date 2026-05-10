@@ -4,7 +4,7 @@ const SFX = (function () {
 
   function init() {
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (ctx.state === "suspended") ctx.resume();
+    if (ctx.state === 'suspended') ctx.resume();
   }
 
   function play(type, freq, time, vol = 0.1, slideFreq = null) {
@@ -15,11 +15,7 @@ const SFX = (function () {
     const gain = ctx.createGain();
     osc.type = type;
     osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    if (slideFreq)
-      osc.frequency.exponentialRampToValueAtTime(
-        slideFreq,
-        ctx.currentTime + time,
-      );
+    if (slideFreq) osc.frequency.exponentialRampToValueAtTime(slideFreq, ctx.currentTime + time);
     gain.gain.setValueAtTime(vol, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + time);
     osc.connect(gain);
@@ -39,7 +35,7 @@ const SFX = (function () {
     const noiseSrc = ctx.createBufferSource();
     noiseSrc.buffer = buffer;
     const filter = ctx.createBiquadFilter();
-    filter.type = "bandpass";
+    filter.type = 'bandpass';
     filter.frequency.value = filterFreq;
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(vol, ctx.currentTime);
@@ -52,46 +48,46 @@ const SFX = (function () {
 
   return {
     init,
-    slide: () => play("sine", 200, 0.1, 0.05, 100),
+    slide: () => play('sine', 200, 0.1, 0.05, 100),
     merge: () => {
-      play("square", 400, 0.1, 0.03, 800);
-      setTimeout(() => play("sine", 800, 0.15, 0.03), 40);
+      play('square', 400, 0.1, 0.03, 800);
+      setTimeout(() => play('sine', 800, 0.15, 0.03), 40);
     },
     hit: () => {
       noise(0.4, 0.4, 200);
-      play("triangle", 80, 0.4, 0.4, 30);
+      play('triangle', 80, 0.4, 0.4, 30);
     },
     diceClatter: () => {
       noise(0.08, 0.15, 1500);
-      play("square", 400, 0.03, 0.05, 200);
+      play('square', 400, 0.03, 0.05, 200);
     },
     crit: () => {
-      play("triangle", 440, 0.2, 0.2);
-      setTimeout(() => play("triangle", 554, 0.2, 0.2), 100);
-      setTimeout(() => play("triangle", 659, 0.6, 0.2), 200);
+      play('triangle', 440, 0.2, 0.2);
+      setTimeout(() => play('triangle', 554, 0.2, 0.2), 100);
+      setTimeout(() => play('triangle', 659, 0.6, 0.2), 200);
     },
     fail: () => {
-      play("sawtooth", 150, 0.4, 0.15, 80);
-      setTimeout(() => play("sawtooth", 100, 0.5, 0.15, 50), 200);
+      play('sawtooth', 150, 0.4, 0.15, 80);
+      setTimeout(() => play('sawtooth', 100, 0.5, 0.15, 50), 200);
     },
     coin: () => {
-      play("sine", 1200, 0.1, 0.03, 2000);
-      setTimeout(() => play("sine", 1600, 0.2, 0.03, 2400), 80);
+      play('sine', 1200, 0.1, 0.03, 2000);
+      setTimeout(() => play('sine', 1600, 0.2, 0.03, 2400), 80);
     },
     powerUp: () => {
-      play("sine", 400, 0.5, 0.1, 800);
-      setTimeout(() => play("square", 600, 0.5, 0.1, 1200), 100);
+      play('sine', 400, 0.5, 0.1, 800);
+      setTimeout(() => play('square', 600, 0.5, 0.1, 1200), 100);
     },
     explosion: () => {
       noise(0.6, 0.6, 150);
-      play("square", 100, 0.6, 0.4, 20);
+      play('square', 100, 0.6, 0.4, 20);
     },
     beam: () => {
-      play("sawtooth", 800, 0.4, 0.2, 100);
+      play('sawtooth', 800, 0.4, 0.2, 100);
     },
     smite: () => {
-      play("sine", 1200, 0.5, 0.3, 400);
-      play("triangle", 800, 0.5, 0.3, 200);
+      play('sine', 1200, 0.5, 0.3, 400);
+      play('triangle', 800, 0.5, 0.3, 200);
     },
   };
 })();

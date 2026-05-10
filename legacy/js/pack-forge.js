@@ -3,28 +3,27 @@
  * Logic for the in-game Content Pack creator UI.
  */
 
-(function() {
-
+(function () {
   const defaultPack = {
-    id: "",
-    name: "",
-    version: "1.0.0",
-    author: "",
-    description: "",
-    type: "mega",
-    game_version: ">=1.0.0",
-    icon: "📦",
+    id: '',
+    name: '',
+    version: '1.0.0',
+    author: '',
+    description: '',
+    type: 'mega',
+    game_version: '>=1.0.0',
+    icon: '📦',
     enemies: [],
     classes: [],
     weapons: [],
-    hazards: []
+    hazards: [],
   };
 
   let currentPack = JSON.parse(JSON.stringify(defaultPack));
-  let currentMode = "simple";
+  let currentMode = 'simple';
   const ITEMS_PER_PAGE = 3;
   let currentPages = { enemies: 1, classes: 1, weapons: 1, hazards: 1, artifacts: 1 };
-  
+
   const FORGE_SECTIONS = [
     { id: 'meta', label: 'Pack Info' },
     { id: 'enemies', label: 'Enemies' },
@@ -33,59 +32,66 @@
     { id: 'hazards', label: 'Hazards' },
     { id: 'artifacts', label: 'Artifacts' },
     { id: 'skin', label: 'Skin' },
-    { id: 'summary', label: 'Bundle Overview' }
+    { id: 'summary', label: 'Bundle Overview' },
   ];
   let currentSectionIdx = 0;
   let forgeTouchStartX = 0;
   let forgeTouchStartY = 0;
 
   const PackForge = {
-
     open(existingPack = null) {
       if (existingPack) {
         currentPack = JSON.parse(JSON.stringify(existingPack));
       } else {
         currentPack = JSON.parse(JSON.stringify(defaultPack));
       }
-      currentMode = "simple";
+      currentMode = 'simple';
       this.render();
-      
-      const forgeModal = document.getElementById("modal-forge");
-      const backdrop = document.getElementById("modal-backdrop");
-      if (forgeModal) forgeModal.classList.remove("hide");
-      if (backdrop) backdrop.classList.remove("hide");
-      document.body.classList.add("separate-page-active");
-      
+
+      const forgeModal = document.getElementById('modal-forge');
+      const backdrop = document.getElementById('modal-backdrop');
+      if (forgeModal) forgeModal.classList.remove('hide');
+      if (backdrop) backdrop.classList.remove('hide');
+      document.body.classList.add('separate-page-active');
+
       currentSectionIdx = 0;
       this.setSection(FORGE_SECTIONS[currentSectionIdx].id);
       this.initTouch();
     },
 
     initTouch() {
-      const area = document.getElementById("forge-form-area");
-      if (!area || area.dataset.touchInit === "true") return;
-      
-      area.addEventListener("touchstart", (e) => {
-        forgeTouchStartX = e.touches[0].clientX;
-        forgeTouchStartY = e.touches[0].clientY;
-      }, { passive: true });
+      const area = document.getElementById('forge-form-area');
+      if (!area || area.dataset.touchInit === 'true') return;
 
-      area.addEventListener("touchend", (e) => {
-        if (currentMode === "advanced") return;
-        
-        const dx = e.changedTouches[0].clientX - forgeTouchStartX;
-        const dy = e.changedTouches[0].clientY - forgeTouchStartY;
-        
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
-          if (dx > 0) {
-            this.prevSection();
-          } else {
-            this.nextSection();
+      area.addEventListener(
+        'touchstart',
+        (e) => {
+          forgeTouchStartX = e.touches[0].clientX;
+          forgeTouchStartY = e.touches[0].clientY;
+        },
+        { passive: true },
+      );
+
+      area.addEventListener(
+        'touchend',
+        (e) => {
+          if (currentMode === 'advanced') return;
+
+          const dx = e.changedTouches[0].clientX - forgeTouchStartX;
+          const dy = e.changedTouches[0].clientY - forgeTouchStartY;
+
+          if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
+            if (dx > 0) {
+              this.prevSection();
+            } else {
+              this.nextSection();
+            }
           }
-        }
-      }, { passive: true });
-      
-      area.dataset.touchInit = "true";
+        },
+        { passive: true },
+      );
+
+      area.dataset.touchInit = 'true';
     },
 
     async editInstalledPack(packId) {
@@ -94,16 +100,16 @@
         window.PackMarketplace.close();
         this.open(pack);
       } else {
-        alert("Could not load pack for editing.");
+        alert('Could not load pack for editing.');
       }
     },
 
     async close() {
-      const forgeModal = document.getElementById("modal-forge");
-      const backdrop = document.getElementById("modal-backdrop");
-      if (forgeModal) forgeModal.classList.add("hide");
-      if (backdrop) backdrop.classList.add("hide");
-      document.body.classList.remove("separate-page-active");
+      const forgeModal = document.getElementById('modal-forge');
+      const backdrop = document.getElementById('modal-backdrop');
+      if (forgeModal) forgeModal.classList.add('hide');
+      if (backdrop) backdrop.classList.add('hide');
+      document.body.classList.remove('separate-page-active');
 
       // Restore installed pack skins
       if (window.PackEngine) {
@@ -123,36 +129,36 @@
     },
 
     async installAndPlay() {
-      if (currentMode === "advanced") this.syncJsonToSimple();
+      if (currentMode === 'advanced') this.syncJsonToSimple();
       else {
         this.updateMeta();
         if (!this.validateWizard()) return;
       }
       this.syncSimpleToJson();
-      
+
       const validation = window.PackEngine.validatePack(currentPack);
       if (!validation.valid) {
-        alert("Pack Validation Failed:\n" + validation.errors.join("\n"));
+        alert('Pack Validation Failed:\n' + validation.errors.join('\n'));
         return;
       }
-      
+
       const ok = await window.PackStorage.save(currentPack);
       if (!ok) {
-        alert("Failed to save pack locally.");
+        alert('Failed to save pack locally.');
         return;
       }
-      
+
       if (window.state && window.state.runStats) {
         window.state.runStats.activePackIds = [currentPack.id];
         window.state.runStats.packRunLabel = currentPack.name;
       }
-      
+
       await window.PackEngine.applyActivePacks();
       this.close();
-      
+
       if (window.resetGame) window.resetGame();
       if (window.startGameFlow) await window.startGameFlow();
-      if (window.showScreen) window.showScreen("screen-game");
+      if (window.showScreen) window.showScreen('screen-game');
     },
 
     onIdInput(el) {
@@ -166,30 +172,34 @@
 
     setMode(mode) {
       currentMode = mode;
-      
-      const simpleBtn = document.getElementById("forge-tab-simple");
-      const advBtn = document.getElementById("forge-tab-advanced");
-      const simpleView = document.getElementById("forge-simple-view");
-      const advView = document.getElementById("forge-advanced-view");
-      
-      if (mode === "simple") {
-        simpleBtn.className = "flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-rose-600 text-white shadow-inner";
-        advBtn.className = "flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-slate-800 text-slate-400 hover:text-white";
-        simpleView.classList.remove("hide");
-        advView.classList.add("hide");
+
+      const simpleBtn = document.getElementById('forge-tab-simple');
+      const advBtn = document.getElementById('forge-tab-advanced');
+      const simpleView = document.getElementById('forge-simple-view');
+      const advView = document.getElementById('forge-advanced-view');
+
+      if (mode === 'simple') {
+        simpleBtn.className =
+          'flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-rose-600 text-white shadow-inner';
+        advBtn.className =
+          'flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-slate-800 text-slate-400 hover:text-white';
+        simpleView.classList.remove('hide');
+        advView.classList.add('hide');
         this.syncJsonToSimple();
       } else {
-        advBtn.className = "flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-indigo-600 text-white shadow-inner";
-        simpleBtn.className = "flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-slate-800 text-slate-400 hover:text-white";
-        advView.classList.remove("hide");
-        simpleView.classList.add("hide");
+        advBtn.className =
+          'flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-indigo-600 text-white shadow-inner';
+        simpleBtn.className =
+          'flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-slate-800 text-slate-400 hover:text-white';
+        advView.classList.remove('hide');
+        simpleView.classList.add('hide');
         this.syncSimpleToJson();
       }
     },
 
     getAvailableSections() {
       const type = currentPack.type || 'mega';
-      return FORGE_SECTIONS.filter(s => {
+      return FORGE_SECTIONS.filter((s) => {
         if (s.id === 'summary' || s.id === 'meta') return true;
         if (type === 'mega') return true;
         if (type === 'dungeon') return ['enemies', 'hazards', 'artifacts'].includes(s.id);
@@ -203,43 +213,45 @@
 
     render() {
       const avail = this.getAvailableSections();
-      
+
       // Sync meta fields
-      document.getElementById("forge-meta-id").value = currentPack.id || "";
-      document.getElementById("forge-meta-name").value = currentPack.name || "";
-      document.getElementById("forge-meta-author").value = currentPack.author || "";
-      document.getElementById("forge-meta-version").value = currentPack.version || "";
-      document.getElementById("forge-meta-type").value = currentPack.type || "mega";
-      document.getElementById("forge-meta-icon").value = currentPack.icon || "📦";
-      document.getElementById("forge-meta-desc").value = currentPack.description || "";
-      
-      const strategyContainer = document.getElementById("forge-meta-strategy-container");
+      document.getElementById('forge-meta-id').value = currentPack.id || '';
+      document.getElementById('forge-meta-name').value = currentPack.name || '';
+      document.getElementById('forge-meta-author').value = currentPack.author || '';
+      document.getElementById('forge-meta-version').value = currentPack.version || '';
+      document.getElementById('forge-meta-type').value = currentPack.type || 'mega';
+      document.getElementById('forge-meta-icon').value = currentPack.icon || '📦';
+      document.getElementById('forge-meta-desc').value = currentPack.description || '';
+
+      const strategyContainer = document.getElementById('forge-meta-strategy-container');
       if (strategyContainer) {
         const stratTypes = ['mega', 'dungeon', 'weapon', 'class', 'artifacts', 'hazard'];
         if (stratTypes.includes(currentPack.type)) {
-          strategyContainer.classList.remove("hide");
-          document.getElementById("forge-meta-strategy").value = currentPack.loadStrategy || "replace";
+          strategyContainer.classList.remove('hide');
+          document.getElementById('forge-meta-strategy').value =
+            currentPack.loadStrategy || 'replace';
         } else {
-          strategyContainer.classList.add("hide");
+          strategyContainer.classList.add('hide');
         }
       }
-      
+
       // Update wizard state
       const section = avail[currentSectionIdx] || avail[0];
       const sectionIdx = avail.indexOf(section);
-      
-      document.getElementById("forge-step-indicator").innerText = `Step ${sectionIdx + 1} of ${avail.length}: ${section.label}`;
-      document.getElementById("forge-step-counter").innerText = `${sectionIdx + 1}/${avail.length}`;
 
-      const btnPrev = document.getElementById("forge-btn-prev");
-      const btnNext = document.getElementById("forge-btn-next");
+      document.getElementById('forge-step-indicator').innerText =
+        `Step ${sectionIdx + 1} of ${avail.length}: ${section.label}`;
+      document.getElementById('forge-step-counter').innerText = `${sectionIdx + 1}/${avail.length}`;
+
+      const btnPrev = document.getElementById('forge-btn-prev');
+      const btnNext = document.getElementById('forge-btn-next');
       if (btnPrev) {
-        if (sectionIdx === 0) btnPrev.classList.add("hide");
-        else btnPrev.classList.remove("hide");
+        if (sectionIdx === 0) btnPrev.classList.add('hide');
+        else btnPrev.classList.remove('hide');
       }
       if (btnNext) {
-        if (sectionIdx === avail.length - 1) btnNext.classList.add("hide");
-        else btnNext.classList.remove("hide");
+        if (sectionIdx === avail.length - 1) btnNext.classList.add('hide');
+        else btnNext.classList.remove('hide');
       }
 
       this.renderEnemies();
@@ -267,33 +279,33 @@
 
     setSection(sectionId) {
       const avail = this.getAvailableSections();
-      currentSectionIdx = avail.findIndex(s => s.id === sectionId);
+      currentSectionIdx = avail.findIndex((s) => s.id === sectionId);
       if (currentSectionIdx < 0) currentSectionIdx = 0;
-      
-      FORGE_SECTIONS.forEach(s => {
+
+      FORGE_SECTIONS.forEach((s) => {
         const view = document.getElementById(`forge-section-${s.id}`);
         if (view) {
-          if (s.id === sectionId) view.classList.remove("hide");
-          else view.classList.add("hide");
+          if (s.id === sectionId) view.classList.remove('hide');
+          else view.classList.add('hide');
         }
       });
-      
+
       this.render();
     },
 
     updateMeta() {
-      currentPack.id = document.getElementById("forge-meta-id").value;
-      currentPack.name = document.getElementById("forge-meta-name").value;
-      currentPack.author = document.getElementById("forge-meta-author").value;
-      currentPack.version = document.getElementById("forge-meta-version").value;
-      currentPack.type = document.getElementById("forge-meta-type").value;
-      currentPack.icon = document.getElementById("forge-meta-icon").value;
-      currentPack.description = document.getElementById("forge-meta-desc").value;
-      currentPack.loadStrategy = document.getElementById("forge-meta-strategy").value;
-      
+      currentPack.id = document.getElementById('forge-meta-id').value;
+      currentPack.name = document.getElementById('forge-meta-name').value;
+      currentPack.author = document.getElementById('forge-meta-author').value;
+      currentPack.version = document.getElementById('forge-meta-version').value;
+      currentPack.type = document.getElementById('forge-meta-type').value;
+      currentPack.icon = document.getElementById('forge-meta-icon').value;
+      currentPack.description = document.getElementById('forge-meta-desc').value;
+      currentPack.loadStrategy = document.getElementById('forge-meta-strategy').value;
+
       // Clear highlights on input
       const fields = ['id', 'name', 'author', 'version', 'icon', 'desc'];
-      fields.forEach(f => {
+      fields.forEach((f) => {
         const el = document.getElementById(`forge-meta-${f}`);
         if (el) el.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
       });
@@ -303,23 +315,23 @@
 
     updateSkin() {
       if (!currentPack.skin) currentPack.skin = {};
-      currentPack.skin.themeName = document.getElementById("forge-skin-theme").value;
-      currentPack.skin.logoOverride = document.getElementById("forge-skin-logo").value;
-      currentPack.skin.fontFamily = document.getElementById("forge-skin-fontFamily").value;
-      currentPack.skin.fontUrl = document.getElementById("forge-skin-fontUrl").value;
-      currentPack.skin.primaryColor = document.getElementById("forge-skin-primary").value;
-      currentPack.skin.accentColor = document.getElementById("forge-skin-accent").value;
-      currentPack.skin.bgColor = document.getElementById("forge-skin-bg").value;
-      currentPack.skin.borderRadius = document.getElementById("forge-skin-radius").value;
-      currentPack.skin.bgImage = document.getElementById("forge-skin-bgImage").value;
-      currentPack.skin.customCss = document.getElementById("forge-skin-customCss").value;
-      currentPack.skin.hpBarColor = document.getElementById("forge-skin-hpBar").value;
-      currentPack.skin.loadingColor = document.getElementById("forge-skin-loading").value;
-      currentPack.skin.glowColor = document.getElementById("forge-skin-glow").value;
-      
+      currentPack.skin.themeName = document.getElementById('forge-skin-theme').value;
+      currentPack.skin.logoOverride = document.getElementById('forge-skin-logo').value;
+      currentPack.skin.fontFamily = document.getElementById('forge-skin-fontFamily').value;
+      currentPack.skin.fontUrl = document.getElementById('forge-skin-fontUrl').value;
+      currentPack.skin.primaryColor = document.getElementById('forge-skin-primary').value;
+      currentPack.skin.accentColor = document.getElementById('forge-skin-accent').value;
+      currentPack.skin.bgColor = document.getElementById('forge-skin-bg').value;
+      currentPack.skin.borderRadius = document.getElementById('forge-skin-radius').value;
+      currentPack.skin.bgImage = document.getElementById('forge-skin-bgImage').value;
+      currentPack.skin.customCss = document.getElementById('forge-skin-customCss').value;
+      currentPack.skin.hpBarColor = document.getElementById('forge-skin-hpBar').value;
+      currentPack.skin.loadingColor = document.getElementById('forge-skin-loading').value;
+      currentPack.skin.glowColor = document.getElementById('forge-skin-glow').value;
+
       if (!currentPack.skin.script) currentPack.skin.script = {};
-      currentPack.skin.script.onLoad = document.getElementById("forge-skin-onLoad").value;
-      
+      currentPack.skin.script.onLoad = document.getElementById('forge-skin-onLoad').value;
+
       this.syncSimpleToJson();
 
       // Live preview while editing
@@ -330,34 +342,35 @@
 
     render() {
       const avail = this.getAvailableSections();
-      
+
       // Sync meta fields
-      document.getElementById("forge-meta-id").value = currentPack.id || "";
-      document.getElementById("forge-meta-name").value = currentPack.name || "";
-      document.getElementById("forge-meta-author").value = currentPack.author || "";
-      document.getElementById("forge-meta-version").value = currentPack.version || "";
-      document.getElementById("forge-meta-type").value = currentPack.type || "mega";
-      document.getElementById("forge-meta-icon").value = currentPack.icon || "📦";
-      document.getElementById("forge-meta-desc").value = currentPack.description || "";
-      
+      document.getElementById('forge-meta-id').value = currentPack.id || '';
+      document.getElementById('forge-meta-name').value = currentPack.name || '';
+      document.getElementById('forge-meta-author').value = currentPack.author || '';
+      document.getElementById('forge-meta-version').value = currentPack.version || '';
+      document.getElementById('forge-meta-type').value = currentPack.type || 'mega';
+      document.getElementById('forge-meta-icon').value = currentPack.icon || '📦';
+      document.getElementById('forge-meta-desc').value = currentPack.description || '';
+
       // Update wizard state
       const section = avail[currentSectionIdx] || avail[0];
       const sectionIdx = avail.indexOf(section);
-      
-      const stepInd = document.getElementById("forge-step-indicator");
-      const stepCount = document.getElementById("forge-step-counter");
-      if (stepInd) stepInd.innerText = `Step ${sectionIdx + 1} of ${avail.length}: ${section.label}`;
+
+      const stepInd = document.getElementById('forge-step-indicator');
+      const stepCount = document.getElementById('forge-step-counter');
+      if (stepInd)
+        stepInd.innerText = `Step ${sectionIdx + 1} of ${avail.length}: ${section.label}`;
       if (stepCount) stepCount.innerText = `${sectionIdx + 1}/${avail.length}`;
 
-      const btnPrev = document.getElementById("forge-btn-prev");
-      const btnNext = document.getElementById("forge-btn-next");
+      const btnPrev = document.getElementById('forge-btn-prev');
+      const btnNext = document.getElementById('forge-btn-next');
       if (btnPrev) {
-        if (sectionIdx === 0) btnPrev.classList.add("hide");
-        else btnPrev.classList.remove("hide");
+        if (sectionIdx === 0) btnPrev.classList.add('hide');
+        else btnPrev.classList.remove('hide');
       }
       if (btnNext) {
-        if (sectionIdx === avail.length - 1) btnNext.classList.add("hide");
-        else btnNext.classList.remove("hide");
+        if (sectionIdx === avail.length - 1) btnNext.classList.add('hide');
+        else btnNext.classList.remove('hide');
       }
 
       this.renderEnemies();
@@ -370,16 +383,16 @@
     },
 
     renderSummary() {
-      const container = document.getElementById("forge-section-summary");
+      const container = document.getElementById('forge-section-summary');
       if (!container) return;
-      
+
       const p = currentPack;
       const counts = [
         { label: 'Enemies', count: p.enemies?.length || 0, icon: '👹' },
         { label: 'Classes', count: p.classes?.length || 0, icon: '👤' },
         { label: 'Weapons', count: p.weapons?.length || 0, icon: '🗡️' },
         { label: 'Hazards', count: p.hazards?.length || 0, icon: '🔥' },
-        { label: 'Artifacts', count: p.artifacts?.length || 0, icon: '🏺' }
+        { label: 'Artifacts', count: p.artifacts?.length || 0, icon: '🏺' },
       ];
 
       let html = `
@@ -393,13 +406,17 @@
           </div>
 
           <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-            ${counts.map(c => `
+            ${counts
+              .map(
+                (c) => `
               <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:border-slate-700 transition-colors cursor-pointer" onclick="PackForge.setSection('${c.label.toLowerCase()}')">
                 <span class="text-2xl mb-1">${c.icon}</span>
                 <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">${c.label}</span>
                 <span class="text-lg font-black text-white">${c.count}</span>
               </div>
-            `).join('')}
+            `,
+              )
+              .join('')}
           </div>
 
           <div class="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-6">
@@ -423,24 +440,31 @@
 
     async openLoadDialog(isMerge = false) {
       let installed = await window.PackStorage.listInstalled();
-      
+
       // Add specialized default packs
       if (typeof CRIT2048_DEFAULT_PACK !== 'undefined') {
         const defaults = [];
-        if (typeof CRIT2048_DEFAULT_ENEMIES_PACK !== 'undefined') defaults.push(CRIT2048_DEFAULT_ENEMIES_PACK);
-        if (typeof CRIT2048_DEFAULT_CLASSES_PACK !== 'undefined') defaults.push(CRIT2048_DEFAULT_CLASSES_PACK);
-        if (typeof CRIT2048_DEFAULT_ARTIFACTS_PACK !== 'undefined') defaults.push(CRIT2048_DEFAULT_ARTIFACTS_PACK);
-        if (typeof CRIT2048_DEFAULT_SKIN_PACK !== 'undefined') defaults.push(CRIT2048_DEFAULT_SKIN_PACK);
-        if (typeof CRIT2048_DEFAULT_WEAPONS_PACK !== 'undefined') defaults.push(CRIT2048_DEFAULT_WEAPONS_PACK);
-        if (typeof CRIT2048_DEFAULT_HAZARDS_PACK !== 'undefined') defaults.push(CRIT2048_DEFAULT_HAZARDS_PACK);
+        if (typeof CRIT2048_DEFAULT_ENEMIES_PACK !== 'undefined')
+          defaults.push(CRIT2048_DEFAULT_ENEMIES_PACK);
+        if (typeof CRIT2048_DEFAULT_CLASSES_PACK !== 'undefined')
+          defaults.push(CRIT2048_DEFAULT_CLASSES_PACK);
+        if (typeof CRIT2048_DEFAULT_ARTIFACTS_PACK !== 'undefined')
+          defaults.push(CRIT2048_DEFAULT_ARTIFACTS_PACK);
+        if (typeof CRIT2048_DEFAULT_SKIN_PACK !== 'undefined')
+          defaults.push(CRIT2048_DEFAULT_SKIN_PACK);
+        if (typeof CRIT2048_DEFAULT_WEAPONS_PACK !== 'undefined')
+          defaults.push(CRIT2048_DEFAULT_WEAPONS_PACK);
+        if (typeof CRIT2048_DEFAULT_HAZARDS_PACK !== 'undefined')
+          defaults.push(CRIT2048_DEFAULT_HAZARDS_PACK);
         defaults.push(CRIT2048_DEFAULT_PACK);
-        
-        installed = [...defaults.map(p => ({ ...p, isBuiltIn: true })), ...installed];
+
+        installed = [...defaults.map((p) => ({ ...p, isBuiltIn: true })), ...installed];
       }
 
       const overlay = document.createElement('div');
       overlay.id = 'forge-load-overlay';
-      overlay.className = 'fixed inset-0 bg-slate-950/90 z-[200] flex items-center justify-center p-4 backdrop-blur-sm';
+      overlay.className =
+        'fixed inset-0 bg-slate-950/90 z-[200] flex items-center justify-center p-4 backdrop-blur-sm';
       overlay.innerHTML = `
         <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
           <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
@@ -448,7 +472,9 @@
             <button onclick="document.getElementById('forge-load-overlay').remove()" class="text-slate-500 hover:text-white">✕</button>
           </div>
           <div class="p-4 overflow-y-auto custom-scrollbar space-y-2">
-            ${installed.map(p => `
+            ${installed
+              .map(
+                (p) => `
               <div onclick="PackForge.loadAndClose('${p.id}', ${isMerge})" class="bg-slate-950 border border-slate-800 hover:border-indigo-500 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-all group">
                 <div class="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">${p.icon || '📦'}</div>
                 <div class="flex-grow">
@@ -457,7 +483,9 @@
                 </div>
                 ${p.isBuiltIn ? '<span class="text-[8px] bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded font-black uppercase">Default</span>' : ''}
               </div>
-            `).join('')}
+            `,
+              )
+              .join('')}
           </div>
           <div class="p-4 bg-slate-950 border-t border-slate-800 text-center">
             <p class="text-[9px] text-slate-600 uppercase tracking-widest font-bold">${isMerge ? 'This will ADD all content from the selected pack to your current one.' : 'Selecting a pack will overwrite your current forge progress.'}</p>
@@ -469,7 +497,7 @@
 
     async loadAndClose(id, isMerge = false) {
       let pack = await window.PackStorage.load(id);
-      
+
       // Check for built-in default packs
       if (!pack) {
         if (id === 'crit2048-default') pack = CRIT2048_DEFAULT_PACK;
@@ -480,7 +508,7 @@
         else if (id === 'crit2048-default-hazards') pack = CRIT2048_DEFAULT_HAZARDS_PACK;
         else if (id === 'crit2048-default-skin') pack = CRIT2048_DEFAULT_SKIN_PACK;
       }
-      
+
       if (pack) {
         if (isMerge) {
           this.mergePack(pack);
@@ -494,12 +522,14 @@
 
     mergePack(other) {
       const types = ['enemies', 'classes', 'weapons', 'hazards', 'artifacts'];
-      types.forEach(type => {
+      types.forEach((type) => {
         if (other[type]) {
           if (!currentPack[type]) currentPack[type] = [];
           // Avoid duplicates by ID
-          other[type].forEach(item => {
-            const exists = currentPack[type].some(x => x.id === item.id || (type === 'weapons' && x.value === item.value));
+          other[type].forEach((item) => {
+            const exists = currentPack[type].some(
+              (x) => x.id === item.id || (type === 'weapons' && x.value === item.value),
+            );
             if (!exists) currentPack[type].push(JSON.parse(JSON.stringify(item)));
           });
         }
@@ -515,20 +545,20 @@
     renderSkinFields() {
       const s = currentPack.skin || {};
       const fields = {
-        theme: s.themeName || "",
-        logo: s.logoOverride || "",
-        fontFamily: s.fontFamily || "",
-        fontUrl: s.fontUrl || "",
-        primary: s.primaryColor || "",
-        accent: s.accentColor || "",
-        bg: s.bgColor || "",
-        radius: s.borderRadius || "",
-        bgImage: s.bgImage || "",
-        customCss: s.customCss || "",
-        onLoad: (s.script && s.script.onLoad) ? s.script.onLoad : "",
-        hpBar: s.hpBarColor || "",
-        loading: s.loadingColor || "",
-        glow: s.glowColor || ""
+        theme: s.themeName || '',
+        logo: s.logoOverride || '',
+        fontFamily: s.fontFamily || '',
+        fontUrl: s.fontUrl || '',
+        primary: s.primaryColor || '',
+        accent: s.accentColor || '',
+        bg: s.bgColor || '',
+        radius: s.borderRadius || '',
+        bgImage: s.bgImage || '',
+        customCss: s.customCss || '',
+        onLoad: s.script && s.script.onLoad ? s.script.onLoad : '',
+        hpBar: s.hpBarColor || '',
+        loading: s.loadingColor || '',
+        glow: s.glowColor || '',
       };
       for (const [id, val] of Object.entries(fields)) {
         const el = document.getElementById(`forge-skin-${id}`);
@@ -541,13 +571,13 @@
         { id: 'forge-meta-id', val: currentPack.id },
         { id: 'forge-meta-name', val: currentPack.name },
         { id: 'forge-meta-author', val: currentPack.author },
-        { id: 'forge-meta-desc', val: currentPack.description }
+        { id: 'forge-meta-desc', val: currentPack.description },
       ];
 
       let firstInvalid = null;
-      required.forEach(field => {
+      required.forEach((field) => {
         const el = document.getElementById(field.id);
-        if (!field.val || field.val.trim() === "") {
+        if (!field.val || field.val.trim() === '') {
           if (el) {
             el.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
             if (!firstInvalid) firstInvalid = el;
@@ -587,12 +617,12 @@
           }
 
           for (const req of itemReqs) {
-            if (!item[req.field] || item[req.field].trim() === "") {
+            if (!item[req.field] || item[req.field].trim() === '') {
               // Go to this section and page
               this.setSection(listName);
               const page = Math.ceil((i + 1) / ITEMS_PER_PAGE);
               this.changePage(listName, page - currentPages[listName]);
-              
+
               // Highlight and focus
               setTimeout(() => {
                 const el = document.getElementById(`forge-${listName}-${i}-${req.field}`);
@@ -615,11 +645,11 @@
     addItem(listName, defaultObj) {
       if (!currentPack[listName]) currentPack[listName] = [];
       currentPack[listName].push(defaultObj);
-      
+
       // Auto-navigate to the last page where the new item is
       const total = currentPack[listName].length;
       currentPages[listName] = Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
-      
+
       this.render();
     },
 
@@ -654,27 +684,28 @@
 
     addEnemy() {
       this.addItem('enemies', {
-        id: "",
-        name: "",
-        icon: "👹",
+        id: '',
+        name: '',
+        icon: '👹',
         hp: 1000,
         slides: 30,
-        lore: "",
-        mode: "simple",
-        primaryAbility: { trigger: "", effect: "" },
-        passiveAbility: { effect: "" },
-        deathReward: { goldBonus: 0 }
+        lore: '',
+        mode: 'simple',
+        primaryAbility: { trigger: '', effect: '' },
+        passiveAbility: { effect: '' },
+        deathReward: { goldBonus: 0 },
       });
     },
 
     renderEnemies() {
-      const container = document.getElementById("forge-enemies-list");
+      const container = document.getElementById('forge-enemies-list');
       if (!container) return;
       if (!currentPack.enemies || currentPack.enemies.length === 0) {
-        container.innerHTML = '<p class="text-[10px] text-slate-500 italic text-center py-4">No enemies defined yet.</p>';
+        container.innerHTML =
+          '<p class="text-[10px] text-slate-500 italic text-center py-4">No enemies defined yet.</p>';
         return;
       }
-      
+
       let html = '';
       const page = currentPages.enemies || 1;
       const startIdx = (page - 1) * ITEMS_PER_PAGE;
@@ -829,28 +860,29 @@
 
     addClass() {
       this.addItem('classes', {
-        id: "",
-        name: "",
-        icon: "👤",
-        desc: "",
-        lore: "",
-        mode: "simple",
+        id: '',
+        name: '',
+        icon: '👤',
+        desc: '',
+        lore: '',
+        mode: 'simple',
         d20Mod: 0,
-        passiveTrigger: "",
-        passiveEffect: "",
-        ability: { name: "", spellType: "fireball", count: 1, sides: 6, maxUses: 1 }
+        passiveTrigger: '',
+        passiveEffect: '',
+        ability: { name: '', spellType: 'fireball', count: 1, sides: 6, maxUses: 1 },
       });
     },
 
     renderClasses() {
-      const container = document.getElementById("forge-classes-list");
+      const container = document.getElementById('forge-classes-list');
       if (!container) return;
       if (!currentPack.classes || currentPack.classes.length === 0) {
-        container.innerHTML = '<p class="text-[10px] text-slate-500 italic text-center py-4">No classes defined yet.</p>';
+        container.innerHTML =
+          '<p class="text-[10px] text-slate-500 italic text-center py-4">No classes defined yet.</p>';
         return;
       }
-      
-            let html = '';
+
+      let html = '';
       const page = currentPages.classes || 1;
       const startIdx = (page - 1) * ITEMS_PER_PAGE;
       const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, currentPack.classes.length);
@@ -1002,24 +1034,25 @@
     addWeapon() {
       this.addItem('weapons', {
         tileValue: 2,
-        name: "New Weapon",
-        icon: "🗡️",
+        name: 'New Weapon',
+        icon: '🗡️',
         dmg: 2,
-        bg: "bg-slate-700",
-        text: "text-white",
-        mode: "simple"
+        bg: 'bg-slate-700',
+        text: 'text-white',
+        mode: 'simple',
       });
     },
 
     renderWeapons() {
-      const container = document.getElementById("forge-weapons-list");
+      const container = document.getElementById('forge-weapons-list');
       if (!container) return;
       if (!currentPack.weapons || currentPack.weapons.length === 0) {
-        container.innerHTML = '<p class="text-[10px] text-slate-500 italic text-center py-4">No weapons defined yet.</p>';
+        container.innerHTML =
+          '<p class="text-[10px] text-slate-500 italic text-center py-4">No weapons defined yet.</p>';
         return;
       }
-      
-            let html = '';
+
+      let html = '';
       const page = currentPages.weapons || 1;
       const startIdx = (page - 1) * ITEMS_PER_PAGE;
       const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, currentPack.weapons.length);
@@ -1099,23 +1132,24 @@
 
     addHazard() {
       this.addItem('hazards', {
-        id: "",
-        name: "",
-        icon: "🔥",
+        id: '',
+        name: '',
+        icon: '🔥',
         tileValue: -8,
-        mode: "simple"
+        mode: 'simple',
       });
     },
 
     renderHazards() {
-      const container = document.getElementById("forge-hazards-list");
+      const container = document.getElementById('forge-hazards-list');
       if (!container) return;
       if (!currentPack.hazards || currentPack.hazards.length === 0) {
-        container.innerHTML = '<p class="text-[10px] text-slate-500 italic text-center py-4">No hazards defined yet.</p>';
+        container.innerHTML =
+          '<p class="text-[10px] text-slate-500 italic text-center py-4">No hazards defined yet.</p>';
         return;
       }
-      
-            let html = '';
+
+      let html = '';
       const page = currentPages.hazards || 1;
       const startIdx = (page - 1) * ITEMS_PER_PAGE;
       const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, currentPack.hazards.length);
@@ -1173,29 +1207,30 @@
 
     addArtifact() {
       this.addItem('artifacts', {
-        id: "",
-        name: "",
-        icon: "🏺",
-        desc: "Artifact effect description",
-        rarity: "Common",
+        id: '',
+        name: '',
+        icon: '🏺',
+        desc: 'Artifact effect description',
+        rarity: 'Common',
         basePrice: 20,
         classReq: null,
-        mode: "simple",
-        passiveTrigger: "",
-        passiveEffect: "",
+        mode: 'simple',
+        passiveTrigger: '',
+        passiveEffect: '',
         passiveParam: 0,
-        scripts: {}
+        scripts: {},
       });
     },
 
     renderArtifacts() {
-      const container = document.getElementById("forge-artifacts-list");
+      const container = document.getElementById('forge-artifacts-list');
       if (!container) return;
       if (!currentPack.artifacts || currentPack.artifacts.length === 0) {
-        container.innerHTML = '<p class="text-[10px] text-slate-500 italic text-center py-4">No artifacts defined yet.</p>';
+        container.innerHTML =
+          '<p class="text-[10px] text-slate-500 italic text-center py-4">No artifacts defined yet.</p>';
         return;
       }
-      
+
       let html = '';
       const page = currentPages.artifacts || 1;
       const startIdx = (page - 1) * ITEMS_PER_PAGE;
@@ -1238,7 +1273,12 @@
                 <label class="block text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Class Req</label>
                 <select id="forge-artifacts-${idx}-classReq" onchange="PackForge.updateItem('artifacts', ${idx}, 'classReq', this.value === 'null' ? null : this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-rose-500 outline-none transition-all">
                   <option value="null" ${item.classReq === null ? 'selected' : ''}>None</option>
-                  ${Object.keys(CLASSES || {}).map(cid => `<option value="${cid}" ${item.classReq === cid ? 'selected' : ''}>${cid}</option>`).join('')}
+                  ${Object.keys(CLASSES || {})
+                    .map(
+                      (cid) =>
+                        `<option value="${cid}" ${item.classReq === cid ? 'selected' : ''}>${cid}</option>`,
+                    )
+                    .join('')}
                 </select>
               </div>
               <div>
@@ -1259,10 +1299,14 @@
                   </div>
                 </div>
 
-                ${item.mode === 'advanced' ? `
+                ${
+                  item.mode === 'advanced'
+                    ? `
                   <!-- Advanced Scripting -->
                   <div class="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                    ${['onD20', 'onSlide', 'onMerge', 'onTavern', 'onEncounterStart', 'onPurchase'].map(hook => `
+                    ${['onD20', 'onSlide', 'onMerge', 'onTavern', 'onEncounterStart', 'onPurchase']
+                      .map(
+                        (hook) => `
                       <div class="flex flex-col gap-1.5">
                         <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">${hook} Script</span>
                         <textarea id="forge-artifacts-${idx}-scripts-${hook}" 
@@ -1270,9 +1314,12 @@
                           class="w-full h-16 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-[10px] font-mono text-emerald-400 focus:border-emerald-500 outline-none transition-all"
                           placeholder="// Enter custom logic for ${hook}...">${item.scripts?.[hook] || ''}</textarea>
                       </div>
-                    `).join('')}
+                    `,
+                      )
+                      .join('')}
                   </div>
-                ` : `
+                `
+                    : `
                   <!-- Simple Mode -->
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div>
@@ -1302,7 +1349,8 @@
                       <input type="number" value="${item.passiveParam || 0}" oninput="PackForge.updateItem('artifacts', ${idx}, 'passiveParam', parseFloat(this.value))" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-[10px] text-amber-400 font-mono outline-none focus:border-rose-500">
                     </div>
                   </div>
-                `}
+                `
+                }
               </div>
             </div>
           </div>
@@ -1325,19 +1373,19 @@
     // ── Advanced Mode Sync ───────────────────────────────────────────────────
 
     syncSimpleToJson() {
-      const editor = document.getElementById("forge-json-editor");
+      const editor = document.getElementById('forge-json-editor');
       editor.value = JSON.stringify(currentPack, null, 2);
       this.validateJson();
     },
 
     syncJsonToSimple() {
-      const editor = document.getElementById("forge-json-editor");
+      const editor = document.getElementById('forge-json-editor');
       try {
         const parsed = JSON.parse(editor.value);
         currentPack = parsed;
         this.render();
       } catch (e) {
-        console.warn("Forge: JSON parse failed, skipping sync to Simple mode.");
+        console.warn('Forge: JSON parse failed, skipping sync to Simple mode.');
       }
     },
 
@@ -1347,9 +1395,9 @@
     },
 
     validateJson() {
-      const editor = document.getElementById("forge-json-editor");
-      const errBox = document.getElementById("forge-json-error");
-      const errMsg = document.getElementById("forge-json-error-msg");
+      const editor = document.getElementById('forge-json-editor');
+      const errBox = document.getElementById('forge-json-error');
+      const errMsg = document.getElementById('forge-json-error-msg');
       if (!errBox || !errMsg) return;
 
       try {
@@ -1361,18 +1409,22 @@
             errBox.classList.remove('hide');
             // Swap colors to Red for error
             errBox.classList.add('bg-rose-950/90', 'border-rose-500/50', 'text-rose-200');
-            errBox.classList.remove('bg-emerald-950/90', 'border-emerald-500/50', 'text-emerald-200');
-            errBox.querySelector('.text-rose-500').innerText = "⚠️ JSON ERROR";
+            errBox.classList.remove(
+              'bg-emerald-950/90',
+              'border-emerald-500/50',
+              'text-emerald-200',
+            );
+            errBox.querySelector('.text-rose-500').innerText = '⚠️ JSON ERROR';
           } else {
-            errMsg.innerText = "All fields valid and pack structure is correct.";
+            errMsg.innerText = 'All fields valid and pack structure is correct.';
             errBox.classList.remove('hide');
             // Swap colors to Emerald for success
             errBox.classList.add('bg-emerald-950/90', 'border-emerald-500/50', 'text-emerald-200');
             errBox.classList.remove('bg-rose-950/90', 'border-rose-500/50', 'text-rose-200');
             const indicator = errBox.querySelector('.text-rose-500');
-            if(indicator) {
-              indicator.innerText = "✅ VALID JSON";
-              indicator.className = "text-emerald-500 font-black";
+            if (indicator) {
+              indicator.innerText = '✅ VALID JSON';
+              indicator.className = 'text-emerald-500 font-black';
             }
           }
         }
@@ -1381,10 +1433,11 @@
         errBox.classList.remove('hide');
         errBox.classList.add('bg-rose-950/90', 'border-rose-500/50', 'text-rose-200');
         errBox.classList.remove('bg-emerald-950/90', 'border-emerald-500/50', 'text-emerald-200');
-        const indicator = errBox.querySelector('.text-emerald-500') || errBox.querySelector('.text-rose-500');
-        if(indicator) {
-          indicator.innerText = "⚠️ SYNTAX ERROR";
-          indicator.className = "text-rose-500 font-black";
+        const indicator =
+          errBox.querySelector('.text-emerald-500') || errBox.querySelector('.text-rose-500');
+        if (indicator) {
+          indicator.innerText = '⚠️ SYNTAX ERROR';
+          indicator.className = 'text-rose-500 font-black';
         }
       }
     },
@@ -1393,7 +1446,7 @@
 
     async exportPack() {
       // 1. Ensure state is synced
-      if (currentMode === "advanced") {
+      if (currentMode === 'advanced') {
         this.syncJsonToSimple();
       } else {
         this.updateMeta();
@@ -1404,18 +1457,18 @@
       if (window.PackEngine) {
         const val = window.PackEngine.validatePack(currentPack);
         if (!val.valid) {
-          alert(`Cannot export invalid pack:\n${val.errors.join('\n')}`, "Export Failed", "❌");
+          alert(`Cannot export invalid pack:\n${val.errors.join('\n')}`, 'Export Failed', '❌');
           return;
         }
       }
 
       // 3. Generate JSON string
       const jsonStr = JSON.stringify(currentPack, null, 2);
-      if (!jsonStr || jsonStr === "{}" || jsonStr.length < 10) {
-        alert("Export failed: Pack data is empty or invalid.");
+      if (!jsonStr || jsonStr === '{}' || jsonStr.length < 10) {
+        alert('Export failed: Pack data is empty or invalid.');
         return;
       }
-      
+
       // 4. Platform-specific export
       if (window.__TAURI__ && window.__TAURI__.core) {
         const dialog = window.__TAURI__.dialog || window.__TAURI__.pluginDialog;
@@ -1424,50 +1477,54 @@
             const filePath = await dialog.save({
               title: 'Export Content Pack',
               defaultPath: `${currentPack.id || 'pack'}.json`,
-              filters: [{ name: 'JSON', extensions: ['json'] }]
+              filters: [{ name: 'JSON', extensions: ['json'] }],
             });
             if (filePath) {
               const enc = new TextEncoder();
               const arr = enc.encode(jsonStr);
               await window.__TAURI__.core.invoke('plugin:fs|write_file', {
                 path: filePath,
-                data: Array.from(arr)
+                data: Array.from(arr),
               });
-              if(window.addLog) addLog("Pack exported successfully!");
+              if (window.addLog) addLog('Pack exported successfully!');
               return;
             }
           } catch (e) {
-            console.error("Tauri export failed", e);
+            console.error('Tauri export failed', e);
           }
         }
       }
-      
+
       // Web fallback (Browser/Mobile)
       try {
-        if(window.addLog) addLog("Generating browser download...");
-        
+        if (window.addLog) addLog('Generating browser download...');
+
         // Data URI approach is often more reliable in mobile WebViews than Blob URLs
         const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonStr);
-        
-        const a = document.createElement("a");
+
+        const a = document.createElement('a');
         a.setAttribute('href', dataUri);
         a.setAttribute('download', `${currentPack.id || 'pack'}.json`);
         a.style.display = 'none';
-        
+
         document.body.appendChild(a);
         a.click();
-        
+
         setTimeout(() => {
           if (document.body.contains(a)) document.body.removeChild(a);
         }, 500);
 
-        if(window.addLog) addLog("Download triggered. If nothing happened, try copying the raw JSON from the Advanced tab.");
+        if (window.addLog)
+          addLog(
+            'Download triggered. If nothing happened, try copying the raw JSON from the Advanced tab.',
+          );
       } catch (err) {
-        console.error("Web export failed", err);
-        alert("Browser download failed. Please switch to 'Advanced Mode' and copy the JSON manually.");
+        console.error('Web export failed', err);
+        alert(
+          "Browser download failed. Please switch to 'Advanced Mode' and copy the JSON manually.",
+        );
       }
-    }
-
+    },
   };
 
   window.PackForge = PackForge;

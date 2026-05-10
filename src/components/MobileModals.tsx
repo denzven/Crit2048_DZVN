@@ -1,21 +1,22 @@
-import React from 'react';
-import { useGameStore } from '../engine/gameStore';
 import { motion } from 'framer-motion';
+import React from 'react';
+
+import { useGameStore } from '../engine/gameStore';
 
 export const MobileInventoryModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { artifacts } = useGameStore();
 
   return (
     <div className="absolute inset-0 z-[200] flex items-center justify-center p-6 md:hidden">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
         className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
       />
-      
-      <motion.div 
+
+      <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -24,23 +25,35 @@ export const MobileInventoryModal: React.FC<{ onClose: () => void }> = ({ onClos
       >
         <div className="p-4 border-b border-slate-800 flex justify-between items-center">
           <h2 className="text-white font-black uppercase tracking-widest text-sm">Inventory</h2>
-          <button onClick={onClose} className="text-slate-400 text-xl p-2">✕</button>
+          <button onClick={onClose} className="text-slate-400 text-xl p-2">
+            ✕
+          </button>
         </div>
         <div className="flex-grow overflow-y-auto p-4 space-y-3 custom-scrollbar">
-          {artifacts.length > 0 ? artifacts.map((a, i) => (
-            <div key={i} className="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex items-center gap-4">
-              <span className="text-3xl">{a.icon}</span>
-              <div>
-                <p className="text-xs font-black text-white uppercase">{a.name}</p>
-                <p className="text-[10px] text-amber-400 font-mono">LVL {a.level}</p>
+          {artifacts.length > 0 ? (
+            artifacts.map((a, i) => (
+              <div
+                key={i}
+                className="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex items-center gap-4"
+              >
+                <span className="text-3xl">{a.icon}</span>
+                <div>
+                  <p className="text-xs font-black text-white uppercase">{a.name}</p>
+                  <p className="text-[10px] text-amber-400 font-mono">LVL {a.level}</p>
+                </div>
               </div>
-            </div>
-          )) : (
+            ))
+          ) : (
             <div className="text-center py-10 text-slate-600 text-xs italic">Empty pockets...</div>
           )}
         </div>
         <div className="p-4 bg-slate-950/50">
-           <button onClick={onClose} className="w-full py-3 bg-slate-800 text-white font-black rounded-xl uppercase tracking-widest text-[10px]">Close</button>
+          <button
+            onClick={onClose}
+            className="w-full py-3 bg-slate-800 text-white font-black rounded-xl uppercase tracking-widest text-[10px]"
+          >
+            Close
+          </button>
         </div>
       </motion.div>
     </div>
@@ -52,7 +65,7 @@ export const MobileLogsModal: React.FC<{ onClose: () => void }> = ({ onClose }) 
 
   return (
     <div className="absolute inset-0 z-[200] flex items-center justify-center p-6 md:hidden">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -60,7 +73,7 @@ export const MobileLogsModal: React.FC<{ onClose: () => void }> = ({ onClose }) 
         className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
       />
 
-      <motion.div 
+      <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -69,15 +82,24 @@ export const MobileLogsModal: React.FC<{ onClose: () => void }> = ({ onClose }) 
       >
         <div className="p-4 border-b border-slate-800 flex justify-between items-center">
           <h2 className="text-white font-black uppercase tracking-widest text-sm">Combat Logs</h2>
-          <button onClick={onClose} className="text-slate-400 text-xl p-2">✕</button>
+          <button onClick={onClose} className="text-slate-400 text-xl p-2">
+            ✕
+          </button>
         </div>
         <div className="flex-grow overflow-y-auto p-4 text-[10px] font-mono text-slate-400 space-y-1 custom-scrollbar flex flex-col-reverse">
           {logs.map((log, i) => (
-            <div key={i} className="py-1 border-b border-slate-800/50">{log}</div>
+            <div key={i} className="py-1 border-b border-slate-800/50">
+              {log}
+            </div>
           ))}
         </div>
         <div className="p-4 bg-slate-950/50">
-           <button onClick={onClose} className="w-full py-3 bg-slate-800 text-white font-black rounded-xl uppercase tracking-widest text-[10px]">Close</button>
+          <button
+            onClick={onClose}
+            className="w-full py-3 bg-slate-800 text-white font-black rounded-xl uppercase tracking-widest text-[10px]"
+          >
+            Close
+          </button>
         </div>
       </motion.div>
     </div>

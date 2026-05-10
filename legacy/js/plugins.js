@@ -14,7 +14,7 @@
  *  - Browser <a download> as final fallback
  */
 
-(function() {
+(function () {
   const Plugins = {
     // Check if running in Tauri environment
     isTauri: !!(window.__TAURI__ && window.__TAURI__.core),
@@ -26,9 +26,9 @@
     async init() {
       if (!this.isTauri || this.initialized) return;
       this.initialized = true;
-      
+
       console.log('--- Tauri Plugin Diagnostics ---');
-      
+
       // Diagnostic: cache dir test
       try {
         const cache = await window.__TAURI__.core.invoke('get_app_cache_dir');
@@ -47,11 +47,16 @@
 
       // Diagnostic: Haptics
       try {
-        await window.__TAURI__.core.invoke('plugin:haptics|request_permissions').catch(() => {
-          return window.__TAURI__.core.invoke('plugin:haptics|requestPermissions');
-        }).catch(() => {
-          console.debug('Haptics permission request skipped (likely not required on this platform)');
-        });
+        await window.__TAURI__.core
+          .invoke('plugin:haptics|request_permissions')
+          .catch(() => {
+            return window.__TAURI__.core.invoke('plugin:haptics|requestPermissions');
+          })
+          .catch(() => {
+            console.debug(
+              'Haptics permission request skipped (likely not required on this platform)',
+            );
+          });
         console.log('✅ Haptics: Responsive');
       } catch (e) {
         console.warn('❌ Haptics: Diagnostics failed', e);
@@ -72,7 +77,7 @@
      */
     async vibrate(type = 'vibrate') {
       if (!this.isTauri || !config.hapticsEnabled || !this.isMobile()) return;
-      
+
       const intensity = config.hapticsIntensity || 1.0;
       if (intensity <= 0) return;
 
@@ -80,31 +85,47 @@
         console.log(`Triggering haptic: ${type} (intensity: ${intensity})`);
         switch (type) {
           case 'vibrate':
-            await window.__TAURI__.core.invoke('plugin:haptics|vibrate', { duration: Math.floor(100 * intensity) });
+            await window.__TAURI__.core.invoke('plugin:haptics|vibrate', {
+              duration: Math.floor(100 * intensity),
+            });
             break;
           case 'impactLight':
-            await window.__TAURI__.core.invoke('plugin:haptics|impact_feedback', { style: 'light' });
+            await window.__TAURI__.core.invoke('plugin:haptics|impact_feedback', {
+              style: 'light',
+            });
             break;
           case 'impactMedium':
-            await window.__TAURI__.core.invoke('plugin:haptics|impact_feedback', { style: 'medium' });
+            await window.__TAURI__.core.invoke('plugin:haptics|impact_feedback', {
+              style: 'medium',
+            });
             break;
           case 'impactHeavy':
-            await window.__TAURI__.core.invoke('plugin:haptics|impact_feedback', { style: 'heavy' });
+            await window.__TAURI__.core.invoke('plugin:haptics|impact_feedback', {
+              style: 'heavy',
+            });
             break;
           case 'notificationSuccess':
-            await window.__TAURI__.core.invoke('plugin:haptics|notification_feedback', { type: 'success' });
+            await window.__TAURI__.core.invoke('plugin:haptics|notification_feedback', {
+              type: 'success',
+            });
             break;
           case 'notificationWarning':
-            await window.__TAURI__.core.invoke('plugin:haptics|notification_feedback', { type: 'warning' });
+            await window.__TAURI__.core.invoke('plugin:haptics|notification_feedback', {
+              type: 'warning',
+            });
             break;
           case 'notificationError':
-            await window.__TAURI__.core.invoke('plugin:haptics|notification_feedback', { type: 'error' });
+            await window.__TAURI__.core.invoke('plugin:haptics|notification_feedback', {
+              type: 'error',
+            });
             break;
           case 'selection':
             await window.__TAURI__.core.invoke('plugin:haptics|selection_feedback');
             break;
           default:
-            await window.__TAURI__.core.invoke('plugin:haptics|vibrate', { duration: Math.floor(50 * intensity) });
+            await window.__TAURI__.core.invoke('plugin:haptics|vibrate', {
+              duration: Math.floor(50 * intensity),
+            });
         }
       } catch (e) {
         console.error(`❌ Haptics [${type}] failed:`, e);
@@ -124,7 +145,7 @@
       // save_to_gallery writes to external cache on Android, downloads on desktop
       const filePath = await window.__TAURI__.core.invoke('save_to_gallery', {
         imageData: dataArray,
-        fileName: fileName
+        fileName: fileName,
       });
       console.log(`✅ Image written to: ${filePath}`);
       return filePath;
@@ -138,9 +159,12 @@
      */
     async share(options) {
       const fileName = options.fileName || `crit2048_share_${Date.now()}.png`;
-      const uint8Array = options.files && options.files.length > 0
-        ? (options.files[0] instanceof Uint8Array ? options.files[0] : new Uint8Array(await options.files[0].arrayBuffer()))
-        : null;
+      const uint8Array =
+        options.files && options.files.length > 0
+          ? options.files[0] instanceof Uint8Array
+            ? options.files[0]
+            : new Uint8Array(await options.files[0].arrayBuffer())
+          : null;
 
       // ── Tauri (Android / Desktop) ──────────────────────────────────────────
       if (this.isTauri) {
@@ -148,12 +172,12 @@
 
         try {
           const filePath = await this._writeToExternalCache(uint8Array, fileName);
-          
+
           // plugin:share|share — tauri-plugin-share handles FileProvider wrapping
           await window.__TAURI__.core.invoke('plugin:share|share', {
             title: options.title || 'Crit 2048 Run Summary',
             text: options.text || '',
-            files: [filePath]
+            files: [filePath],
           });
           console.log('✅ Native Share Success');
           return;
@@ -226,7 +250,7 @@
             await window.__TAURI__.core.invoke('plugin:share|share', {
               title: 'Save to Gallery',
               text: 'Tap "Save image" or "Photos" to save your run card.',
-              files: [filePath]
+              files: [filePath],
             });
             return;
           } catch (e) {
@@ -271,7 +295,11 @@
       const blob = new Blob([uint8Array], { type: 'image/png' });
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
       console.log('✅ Image copied to clipboard');
-      alert('Image copied to clipboard! Paste it in any app to share.', 'Copied to Clipboard!', '📋');
+      alert(
+        'Image copied to clipboard! Paste it in any app to share.',
+        'Copied to Clipboard!',
+        '📋',
+      );
     },
 
     /**
@@ -293,7 +321,7 @@
      */
     async saveWithDialog(data, defaultName = 'screenshot.png') {
       if (!this.isTauri) return;
-      
+
       const dialog = window.__TAURI__.dialog || window.__TAURI__.pluginDialog;
       if (!dialog || !dialog.save) {
         console.warn('Dialog Plugin not available, falling back to download.');
@@ -305,20 +333,22 @@
         const filePath = await dialog.save({
           title: 'Save Screenshot',
           defaultPath: defaultName,
-          filters: [{ name: 'Images', extensions: ['png'] }]
+          filters: [{ name: 'Images', extensions: ['png'] }],
         });
 
         if (filePath) {
-          await window.__TAURI__.core.invoke('save_to_gallery', {
-            imageData: Array.from(data),
-            fileName: defaultName
-          }).catch(async () => {
-            // Fallback: use fs plugin
-            await window.__TAURI__.core.invoke('plugin:fs|write_file', {
-              path: filePath,
-              data: Array.from(data)
+          await window.__TAURI__.core
+            .invoke('save_to_gallery', {
+              imageData: Array.from(data),
+              fileName: defaultName,
+            })
+            .catch(async () => {
+              // Fallback: use fs plugin
+              await window.__TAURI__.core.invoke('plugin:fs|write_file', {
+                path: filePath,
+                data: Array.from(data),
+              });
             });
-          });
           console.log(`✅ Saved successfully to: ${filePath}`);
           alert(`Saved successfully!`, 'Saved!', '✅');
           return filePath;
@@ -337,7 +367,7 @@
       try {
         const shared = await window.__TAURI__.core.invoke('plugin:share|get_shared_files', {
           group: '',
-          path: 'temp'
+          path: 'temp',
         });
         return shared || [];
       } catch (e) {
@@ -350,7 +380,9 @@
      * Check if running on a mobile platform
      */
     isMobile() {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      );
     },
 
     /**
@@ -360,13 +392,13 @@
       if (!this.isTauri) return;
       try {
         await window.__TAURI__.core.invoke('set_discord_presence', {
-          details: details || "Main Menu",
-          stateStr: stateStr || "Preparing for a run..."
+          details: details || 'Main Menu',
+          stateStr: stateStr || 'Preparing for a run...',
         });
       } catch (e) {
         console.debug('DRP update skipped');
       }
-    }
+    },
   };
 
   window.Plugins = Plugins;

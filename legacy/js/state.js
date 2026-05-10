@@ -2,7 +2,7 @@
 let tileIdCounter = 1;
 
 const state = {
-  gameState: "START",
+  gameState: 'START',
   grid: Array(16).fill(null),
   encounterIdx: 0,
   monsterHp: 0,
@@ -19,12 +19,12 @@ const state = {
   isRolling: false,
   isSelecting: false,
   // Guard flags — prevent race conditions on rapid input or resume
-  isGameOver: false,       // Set immediately when game-over is detected, before setTimeout
-  isTransitioning: false,  // Set during state transitions to block concurrent processMove calls
+  isGameOver: false, // Set immediately when game-over is detected, before setTimeout
+  isTransitioning: false, // Set during state transitions to block concurrent processMove calls
   shopPool: [],
   currentAttackInfo: null,
-  runStats: { 
-    maxDamage: 0, 
+  runStats: {
+    maxDamage: 0,
     totalDamageDealt: 0,
     totalMerges: 0,
     totalMoves: 0,
@@ -42,11 +42,11 @@ const state = {
     luckFactor: 10,
     startTime: 0,
     endTime: 0,
-    seedUsed: "",
-    endReason: "",
+    seedUsed: '',
+    endReason: '',
     activePackIds: [],
-    packRunLabel: "",
-    customEnemiesDefeated: 0
+    packRunLabel: '',
+    customEnemiesDefeated: 0,
   },
   lastDirection: null,
   hunterMarkLeft: 0,
@@ -57,13 +57,13 @@ function saveGameState() {
   const bundle = {
     state,
     tileIdCounter,
-    config
+    config,
   };
-  localStorage.setItem("crit2048_save", JSON.stringify(bundle));
+  localStorage.setItem('crit2048_save', JSON.stringify(bundle));
 }
 
 function loadGameState() {
-  const saved = localStorage.getItem("crit2048_save");
+  const saved = localStorage.getItem('crit2048_save');
   if (!saved) return false;
   try {
     const bundle = JSON.parse(saved);
@@ -80,11 +80,11 @@ function loadGameState() {
     state.gold = Math.max(0, state.gold || 0);
     return true;
   } catch (e) {
-    console.error("Load failed", e);
+    console.error('Load failed', e);
     return false;
   }
 }
 
 function clearSave() {
-  localStorage.removeItem("crit2048_save");
+  localStorage.removeItem('crit2048_save');
 }

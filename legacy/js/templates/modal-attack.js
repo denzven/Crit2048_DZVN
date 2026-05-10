@@ -8,7 +8,7 @@
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["modal-attack"] = `
+window.ViewTemplates['modal-attack'] = `
     <!-- ATTACK DICE MODAL (Spells) -->
     <div id="modal-attack" class="hide absolute inset-0 z-[100] flex flex-col items-center justify-center p-4 pointer-events-none">
       <div id="attack-panel" class="pointer-events-auto bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-2xl w-full text-center flex flex-col items-center shadow-2xl relative">

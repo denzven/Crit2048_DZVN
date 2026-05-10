@@ -1,6 +1,6 @@
 name: Content or Feature Idea
 description: Propose a new Monster, Hero Class, or Game Mechanic.
-labels: ["enhancement", "content"]
+labels: ['enhancement', 'content']
 body:
   - type: markdown
     attributes:

@@ -8,7 +8,7 @@
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["screen-end"] = `
+window.ViewTemplates['screen-end'] = `
     <!-- GAME OVER / VICTORY STATS SCREEN -->
     <div id="screen-end" class="hide w-full flex flex-col h-full relative z-10">
       <div class="flex-grow overflow-y-auto pb-20 custom-scrollbar tavern-container">

@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { motion, useSpring, useTransform, animate } from 'framer-motion';
+import { animate, motion, useSpring, useTransform } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface CounterProps {
   value: number;
@@ -10,13 +10,13 @@ interface CounterProps {
   suffix?: string;
 }
 
-export const Counter: React.FC<CounterProps> = ({ 
-  value, 
-  duration = 0.5, 
-  className = "", 
+export const Counter: React.FC<CounterProps> = ({
+  value,
+  duration = 0.5,
+  className = '',
   decimals = 0,
-  prefix = "",
-  suffix = ""
+  prefix = '',
+  suffix = '',
 }) => {
   const [displayValue, setDisplayValue] = useState(value);
   const prevValueRef = useRef(value);
@@ -27,7 +27,7 @@ export const Counter: React.FC<CounterProps> = ({
       onUpdate(value) {
         setDisplayValue(value);
       },
-      ease: "easeOut"
+      ease: 'easeOut',
     });
 
     prevValueRef.current = value;

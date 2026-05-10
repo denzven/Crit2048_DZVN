@@ -1,4 +1,13 @@
-export type PackType = 'mega' | 'monsters' | 'heroes' | 'arsenal' | 'artifacts' | 'fates' | 'themes' | 'tunes' | 'hazards';
+export type PackType =
+  | 'mega'
+  | 'monsters'
+  | 'heroes'
+  | 'arsenal'
+  | 'artifacts'
+  | 'fates'
+  | 'themes'
+  | 'tunes'
+  | 'hazards';
 
 export interface PackEntry {
   id: string;
@@ -22,14 +31,14 @@ export interface EnemyDef {
   mode: 'simple' | 'advanced' | 'builtin';
   primaryAbility?: {
     trigger: string;
-    triggerParam?: any;
+    triggerParam?: unknown;
     effect?: string;
-    effectParam?: any;
+    effectParam?: unknown;
     logMessage?: string;
   };
   passiveAbility?: {
     effect?: string;
-    effectParam?: any;
+    effectParam?: unknown;
     logMessage?: string;
   };
   script?: Record<string, string>;
@@ -45,9 +54,9 @@ export interface ClassDef {
   d20Mod?: number;
   passiveTrigger?: string;
   passiveEffect?: string;
-  passiveParam?: any;
+  passiveParam?: unknown;
   scripts?: Record<string, string>;
-  ability?: any;
+  ability?: unknown;
   mode?: 'simple' | 'advanced' | 'builtin';
 }
 
@@ -62,7 +71,7 @@ export interface ArtifactDef {
   mode?: 'simple' | 'advanced';
   passiveTrigger?: string;
   passiveEffect?: string;
-  passiveParam?: any;
+  passiveParam?: unknown;
   scripts?: Record<string, string>;
 }
 
@@ -113,8 +122,8 @@ export interface PackData extends PackEntry {
   heroes?: ClassDef[];
   arsenal?: WeaponDef[];
   artifacts?: ArtifactDef[];
-  fates?: any[];
+  fates?: unknown[];
   hazards?: HazardDef[];
   themes?: SkinDef;
-  tunes?: any[];
+  tunes?: unknown[];
 }

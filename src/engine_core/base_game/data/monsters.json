@@ -1,14 +1,135 @@
 [
-  { "id": "goblin_scout", "name": "Goblin Scout", "hp": 150, "slides": 25, "icon": "👺", "lore": "Ambush (Spawns a Goblin every 12 slides)", "mode": "advanced", "script": { "onSlide": "if (G.slides % 12 === 0) G.spawnHazard('-2');" } },
-  { "id": "orc_brute", "name": "Orc Brute", "hp": 500, "slides": 30, "icon": "👹", "lore": "Tough (-10% Dmg taken)", "mode": "simple", "passiveAbility": { "effect": "damage_reduction", "effectParam": 10 } },
-  { "id": "slime_king", "name": "Slime King", "hp": 1200, "slides": 35, "icon": "🟢", "lore": "Ooze (Spawns a Slime every 8 slides)", "mode": "advanced", "script": { "onSlide": "if (G.slides % 8 === 0) G.spawnHazard('-1');" } },
-  { "id": "owlbear_alpha", "name": "Owlbear Alpha", "hp": 2000, "slides": 35, "icon": "🦉", "lore": "Fierce (Crushes weakest weapon every 10 slides)", "mode": "advanced", "script": { "onSlide": "if (G.slides % 10 === 0) G.player.drainSlides(1); G.log('Owlbear crushed your spirit!');" } },
-  { "id": "troll_king", "name": "Troll King", "hp": 3500, "slides": 40, "icon": "🧌", "lore": "Regen (Heals 30 HP per slide)", "mode": "advanced", "script": { "onSlide": "G.enemy.healHp(30);" } },
-  { "id": "the_lich", "name": "The Lich", "hp": 8000, "slides": 40, "icon": "💀", "lore": "Necromancy (Spawns Skeleton per 12 slides, -10 Start Slides)", "mode": "advanced", "script": { "onEncounterStart": "G.player.drainSlides(10); G.log('💀 The Lich drained 10 slides from your soul!');", "onSlide": "if (G.slides % 12 === 0) G.spawnHazard('-3');" } },
-  { "id": "beholder", "name": "Beholder", "hp": 12000, "slides": 40, "icon": "👁️‍🗨️", "lore": "Eye Ray (Spawns Web per 10 slides)", "mode": "advanced", "script": { "onSlide": "if (G.slides % 10 === 0) G.spawnHazard('-5');" } },
-  { "id": "ancient_dragon", "name": "Ancient Dragon", "hp": 20000, "slides": 45, "icon": "🐉", "lore": "Inferno (Burns best weapon every 10 slides)", "mode": "advanced", "script": { "onSlide": "if (G.slides % 10 === 0) { G.log('Inferno burned your best weapon!'); G.destroyWeapon('best'); }" } },
-  { "id": "mind_flayer", "name": "Mind Flayer", "hp": 5000, "slides": 35, "icon": "🧠", "lore": "Mind Blast (Shuffles tiles every 8 slides)", "mode": "advanced", "script": { "onSlide": "if (G.slides % 8 === 0) { G.log('Mind Blast: Tiles shuffled!'); G.shuffleTiles(); }" } },
-  { "id": "vampire_lord", "name": "Vampire Lord", "hp": 16000, "slides": 40, "icon": "🧛", "lore": "Charm (Regen 50 HP/slide, degrades best weapon every 15 slides)", "mode": "advanced", "script": { "onSlide": "if (G.slides % 15 === 0) { G.log('Charm: Best weapon degraded!'); G.degradeWeapon('best'); } G.enemy.healHp(50);" } },
-  { "id": "mimic_colony", "name": "Mimic Colony", "hp": 800, "slides": 30, "icon": "📦", "lore": "Shapechanger (Spawns Mimic every 10 slides)", "mode": "advanced", "script": { "onSlide": "if (G.slides % 10 === 0) G.spawnHazard('-4');" } },
-  { "id": "tiamat", "name": "Tiamat", "hp": 50000, "slides": 50, "icon": "🐲", "lore": "Five Heads (Composite of all boss powers)", "mode": "advanced", "script": { "onSlide": "if (G.slides > 0) { if (G.slides % 8 === 0) { G.spawnHazard('-1'); G.log('Tiamat spits acid! (Slime)'); } if (G.slides % 12 === 0) { G.spawnHazard('-2'); G.log('Tiamat summons reinforcements! (Goblin)'); } if (G.slides % 10 === 0) { G.spawnHazard('-4'); G.spawnHazard('-5'); G.log('Tiamat warps reality!'); } if (G.slides % 8 === 0) { G.shuffleTiles(); G.log('Tiamat mind blasts!'); } if (G.slides % 12 === 0) { G.spawnHazard('-3'); G.log('Tiamat raises the dead!'); } if (G.slides % 15 === 0) { G.degradeWeapon('best'); G.log('Tiamat charms your weapon!'); } if (G.slides % 10 === 0) { G.destroyWeapon('best'); G.log('Tiamat breathes fire!'); } if (G.prng() > 0.5) { G.enemy.healHp(40); } }" } }
+  {
+    "id": "goblin_scout",
+    "name": "Goblin Scout",
+    "hp": 150,
+    "slides": 25,
+    "icon": "👺",
+    "lore": "Ambush (Spawns a Goblin every 12 slides)",
+    "mode": "advanced",
+    "script": { "onSlide": "if (G.slides % 12 === 0) G.spawnHazard('-2');" }
+  },
+  {
+    "id": "orc_brute",
+    "name": "Orc Brute",
+    "hp": 500,
+    "slides": 30,
+    "icon": "👹",
+    "lore": "Tough (-10% Dmg taken)",
+    "mode": "simple",
+    "passiveAbility": { "effect": "damage_reduction", "effectParam": 10 }
+  },
+  {
+    "id": "slime_king",
+    "name": "Slime King",
+    "hp": 1200,
+    "slides": 35,
+    "icon": "🟢",
+    "lore": "Ooze (Spawns a Slime every 8 slides)",
+    "mode": "advanced",
+    "script": { "onSlide": "if (G.slides % 8 === 0) G.spawnHazard('-1');" }
+  },
+  {
+    "id": "owlbear_alpha",
+    "name": "Owlbear Alpha",
+    "hp": 2000,
+    "slides": 35,
+    "icon": "🦉",
+    "lore": "Fierce (Crushes weakest weapon every 10 slides)",
+    "mode": "advanced",
+    "script": {
+      "onSlide": "if (G.slides % 10 === 0) G.player.drainSlides(1); G.log('Owlbear crushed your spirit!');"
+    }
+  },
+  {
+    "id": "troll_king",
+    "name": "Troll King",
+    "hp": 3500,
+    "slides": 40,
+    "icon": "🧌",
+    "lore": "Regen (Heals 30 HP per slide)",
+    "mode": "advanced",
+    "script": { "onSlide": "G.enemy.healHp(30);" }
+  },
+  {
+    "id": "the_lich",
+    "name": "The Lich",
+    "hp": 8000,
+    "slides": 40,
+    "icon": "💀",
+    "lore": "Necromancy (Spawns Skeleton per 12 slides, -10 Start Slides)",
+    "mode": "advanced",
+    "script": {
+      "onEncounterStart": "G.player.drainSlides(10); G.log('💀 The Lich drained 10 slides from your soul!');",
+      "onSlide": "if (G.slides % 12 === 0) G.spawnHazard('-3');"
+    }
+  },
+  {
+    "id": "beholder",
+    "name": "Beholder",
+    "hp": 12000,
+    "slides": 40,
+    "icon": "👁️‍🗨️",
+    "lore": "Eye Ray (Spawns Web per 10 slides)",
+    "mode": "advanced",
+    "script": { "onSlide": "if (G.slides % 10 === 0) G.spawnHazard('-5');" }
+  },
+  {
+    "id": "ancient_dragon",
+    "name": "Ancient Dragon",
+    "hp": 20000,
+    "slides": 45,
+    "icon": "🐉",
+    "lore": "Inferno (Burns best weapon every 10 slides)",
+    "mode": "advanced",
+    "script": {
+      "onSlide": "if (G.slides % 10 === 0) { G.log('Inferno burned your best weapon!'); G.destroyWeapon('best'); }"
+    }
+  },
+  {
+    "id": "mind_flayer",
+    "name": "Mind Flayer",
+    "hp": 5000,
+    "slides": 35,
+    "icon": "🧠",
+    "lore": "Mind Blast (Shuffles tiles every 8 slides)",
+    "mode": "advanced",
+    "script": {
+      "onSlide": "if (G.slides % 8 === 0) { G.log('Mind Blast: Tiles shuffled!'); G.shuffleTiles(); }"
+    }
+  },
+  {
+    "id": "vampire_lord",
+    "name": "Vampire Lord",
+    "hp": 16000,
+    "slides": 40,
+    "icon": "🧛",
+    "lore": "Charm (Regen 50 HP/slide, degrades best weapon every 15 slides)",
+    "mode": "advanced",
+    "script": {
+      "onSlide": "if (G.slides % 15 === 0) { G.log('Charm: Best weapon degraded!'); G.degradeWeapon('best'); } G.enemy.healHp(50);"
+    }
+  },
+  {
+    "id": "mimic_colony",
+    "name": "Mimic Colony",
+    "hp": 800,
+    "slides": 30,
+    "icon": "📦",
+    "lore": "Shapechanger (Spawns Mimic every 10 slides)",
+    "mode": "advanced",
+    "script": { "onSlide": "if (G.slides % 10 === 0) G.spawnHazard('-4');" }
+  },
+  {
+    "id": "tiamat",
+    "name": "Tiamat",
+    "hp": 50000,
+    "slides": 50,
+    "icon": "🐲",
+    "lore": "Five Heads (Composite of all boss powers)",
+    "mode": "advanced",
+    "script": {
+      "onSlide": "if (G.slides > 0) { if (G.slides % 8 === 0) { G.spawnHazard('-1'); G.log('Tiamat spits acid! (Slime)'); } if (G.slides % 12 === 0) { G.spawnHazard('-2'); G.log('Tiamat summons reinforcements! (Goblin)'); } if (G.slides % 10 === 0) { G.spawnHazard('-4'); G.spawnHazard('-5'); G.log('Tiamat warps reality!'); } if (G.slides % 8 === 0) { G.shuffleTiles(); G.log('Tiamat mind blasts!'); } if (G.slides % 12 === 0) { G.spawnHazard('-3'); G.log('Tiamat raises the dead!'); } if (G.slides % 15 === 0) { G.degradeWeapon('best'); G.log('Tiamat charms your weapon!'); } if (G.slides % 10 === 0) { G.destroyWeapon('best'); G.log('Tiamat breathes fire!'); } if (G.prng() > 0.5) { G.enemy.healHp(40); } }"
+    }
+  }
 ]

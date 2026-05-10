@@ -1,13 +1,13 @@
 /**
  * UI TEMPLATE: MODAL-SHARE
- * 
+ *
  * A professional customization modal for sharing run statistics.
  * Allows users to preview and theme their share card before sending.
  */
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["modal-share"] = `
+window.ViewTemplates['modal-share'] = `
 <div id="modal-share" class="hide fixed inset-0 z-[110] flex items-center justify-center p-0 md:p-6">
   <div class="absolute inset-0 bg-slate-950/95 backdrop-blur-xl" onclick="closeShareModal()"></div>
   

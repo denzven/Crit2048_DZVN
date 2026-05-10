@@ -5,7 +5,7 @@
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["modal-marketplace"] = `
+window.ViewTemplates['modal-marketplace'] = `
     <!-- MARKETPLACE MODAL: THE GRIMOIRE -->
     <div id="modal-marketplace" class="hide absolute inset-0 bg-slate-950 z-[120] flex items-center justify-center p-2 md:p-4">
       <div class="bg-slate-900/95 border border-slate-700 rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col h-full max-h-[95vh] overflow-hidden backdrop-blur-3xl relative z-[122]">

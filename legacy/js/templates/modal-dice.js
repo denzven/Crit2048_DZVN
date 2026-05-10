@@ -8,7 +8,7 @@
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["modal-dice"] = `
+window.ViewTemplates['modal-dice'] = `
     <!-- D20 MODAL -->
     <div id="modal-dice" class="hide absolute inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
       <div id="d20-panel" class="pointer-events-auto bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full text-center flex flex-col items-center shadow-2xl relative">

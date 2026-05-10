@@ -1,86 +1,84 @@
-import type { Tile, GameStoreState } from '../types/game';
+import type { ExtendedGameStoreState, GameStoreState, Tile } from '../types/game';
+import { WEAPON_STATS } from './data';
 import { Native } from './native';
 import { PackEngine } from './packEngine';
-import { WEAPON_STATS } from './data';
 
 export const CombatLogic = {
   /**
    * Core 2048-style movement and merging logic
    */
-  processMove(state: GameStoreState, direction: 'LEFT' | 'RIGHT' | 'UP' | 'DOWN'): { 
-    newGrid: (Tile | null)[], 
-    changed: boolean, 
-    damageDealt: number,
-    merges: number,
-    goldEarned: number,
-    multIncrease: number,
-    mergeResults: { damage: number, gold: number, pos: number }[]
+  processMove(
+    state: GameStoreState,
+    direction: 'LEFT' | 'RIGHT' | 'UP' | 'DOWN',
+  ): {
+    newGrid: (Tile | null)[];
+    changed: boolean;
+    damageDealt: number;
+    merges: number;
+    goldEarned: number;
+    multIncrease: number;
+    mergeResults: { damage: number; gold: number; pos: number }[];
   } {
     let newGrid = [...state.grid];
     let changed = false;
     let damageDealt = 0;
     let merges = 0;
     let goldEarned = 0;
-    let multIncrease = 0;
-    let mergeResults: { damage: number, gold: number, pos: number }[] = [];
+    const multIncrease = 0;
+    const mergeResults: { damage: number; gold: number; pos: number }[] = [];
 
     const processLine = (lineIndices: number[]) => {
       // 1. Filter out nulls
-      let line = lineIndices.map((i) => newGrid[i]).filter((v): v is Tile => v !== null);
-      let combined: (Tile | null)[] = [];
-      
+      const line = lineIndices.map((i) => newGrid[i]).filter((v): v is Tile => v !== null);
+      const combined: (Tile | null)[] = [];
+
       for (let i = 0; i < line.length; i++) {
-        if (
-          i < line.length - 1 &&
-          line[i].val > 0 &&
-          line[i].val === line[i + 1].val
-        ) {
+        if (i < line.length - 1 && line[i].val > 0 && line[i].val === line[i + 1].val) {
           // MERGE DETECTED
-          let tA = line[i];
-          let tB = line[i + 1];
-          let newVal = tA.val * 2;
-          
-          combined.push({ 
+          const tA = line[i];
+          const newVal = tA.val * 2;
+
+          combined.push({
             id: tA.id, // Keep the ID for animation continuity
-            val: newVal, 
-            pop: true, 
-            merged: true 
+            val: newVal,
+            pop: true,
+            merged: true,
           });
 
           merges++;
           // (mergeResults tracking handled below)
-          
+
           // Pack Hook: onMerge
           PackEngine.onMerge(state, newVal, lineIndices[i], direction);
-          
+
           // Calculate Damage
-          let baseDmg = WEAPON_STATS[newVal]?.dmg || newVal; 
-          
+          const baseDmg = WEAPON_STATS[newVal]?.dmg || newVal;
+
           // (Class and Artifact bonuses are now handled via PackEngine hooks)
 
           // Hunter's Mark logic
           let finalMergeDmg = baseDmg * state.multiplier;
-          
+
           // Pack Hook: calculateMergeDamage
           finalMergeDmg = PackEngine.calculateMergeDamage(state, finalMergeDmg, direction, newVal);
 
-          if ((state as any).hunterMarkLeft > 0) {
+          if ((state as ExtendedGameStoreState).hunterMarkLeft > 0) {
             finalMergeDmg *= 2;
-            (state as any).hunterMarkLeft--;
+            (state as ExtendedGameStoreState).hunterMarkLeft--;
           }
 
           damageDealt += finalMergeDmg;
-          
+
           // Baseline Gold: log2(val)
-          let baseGold = Math.floor(Math.log2(newVal));
+          const baseGold = Math.floor(Math.log2(newVal));
           goldEarned += baseGold;
 
-          mergeResults.push({ 
-            damage: finalMergeDmg, 
-            gold: baseGold, 
-            pos: lineIndices[i] 
+          mergeResults.push({
+            damage: finalMergeDmg,
+            gold: baseGold,
+            pos: lineIndices[i],
           });
-          
+
           if (state.settings?.haptics) Native.vibrate(20); // Small pulse on merge
           i++; // Skip next tile since it merged
         } else {
@@ -117,7 +115,7 @@ export const CombatLogic = {
 
     if (changed) {
       // Goblin Gold Theft
-      const goblinCount = newGrid.filter(t => t && t.val === -2).length;
+      const goblinCount = newGrid.filter((t) => t && t.val === -2).length;
       if (goblinCount > 0) {
         const stolen = Math.min(state.gold, goblinCount);
         goldEarned -= stolen;
@@ -125,10 +123,10 @@ export const CombatLogic = {
 
       // Hazard Clearing Thresholds
       if (damageDealt >= 100) {
-        newGrid = newGrid.map(t => t && t.val === -1 ? null : t); // Slime
+        newGrid = newGrid.map((t) => (t && t.val === -1 ? null : t)); // Slime
       }
       if (damageDealt >= 50) {
-        newGrid = newGrid.map(t => t && t.val === -2 ? null : t); // Goblin
+        newGrid = newGrid.map((t) => (t && t.val === -2 ? null : t)); // Goblin
       }
 
       // Board Power: 5% of total board value added as passive damage
@@ -150,27 +148,29 @@ export const CombatLogic = {
    */
   checkGridlock(grid: (Tile | null)[]): boolean {
     if (grid.some((t) => t === null)) return false;
-    
+
     // Check horizontal merges
     for (let r = 0; r < 4; r++) {
       for (let c = 0; c < 3; c++) {
-        let i1 = r * 4 + c, i2 = r * 4 + c + 1;
+        const i1 = r * 4 + c,
+          i2 = r * 4 + c + 1;
         const t1 = grid[i1];
         const t2 = grid[i2];
         if (t1 && t2 && t1.val > 0 && t1.val === t2.val) return false;
       }
     }
-    
+
     // Check vertical merges
     for (let c = 0; c < 4; c++) {
       for (let r = 0; r < 3; r++) {
-        let i1 = r * 4 + c, i2 = (r + 1) * 4 + c;
+        const i1 = r * 4 + c,
+          i2 = (r + 1) * 4 + c;
         const t1 = grid[i1];
         const t2 = grid[i2];
         if (t1 && t2 && t1.val > 0 && t1.val === t2.val) return false;
       }
     }
-    
+
     return true;
-  }
+  },
 };

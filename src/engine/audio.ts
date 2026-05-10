@@ -9,12 +9,12 @@ export class AudioEngine {
   private musicGain: GainNode | null = null;
   private sfxGain: GainNode | null = null;
   private isMusicPlaying = false;
-  private volume: number = 0.5;
-  private lastPlayTime: Map<string, number> = new Map();
+  private volume = 0.5;
+  private lastPlayTime = new Map<string, number>();
 
   // --- Seamless Transition States ---
-  private currentMode: string = 'MENU';
-  private intensity: number = 0;
+  private currentMode = 'MENU';
+  private intensity = 0;
 
   // Smooth faders for continuous crossfading
   private fadeMenu = 1.0;
@@ -26,11 +26,14 @@ export class AudioEngine {
   private targetBpm = 95;
   private currentBpm = 95;
   private beatCount = 0;
-  private musicInterval: any = null;
+  private musicInterval: ReturnType<typeof setTimeout> | null = null;
 
   init() {
     if (this.ctx) return;
-    this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    this.ctx = new (
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    )();
 
     this.masterGain = this.ctx.createGain();
     this.masterGain.connect(this.ctx.destination);
@@ -92,14 +95,22 @@ export class AudioEngine {
 
   // --- CORE SYNTHESIS UTILS ---
 
-  private play(type: OscillatorType, freq: number, time: number, vol = 0.1, slideFreq: number | null = null, useReverb = false) {
+  private play(
+    type: OscillatorType,
+    freq: number,
+    time: number,
+    vol = 0.1,
+    slideFreq: number | null = null,
+    useReverb = false,
+  ) {
     if (!this.ctx || !this.sfxGain || this.volume <= 0 || vol <= 0.005) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
     osc.type = type;
     osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-    if (slideFreq) osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + time);
+    if (slideFreq)
+      osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + time);
 
     gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(vol, this.ctx.currentTime + 0.01); // Avoid clicking
@@ -107,10 +118,19 @@ export class AudioEngine {
 
     osc.connect(gain);
     gain.connect(useReverb ? this.reverb! : this.sfxGain);
-    osc.start(); osc.stop(this.ctx.currentTime + time);
+    osc.start();
+    osc.stop(this.ctx.currentTime + time);
   }
 
-  private noise(t: number, duration: number, vol = 0.1, filterFreq = 1000, type: BiquadFilterType = 'bandpass', q = 1, isSfx = false) {
+  private noise(
+    t: number,
+    duration: number,
+    vol = 0.1,
+    filterFreq = 1000,
+    type: BiquadFilterType = 'bandpass',
+    q = 1,
+    isSfx = false,
+  ) {
     if (!this.ctx || this.volume <= 0 || vol <= 0.005) return;
     const bufferSize = this.ctx.sampleRate * Math.max(duration, 0.1);
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -129,7 +149,8 @@ export class AudioEngine {
     gain.gain.setValueAtTime(vol, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
 
-    noiseSrc.connect(filter); filter.connect(gain);
+    noiseSrc.connect(filter);
+    filter.connect(gain);
     gain.connect(isSfx ? this.sfxGain! : this.musicGain!);
     noiseSrc.start(t);
   }
@@ -156,10 +177,14 @@ export class AudioEngine {
     g.gain.linearRampToValueAtTime(vol, t + duration * 0.4);
     g.gain.linearRampToValueAtTime(0.001, t + duration);
 
-    osc1.connect(f); osc2.connect(f);
-    f.connect(g); g.connect(this.musicGain!);
-    osc1.start(t); osc1.stop(t + duration);
-    osc2.start(t); osc2.stop(t + duration);
+    osc1.connect(f);
+    osc2.connect(f);
+    f.connect(g);
+    g.connect(this.musicGain!);
+    osc1.start(t);
+    osc1.stop(t + duration);
+    osc2.start(t);
+    osc2.stop(t + duration);
   }
 
   private synthChoir(freq: number, t: number, duration: number, vol: number) {
@@ -169,21 +194,28 @@ export class AudioEngine {
     const g = this.ctx.createGain();
     const f1 = this.ctx.createBiquadFilter();
 
-    osc1.type = 'sawtooth'; osc2.type = 'sawtooth';
+    osc1.type = 'sawtooth';
+    osc2.type = 'sawtooth';
     osc1.frequency.setValueAtTime(freq, t);
     osc2.frequency.setValueAtTime(freq * 0.998, t);
 
-    f1.type = 'bandpass'; f1.frequency.value = 800; f1.Q.value = 2.0;
+    f1.type = 'bandpass';
+    f1.frequency.value = 800;
+    f1.Q.value = 2.0;
 
     g.gain.setValueAtTime(0.001, t);
     g.gain.linearRampToValueAtTime(vol, t + duration * 0.3);
     g.gain.setValueAtTime(vol, t + duration * 0.7);
     g.gain.exponentialRampToValueAtTime(0.001, t + duration);
 
-    osc1.connect(f1); osc2.connect(f1);
-    f1.connect(g); g.connect(this.musicGain!);
-    osc1.start(t); osc1.stop(t + duration);
-    osc2.start(t); osc2.stop(t + duration);
+    osc1.connect(f1);
+    osc2.connect(f1);
+    f1.connect(g);
+    g.connect(this.musicGain!);
+    osc1.start(t);
+    osc1.stop(t + duration);
+    osc2.start(t);
+    osc2.stop(t + duration);
   }
 
   private synthTubularBell(freq: number, t: number, vol: number) {
@@ -198,10 +230,12 @@ export class AudioEngine {
       const v = vol / (i + 1.5);
       g.gain.setValueAtTime(0.001, t);
       g.gain.exponentialRampToValueAtTime(v, t + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.001, t + (3.0 / (i + 1)));
+      g.gain.exponentialRampToValueAtTime(0.001, t + 3.0 / (i + 1));
 
-      osc.connect(g); g.connect(this.musicGain!);
-      osc.start(t); osc.stop(t + 3.0);
+      osc.connect(g);
+      g.connect(this.musicGain!);
+      osc.start(t);
+      osc.stop(t + 3.0);
     });
   }
 
@@ -212,7 +246,8 @@ export class AudioEngine {
     const g = this.ctx.createGain();
     const f = this.ctx.createBiquadFilter();
 
-    osc1.type = 'sawtooth'; osc2.type = 'sawtooth';
+    osc1.type = 'sawtooth';
+    osc2.type = 'sawtooth';
     osc1.frequency.setValueAtTime(freq, t);
     osc2.frequency.setValueAtTime(freq * 1.002, t);
 
@@ -229,10 +264,14 @@ export class AudioEngine {
       g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
     }
 
-    osc1.connect(f); osc2.connect(f);
-    f.connect(g); g.connect(this.musicGain!);
-    osc1.start(t); osc1.stop(t + 0.8);
-    osc2.start(t); osc2.stop(t + 0.8);
+    osc1.connect(f);
+    osc2.connect(f);
+    f.connect(g);
+    g.connect(this.musicGain!);
+    osc1.start(t);
+    osc1.stop(t + 0.8);
+    osc2.start(t);
+    osc2.stop(t + 0.8);
   }
 
   private synthAcousticBass(freq: number, t: number, vol: number) {
@@ -252,8 +291,11 @@ export class AudioEngine {
     g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
 
-    osc.connect(f); f.connect(g); g.connect(this.musicGain!);
-    osc.start(t); osc.stop(t + 0.6);
+    osc.connect(f);
+    f.connect(g);
+    g.connect(this.musicGain!);
+    osc.start(t);
+    osc.stop(t + 0.6);
   }
 
   private synthLute(freq: number, t: number, vol: number) {
@@ -273,8 +315,11 @@ export class AudioEngine {
     g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
 
-    osc.connect(f); f.connect(g); g.connect(this.musicGain!);
-    osc.start(t); osc.stop(t + 0.4);
+    osc.connect(f);
+    f.connect(g);
+    g.connect(this.musicGain!);
+    osc.start(t);
+    osc.stop(t + 0.4);
 
     this.noise(t, 0.02, vol * 0.2, 3000, 'highpass', 1);
   }
@@ -292,8 +337,10 @@ export class AudioEngine {
     g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
 
-    osc.connect(g); g.connect(this.musicGain!);
-    osc.start(t); osc.stop(t + 0.3);
+    osc.connect(g);
+    g.connect(this.musicGain!);
+    osc.start(t);
+    osc.stop(t + 0.3);
 
     this.noise(t, 0.05, vol * 0.15, 600, 'lowpass', 1);
   }
@@ -306,21 +353,30 @@ export class AudioEngine {
       this.noise(t, 0.15, vol, 2500, 'bandpass', 1.0);
       const osc = this.ctx!.createOscillator();
       const g = this.ctx!.createGain();
-      osc.type = 'triangle'; osc.frequency.setValueAtTime(200, t);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(200, t);
       osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
-      g.gain.setValueAtTime(vol * 0.8, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-      osc.connect(g); g.connect(this.musicGain!); osc.start(t); osc.stop(t + 0.1);
+      g.gain.setValueAtTime(vol * 0.8, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+      osc.connect(g);
+      g.connect(this.musicGain!);
+      osc.start(t);
+      osc.stop(t + 0.1);
     }
   }
 
-  private midiToFreq(m: number) { return Math.pow(2, (m - 69) / 12) * 440; }
+  private midiToFreq(m: number) {
+    return Math.pow(2, (m - 69) / 12) * 440;
+  }
 
   // --- SEAMLESS SEQUENCER ENGINE ---
 
-  setMusicMode(mode: string, intensity: number = 0) {
+  setMusicMode(mode: string, intensity = 0) {
     const isMenu = ['MENU', 'START', 'CLASS_SELECT'].includes(mode);
-    const wasMenu = ['MENU', 'START', 'CLASS_SELECT', 'FORGE', 'GRIMOIRE'].includes(this.currentMode);
-    
+    const wasMenu = ['MENU', 'START', 'CLASS_SELECT', 'FORGE', 'GRIMOIRE'].includes(
+      this.currentMode,
+    );
+
     // Reset sequencer to bar 1 when returning to menu from dungeon
     if (isMenu && !wasMenu) {
       this.beatCount = 0;
@@ -333,7 +389,7 @@ export class AudioEngine {
     else if (mode === 'TAVERN') this.targetBpm = 105;
     else if (mode === 'GRIMOIRE') this.targetBpm = 85;
     else if (mode === 'FORGE') this.targetBpm = 100;
-    else this.targetBpm = 115 + (intensity * 4);
+    else this.targetBpm = 115 + intensity * 4;
 
     // Restore music gain if it was ducked by victory/gameOver
     if (this.ctx && this.musicGain && this.musicGain.gain.value < 0.1) {
@@ -355,7 +411,7 @@ export class AudioEngine {
 
   updateTension(multiplier: number) {
     if (this.currentMode !== 'PLAYING') return;
-    this.targetBpm = 115 + (this.intensity * 4) + Math.min(20, (multiplier - 1) * 3);
+    this.targetBpm = 115 + this.intensity * 4 + Math.min(20, (multiplier - 1) * 3);
   }
 
   private playSequence() {
@@ -384,7 +440,7 @@ export class AudioEngine {
       const bar = Math.floor(this.beatCount / 16) % 8;
 
       // Light, organic swing applied globally
-      const swingDelay = (step % 2 !== 0) ? stepTime * 0.15 : 0;
+      const swingDelay = step % 2 !== 0 ? stepTime * 0.15 : 0;
       const t = this.ctx!.currentTime + 0.05 + swingDelay;
 
       // 2. LAYER DISPATCHER
@@ -417,7 +473,7 @@ export class AudioEngine {
       [50, 53, 57, 62], // Dm
       [48, 52, 55, 60], // C
       [46, 50, 53, 58], // Bb
-      [45, 49, 52, 57]  // A
+      [45, 49, 52, 57], // A
     ];
     const chord = chords[bar % 4];
 
@@ -436,11 +492,12 @@ export class AudioEngine {
       [53, 57, 60, 65], // F
       [48, 52, 55, 60], // C
       [50, 53, 57, 62], // Dm
-      [46, 50, 53, 58]  // Bb
+      [46, 50, 53, 58], // Bb
     ];
     const chord = chords[bar % 4];
 
-    if (step === 0 || step === 8) this.synthAcousticBass(this.midiToFreq(chord[0] - 12), t, 0.1 * fade);
+    if (step === 0 || step === 8)
+      this.synthAcousticBass(this.midiToFreq(chord[0] - 12), t, 0.1 * fade);
 
     if (step === 4 || step === 10 || step === 14) {
       this.synthLute(this.midiToFreq(chord[1]), t, 0.06 * fade);
@@ -456,7 +513,7 @@ export class AudioEngine {
       [50, 57, 62], // Dm (Power chord)
       [53, 60, 65], // F
       [55, 62, 67], // Gm
-      [48, 55, 60]  // C
+      [48, 55, 60], // C
     ];
     const chord = chords[bar % 4];
 
@@ -484,7 +541,7 @@ export class AudioEngine {
       [50, 53, 57, 64], // Dm(add9)
       [50, 53, 57, 64],
       [51, 55, 58, 62], // Ebmaj7 (Super mysterious Phrygian shift)
-      [51, 55, 58, 62]
+      [51, 55, 58, 62],
     ];
     const chord = chords[bar % 4];
 
@@ -514,7 +571,7 @@ export class AudioEngine {
       [50, 53, 57, 62], // Dm
       [46, 50, 53, 58], // Bb
       [43, 46, 50, 55], // Gm
-      [45, 49, 52, 57]  // A7
+      [45, 49, 52, 57], // A7
     ];
     const chord = chords[bar % 4];
 
@@ -530,7 +587,7 @@ export class AudioEngine {
       if (step % 2 === 0) {
         const pattern = [0, 2, 3, 2, 0, 2, 3, 2];
         const noteIdx = pattern[step / 2];
-        const vol = (step === 0 || step === 8) ? 0.08 : 0.05;
+        const vol = step === 0 || step === 8 ? 0.08 : 0.05;
         this.synthLute(this.midiToFreq(chord[noteIdx]), t, vol * fade);
       }
     }
@@ -573,8 +630,10 @@ export class AudioEngine {
     osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
     g.gain.setValueAtTime(0.015, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-    osc.connect(g); g.connect(this.sfxGain!);
-    osc.start(t); osc.stop(t + 0.1);
+    osc.connect(g);
+    g.connect(this.sfxGain!);
+    osc.start(t);
+    osc.stop(t + 0.1);
   }
 
   merge() {
@@ -587,16 +646,21 @@ export class AudioEngine {
     osc.frequency.exponentialRampToValueAtTime(1174.66, t + 0.08); // Slide to D6
     g.gain.setValueAtTime(0.04, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-    osc.connect(g); g.connect(this.sfxGain!);
-    osc.start(t); osc.stop(t + 0.25);
+    osc.connect(g);
+    g.connect(this.sfxGain!);
+    osc.start(t);
+    osc.stop(t + 0.25);
   }
 
   diceClatter() {
     if (!this.ctx) return;
     for (let i = 0; i < 4; i++) {
-      setTimeout(() => {
-        this.play('triangle', 400 + Math.random() * 200, 0.03, 0.02, 200);
-      }, i * 35 + Math.random() * 20);
+      setTimeout(
+        () => {
+          this.play('triangle', 400 + Math.random() * 200, 0.03, 0.02, 200);
+        },
+        i * 35 + Math.random() * 20,
+      );
     }
   }
 
@@ -605,7 +669,7 @@ export class AudioEngine {
     const t = this.ctx.currentTime;
     this.synthBrassStab(this.midiToFreq(65), t, 0.08); // F
     setTimeout(() => {
-      this.synthBrassStab(this.midiToFreq(66), this.ctx!.currentTime, 0.12, true); // F# 
+      this.synthBrassStab(this.midiToFreq(66), this.ctx!.currentTime, 0.12, true); // F#
       this.synthTubularBell(this.midiToFreq(78), this.ctx!.currentTime, 0.08);
     }, 100);
   }
@@ -626,9 +690,8 @@ export class AudioEngine {
 
   coin() {
     if (!this.throttle('coin', 100) || !this.ctx) return;
-    const t = this.ctx.currentTime;
     this.play('sine', 1174.66, 0.15, 0.03, 1174.66);
-    setTimeout(() => this.play('sine', 1760.00, 0.2, 0.03, 1760.00), 50);
+    setTimeout(() => this.play('sine', 1760.0, 0.2, 0.03, 1760.0), 50);
   }
 
   powerUp() {
@@ -661,13 +724,13 @@ export class AudioEngine {
     });
 
     setTimeout(() => {
-      if (this.ctx && this.musicGain) this.musicGain.gain.setTargetAtTime(0.6, this.ctx.currentTime, 2.0);
+      if (this.ctx && this.musicGain)
+        this.musicGain.gain.setTargetAtTime(0.6, this.ctx.currentTime, 2.0);
     }, 3500);
   }
 
   encounterWin() {
     if (!this.ctx) return;
-    const t = this.ctx.currentTime;
     const flourish = [57, 62, 66];
     flourish.forEach((note, i) => {
       setTimeout(() => {
@@ -696,18 +759,24 @@ export class AudioEngine {
     // Slow, mournful descending diminished chord
     const descent = [56, 53, 50, 44]; // G#, F, D, G#
     descent.forEach((note, i) => {
-      setTimeout(() => {
-        if (!this.ctx) return;
-        this.synthChoir(this.midiToFreq(note), this.ctx.currentTime, 2.5, 0.1);
-      }, 800 + (i * 700));
+      setTimeout(
+        () => {
+          if (!this.ctx) return;
+          this.synthChoir(this.midiToFreq(note), this.ctx.currentTime, 2.5, 0.1);
+        },
+        800 + i * 700,
+      );
     });
 
     // Final echoing death toll in the abyss
-    setTimeout(() => {
-      if (!this.ctx) return;
-      this.synthTubularBell(this.midiToFreq(38), this.ctx.currentTime, 0.2); // Low D bell
-      this.synthAcousticBass(this.midiToFreq(26), this.ctx.currentTime, 0.2); // Sub D
-    }, 800 + (descent.length * 700));
+    setTimeout(
+      () => {
+        if (!this.ctx) return;
+        this.synthTubularBell(this.midiToFreq(38), this.ctx.currentTime, 0.2); // Low D bell
+        this.synthAcousticBass(this.midiToFreq(26), this.ctx.currentTime, 0.2); // Sub D
+      },
+      800 + descent.length * 700,
+    );
   }
 
   enemyPower() {

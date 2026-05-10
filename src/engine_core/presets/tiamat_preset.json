@@ -3,14 +3,52 @@
   "defaults": {
     "passiveTriggers": {
       "onSlide": [
-        { "condition": "G.slides % 8 === 0", "type": "spawn_hazard", "amount": -1, "stringParam": "Tiamat spits acid! (Slime)" },
-        { "condition": "G.slides % 12 === 0", "type": "spawn_hazard", "amount": -2, "stringParam": "Tiamat summons reinforcements! (Goblin)" },
-        { "condition": "G.slides % 10 === 0", "type": "spawn_hazard", "amount": -4, "stringParam": "Tiamat warps reality! (Mimic)" },
-        { "condition": "G.slides % 10 === 0", "type": "spawn_hazard", "amount": -5, "stringParam": "Tiamat warps reality! (Web)" },
-        { "condition": "G.slides % 8 === 0", "type": "tile_shuffle", "amount": 4, "stringParam": "Tiamat mind blasts!" },
-        { "condition": "G.slides % 12 === 0", "type": "spawn_hazard", "amount": -3, "stringParam": "Tiamat raises the dead!" },
-        { "condition": "G.slides % 15 === 0", "type": "weapon_degrade", "stringParam": "Tiamat charms your weapon!" },
-        { "condition": "G.slides % 10 === 0", "type": "weapon_destroy", "stringParam": "Tiamat breathes fire!" },
+        {
+          "condition": "G.slides % 8 === 0",
+          "type": "spawn_hazard",
+          "amount": -1,
+          "stringParam": "Tiamat spits acid! (Slime)"
+        },
+        {
+          "condition": "G.slides % 12 === 0",
+          "type": "spawn_hazard",
+          "amount": -2,
+          "stringParam": "Tiamat summons reinforcements! (Goblin)"
+        },
+        {
+          "condition": "G.slides % 10 === 0",
+          "type": "spawn_hazard",
+          "amount": -4,
+          "stringParam": "Tiamat warps reality! (Mimic)"
+        },
+        {
+          "condition": "G.slides % 10 === 0",
+          "type": "spawn_hazard",
+          "amount": -5,
+          "stringParam": "Tiamat warps reality! (Web)"
+        },
+        {
+          "condition": "G.slides % 8 === 0",
+          "type": "tile_shuffle",
+          "amount": 4,
+          "stringParam": "Tiamat mind blasts!"
+        },
+        {
+          "condition": "G.slides % 12 === 0",
+          "type": "spawn_hazard",
+          "amount": -3,
+          "stringParam": "Tiamat raises the dead!"
+        },
+        {
+          "condition": "G.slides % 15 === 0",
+          "type": "weapon_degrade",
+          "stringParam": "Tiamat charms your weapon!"
+        },
+        {
+          "condition": "G.slides % 10 === 0",
+          "type": "weapon_destroy",
+          "stringParam": "Tiamat breathes fire!"
+        },
         { "condition": "G.prng() > 0.5", "type": "regen", "amount": 40 }
       ]
     }

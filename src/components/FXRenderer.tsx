@@ -1,19 +1,19 @@
 /**
  * FXRenderer.tsx
- * 
+ *
  * Central visual effects renderer for Crit 2048.
- * 
+ *
  * PRESETS (use via G.triggerFX('preset_name', params)):
- * 
+ *
  * Global (screen-level) presets — no x/y coords:
  *   'stomp'    — Full-screen slam (enemy attack, boss ability)
  *   'flash'    — Full-screen color flash (white/red/gold)
  *   'announce' — Center-screen text banner
- * 
+ *
  * Targeted presets — use targetId: 'hud-gold' | 'hud-slides' | 'hud-multiplier':
  *   'float'    — Icon floats up from a HUD element (Ring of Wealth, Boots of Haste)
  *   'pop'      — Icon pops on a HUD element (Giant Potion)
- * 
+ *
  * Grid-local presets — use x, y (0–100 percent within grid):
  *   'aoe'      — Radial shockwave ring from a tile
  *   'lightning'— Bolt strike from above onto a tile
@@ -24,12 +24,17 @@
  *   'poison'   — Purple drip on a tile
  */
 
+import { AnimatePresence, motion } from 'framer-motion';
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { useGameStore } from '../engine/gameStore';
 import { useRegistry } from '../engine/registryHub';
 
-type FXEntry = { id: string; name: string; params?: any };
+interface FXEntry {
+  id: string;
+  name: string;
+  params?: any;
+}
 
 // ─── Preset Components ─────────────────────────────────────────────────────────
 
@@ -88,7 +93,7 @@ const PopFX: React.FC<{ left: string; top: string; icon: string }> = ({ left, to
     className="fixed pointer-events-none z-[1200] text-5xl"
     style={{ left, top, transform: 'translate(-50%, -50%)' }}
     initial={{ scale: 0, opacity: 0, rotate: -20 }}
-    animate={{ scale: [0, 1.8, 1.3, 1.6, 0], opacity: [0, 1, 1, 1, 0], rotate: [- 20, 5, -5, 0, 0] }}
+    animate={{ scale: [0, 1.8, 1.3, 1.6, 0], opacity: [0, 1, 1, 1, 0], rotate: [-20, 5, -5, 0, 0] }}
     transition={{ duration: 0.9, times: [0, 0.25, 0.5, 0.75, 1] }}
   >
     {icon}
@@ -122,7 +127,11 @@ const AoeFX: React.FC<{ x: number; y: number; color?: string }> = ({ x, y, color
 );
 
 /** Grid-local: Lightning bolt strike from above */
-const LightningFX: React.FC<{ x: number; y: number; color?: string }> = ({ x, y, color = '#facc15' }) => (
+const LightningFX: React.FC<{ x: number; y: number; color?: string }> = ({
+  x,
+  y,
+  color = '#facc15',
+}) => (
   <div
     className="absolute pointer-events-none z-[60]"
     style={{ left: `${x}%`, top: 0, transform: 'translateX(-50%)' }}
@@ -133,7 +142,7 @@ const LightningFX: React.FC<{ x: number; y: number; color?: string }> = ({ x, y,
         background: `linear-gradient(to bottom, #fff, ${color}, ${color})`,
         boxShadow: `0 0 12px ${color}, 0 0 30px ${color}`,
         height: `${y}%`,
-        filter: 'blur(0.5px)'
+        filter: 'blur(0.5px)',
       }}
       initial={{ scaleY: 0, opacity: 1 }}
       animate={{ scaleY: [0, 1, 1, 0], opacity: [0.8, 1, 1, 0] }}
@@ -142,7 +151,12 @@ const LightningFX: React.FC<{ x: number; y: number; color?: string }> = ({ x, y,
     {/* Impact bloom */}
     <motion.div
       className="absolute rounded-full"
-      style={{ bottom: 0, left: '50%', transform: 'translate(-50%, 50%)', background: `radial-gradient(circle, #fff 0%, ${color} 40%, transparent 70%)` }}
+      style={{
+        bottom: 0,
+        left: '50%',
+        transform: 'translate(-50%, 50%)',
+        background: `radial-gradient(circle, #fff 0%, ${color} 40%, transparent 70%)`,
+      }}
       initial={{ width: 0, height: 0, opacity: 1 }}
       animate={{ width: 80, height: 80, opacity: 0 }}
       transition={{ duration: 0.4, delay: 0.12 }}
@@ -151,19 +165,32 @@ const LightningFX: React.FC<{ x: number; y: number; color?: string }> = ({ x, y,
 );
 
 /** Grid-local: Directional arrow / projectile */
-const ProjectileFX: React.FC<{ x: number; y: number; dir?: string; icon?: string; color?: string }> = ({ x, y, dir = 'RIGHT', icon = '🏹', color }) => {
+const ProjectileFX: React.FC<{
+  x: number;
+  y: number;
+  dir?: string;
+  icon?: string;
+  color?: string;
+}> = ({ x, y, dir = 'RIGHT', icon = '🏹', color }) => {
   const rotation = { LEFT: 180, RIGHT: 0, UP: -90, DOWN: 90 }[dir] ?? 0;
-  const from = dir === 'LEFT' ? { x: 120 } : dir === 'RIGHT' ? { x: -120 } : dir === 'UP' ? { y: 120 } : { y: -120 };
+  const from =
+    dir === 'LEFT'
+      ? { x: 120 }
+      : dir === 'RIGHT'
+        ? { x: -120 }
+        : dir === 'UP'
+          ? { y: 120 }
+          : { y: -120 };
   const to = { x: 0, y: 0 };
   return (
     <motion.div
       className="absolute pointer-events-none z-[60] text-3xl"
-      style={{ 
-        left: `${x}%`, 
-        top: `${y}%`, 
+      style={{
+        left: `${x}%`,
+        top: `${y}%`,
         transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
         color: color || 'inherit',
-        textShadow: color ? `0 0 10px ${color}` : 'none'
+        textShadow: color ? `0 0 10px ${color}` : 'none',
       }}
       initial={{ ...from, opacity: 0, scale: 0.5 }}
       animate={{ ...to, opacity: [0, 1, 1, 0], scale: [0.5, 1.2, 1.0, 0.7] }}
@@ -175,7 +202,11 @@ const ProjectileFX: React.FC<{ x: number; y: number; dir?: string; icon?: string
 };
 
 /** Grid-local: Holy smite pillar */
-const SmiteFX: React.FC<{ x: number; y: number; color?: string }> = ({ x, y, color = '#fde047' }) => (
+const SmiteFX: React.FC<{ x: number; y: number; color?: string }> = ({
+  x,
+  y,
+  color = '#fde047',
+}) => (
   <div
     className="absolute pointer-events-none z-[60]"
     style={{ left: `${x}%`, top: 0, transform: 'translateX(-50%)' }}
@@ -197,15 +228,20 @@ const SmiteFX: React.FC<{ x: number; y: number; color?: string }> = ({ x, y, col
 );
 
 /** Grid-local: Swirl / Curse */
-const SwirlFX: React.FC<{ x: number; y: number; color?: string; icon?: string }> = ({ x, y, color = '#a855f7', icon = '🌀' }) => (
+const SwirlFX: React.FC<{ x: number; y: number; color?: string; icon?: string }> = ({
+  x,
+  y,
+  color = '#a855f7',
+  icon = '🌀',
+}) => (
   <motion.div
     className="absolute pointer-events-none z-[60] text-5xl"
-    style={{ 
-      left: `${x}%`, 
-      top: `${y}%`, 
+    style={{
+      left: `${x}%`,
+      top: `${y}%`,
       transform: 'translate(-50%, -50%)',
       color: color || 'inherit',
-      textShadow: color ? `0 0 15px ${color}` : 'none'
+      textShadow: color ? `0 0 15px ${color}` : 'none',
     }}
     initial={{ scale: 0, opacity: 0, rotate: 0 }}
     animate={{ scale: [0, 1.5, 1, 0], opacity: [0, 1, 0.8, 0], rotate: [0, -180, -360, -540] }}
@@ -217,7 +253,10 @@ const SwirlFX: React.FC<{ x: number; y: number; color?: string; icon?: string }>
 
 /** Grid-local: Heal sparkles */
 const HealFX: React.FC<{ x: number; y: number }> = ({ x, y }) => (
-  <div className="absolute pointer-events-none z-[60]" style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}>
+  <div
+    className="absolute pointer-events-none z-[60]"
+    style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
+  >
     {['✨', '💚', '✨', '💚', '✨'].map((icon, i) => (
       <motion.span
         key={i}
@@ -227,7 +266,7 @@ const HealFX: React.FC<{ x: number; y: number }> = ({ x, y }) => (
           x: Math.cos((i / 5) * Math.PI * 2) * 30,
           y: -40 - i * 12,
           opacity: [0, 1, 0],
-          scale: [0, 1.2, 0]
+          scale: [0, 1.2, 0],
         }}
         transition={{ duration: 0.7, delay: i * 0.08, ease: 'easeOut' }}
       >
@@ -239,7 +278,10 @@ const HealFX: React.FC<{ x: number; y: number }> = ({ x, y }) => (
 
 /** Grid-local: Poison drip */
 const PoisonFX: React.FC<{ x: number; y: number }> = ({ x, y }) => (
-  <div className="absolute pointer-events-none z-[60]" style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}>
+  <div
+    className="absolute pointer-events-none z-[60]"
+    style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
+  >
     {['☠️', '💜', '☠️'].map((icon, i) => (
       <motion.span
         key={i}
@@ -253,7 +295,12 @@ const PoisonFX: React.FC<{ x: number; y: number }> = ({ x, y }) => (
     ))}
     <motion.div
       className="absolute rounded-full"
-      style={{ width: 50, height: 50, background: 'radial-gradient(circle, #a855f760 0%, transparent 70%)', inset: -25 }}
+      style={{
+        width: 50,
+        height: 50,
+        background: 'radial-gradient(circle, #a855f760 0%, transparent 70%)',
+        inset: -25,
+      }}
       initial={{ scale: 0, opacity: 1 }}
       animate={{ scale: 2, opacity: 0 }}
       transition={{ duration: 0.5 }}
@@ -282,21 +329,39 @@ function resolveTargetPosition(params: any): { left: string; top: string; found:
 // This is exported and used inside Grid.tsx for x/y-based effects
 
 export const GridFXLayer: React.FC<{ activeFX: FXEntry[] }> = ({ activeFX }) => {
-  const gridFX = activeFX.filter(fx => fx.params?.x !== undefined && fx.params?.y !== undefined);
+  const gridFX = activeFX.filter((fx) => fx.params?.x !== undefined && fx.params?.y !== undefined);
   return (
     <AnimatePresence>
-      {gridFX.map(fx => {
+      {gridFX.map((fx) => {
         const { x, y } = fx.params;
         switch (fx.name) {
-          case 'aoe':       return <AoeFX key={fx.id} x={x} y={y} color={fx.params.color} />;
-          case 'lightning': return <LightningFX key={fx.id} x={x} y={y} color={fx.params.color} />;
+          case 'aoe':
+            return <AoeFX key={fx.id} x={x} y={y} color={fx.params.color} />;
+          case 'lightning':
+            return <LightningFX key={fx.id} x={x} y={y} color={fx.params.color} />;
           case 'arrow':
-          case 'projectile': return <ProjectileFX key={fx.id} x={x} y={y} dir={fx.params.dir} icon={fx.params.icon} color={fx.params.color} />;
-          case 'smite':     return <SmiteFX key={fx.id} x={x} y={y} color={fx.params.color} />;
+          case 'projectile':
+            return (
+              <ProjectileFX
+                key={fx.id}
+                x={x}
+                y={y}
+                dir={fx.params.dir}
+                icon={fx.params.icon}
+                color={fx.params.color}
+              />
+            );
+          case 'smite':
+            return <SmiteFX key={fx.id} x={x} y={y} color={fx.params.color} />;
           case 'swirl':
-          case 'curse':     return <SwirlFX key={fx.id} x={x} y={y} color={fx.params.color} icon={fx.params.icon} />;
-          case 'heal':      return <HealFX key={fx.id} x={x} y={y} />;
-          case 'poison':    return <PoisonFX key={fx.id} x={x} y={y} />;
+          case 'curse':
+            return (
+              <SwirlFX key={fx.id} x={x} y={y} color={fx.params.color} icon={fx.params.icon} />
+            );
+          case 'heal':
+            return <HealFX key={fx.id} x={x} y={y} />;
+          case 'poison':
+            return <PoisonFX key={fx.id} x={x} y={y} />;
           case 'stomp':
           default:
             // Legacy icon drop on grid
@@ -322,16 +387,20 @@ export const GridFXLayer: React.FC<{ activeFX: FXEntry[] }> = ({ activeFX }) => 
 // ─── Global FX Renderer (replaces ArtifactTriggerOverlay) ────────────────────
 
 const FXRenderer: React.FC = () => {
-  const activeFX = useGameStore(s => s.activeFX);
-  const artifacts = useRegistry(s => s.artifacts);
+  const activeFX = useGameStore((s) => s.activeFX);
+  const artifacts = useRegistry((s) => s.artifacts);
 
   // Only global/targeted FX (no x/y grid-local ones)
-  const globalFX = activeFX.filter(fx => !( fx.params?.x !== undefined && fx.params?.y !== undefined));
+  const globalFX = activeFX.filter(
+    (fx) => !(fx.params?.x !== undefined && fx.params?.y !== undefined),
+  );
 
   return (
     <AnimatePresence>
-      {globalFX.map(fx => {
-        const artifactDef = Object.values(artifacts).find((a: any) => a.id === fx.params?.artifactId);
+      {globalFX.map((fx) => {
+        const artifactDef = Object.values(artifacts).find(
+          (a: any) => a.id === fx.params?.artifactId,
+        );
         const icon = fx.params?.icon || (artifactDef as any)?.icon || '✨';
 
         // Flash — full-screen color wash
@@ -348,7 +417,7 @@ const FXRenderer: React.FC = () => {
         if (fx.name === 'float' || fx.name === 'pop') {
           const { left, top } = resolveTargetPosition(fx.params);
           if (fx.name === 'float') return <FloatFX key={fx.id} left={left} top={top} icon={icon} />;
-          if (fx.name === 'pop')   return <PopFX   key={fx.id} left={left} top={top} icon={icon} />;
+          if (fx.name === 'pop') return <PopFX key={fx.id} left={left} top={top} icon={icon} />;
         }
 
         // Generic center screen — announce style
@@ -375,7 +444,9 @@ const FXRenderer: React.FC = () => {
                 animate={{ opacity: 1, y: -60 }}
                 className="bg-slate-900/90 border border-slate-700 px-4 py-1 rounded-full mt-4"
               >
-                <span className="text-rose-400 font-black uppercase text-sm tracking-widest">{fx.params.name}</span>
+                <span className="text-rose-400 font-black uppercase text-sm tracking-widest">
+                  {fx.params.name}
+                </span>
               </motion.div>
             )}
           </motion.div>

@@ -8,7 +8,7 @@
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["screen-playing"] = `
+window.ViewTemplates['screen-playing'] = `
     <div id="screen-playing" class="hide flex flex-col items-center w-full max-w-4xl relative z-10 h-full justify-center scale-origin-center">
       
       <div id="playing-hud" class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-2 md:p-3 mb-2 md:mb-4 relative overflow-hidden flex flex-col gap-1 shrink-0 shadow-lg">

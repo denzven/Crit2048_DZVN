@@ -8,7 +8,7 @@
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["modal-help"] = `
+window.ViewTemplates['modal-help'] = `
     <!-- HELP / COMPENDIUM MODAL -->
     <div id="modal-help" class="hide absolute inset-0 bg-slate-950/60 z-[150] flex flex-col items-center justify-center p-4 md:p-8 transition-all duration-300">
       <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative flex flex-col h-[85vh] max-h-[800px] backdrop-blur-sm">

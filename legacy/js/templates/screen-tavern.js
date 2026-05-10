@@ -8,7 +8,7 @@
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["screen-tavern"] = `
+window.ViewTemplates['screen-tavern'] = `
     <!-- TAVERN (SHOP) -->
     <div id="screen-tavern" class="hide w-full flex flex-col h-full relative z-10">
       <div id="tavern-scroll-area" class="flex-grow overflow-y-auto pb-6 space-y-6 flex flex-col min-h-0 custom-scrollbar tavern-container">

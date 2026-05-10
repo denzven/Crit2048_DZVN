@@ -7,7 +7,7 @@
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["modal-alert"] = `
+window.ViewTemplates['modal-alert'] = `
     <!-- CUSTOM DIALOG MODAL (Alert/Confirm) -->
     <div id="modal-alert" class="hide absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
       <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center fx-modal-entrance ring-1 ring-white/10">

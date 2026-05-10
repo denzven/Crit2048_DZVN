@@ -8,7 +8,7 @@
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["modal-settings"] = `
+window.ViewTemplates['modal-settings'] = `
     <!-- SETTINGS MODAL -->
     <div id="modal-settings" class="hide absolute inset-0 bg-slate-950/95 z-[110] flex items-center justify-center p-4">
       <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md md:max-w-xl w-full shadow-2xl flex flex-col max-h-[90vh]">

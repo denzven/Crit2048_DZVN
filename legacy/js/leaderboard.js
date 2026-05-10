@@ -3,11 +3,11 @@
  * Handles saving, retrieving, and managing run history in localStorage.
  */
 
-const LEADERBOARD_KEY = "crit2048_leaderboard";
+const LEADERBOARD_KEY = 'crit2048_leaderboard';
 
 function saveRunToLeaderboard(runStats, playerClass, encounterIdx) {
   const leaderboard = getLeaderboard();
-  
+
   const entry = {
     id: Date.now(),
     date: new Date().toISOString(),
@@ -21,19 +21,19 @@ function saveRunToLeaderboard(runStats, playerClass, encounterIdx) {
     maxMultiplier: runStats.maxMultiplier,
     duration: runStats.endTime - runStats.startTime,
     seed: runStats.seedUsed,
-    reason: runStats.endReason
+    reason: runStats.endReason,
   };
-  
+
   leaderboard.push(entry);
-  
+
   // Sort by Ante (desc), then Max Damage (desc)
   leaderboard.sort((a, b) => b.ante - a.ante || b.maxDamage - a.maxDamage);
-  
+
   // Keep only top 50 runs?
   if (leaderboard.length > 50) {
     leaderboard.splice(50);
   }
-  
+
   localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(leaderboard));
 }
 
@@ -42,57 +42,60 @@ function getLeaderboard() {
   try {
     return data ? JSON.parse(data) : [];
   } catch (e) {
-    console.error("Failed to parse leaderboard", e);
+    console.error('Failed to parse leaderboard', e);
     return [];
   }
 }
 
 function removeLeaderboardEntry(id) {
   let leaderboard = getLeaderboard();
-  leaderboard = leaderboard.filter(entry => entry.id !== id);
+  leaderboard = leaderboard.filter((entry) => entry.id !== id);
   localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(leaderboard));
   renderLeaderboard();
   updateStartLeaderboardVisibility();
 }
 
 function clearLeaderboard() {
-  showConfirm("Are you sure you want to clear the entire leaderboard? This cannot be undone.", (confirmed) => {
-    if (confirmed) {
-      localStorage.removeItem(LEADERBOARD_KEY);
-      renderLeaderboard();
-      updateStartLeaderboardVisibility();
-    }
-  });
+  showConfirm(
+    'Are you sure you want to clear the entire leaderboard? This cannot be undone.',
+    (confirmed) => {
+      if (confirmed) {
+        localStorage.removeItem(LEADERBOARD_KEY);
+        renderLeaderboard();
+        updateStartLeaderboardVisibility();
+      }
+    },
+  );
 }
 
 function updateStartLeaderboardVisibility() {
-  if (state.gameState === "START" && el.btnStartLeaderboard) {
+  if (state.gameState === 'START' && el.btnStartLeaderboard) {
     if (getLeaderboard().length > 0) {
-      el.btnStartLeaderboard.classList.remove("hide");
+      el.btnStartLeaderboard.classList.remove('hide');
     } else {
-      el.btnStartLeaderboard.classList.add("hide");
+      el.btnStartLeaderboard.classList.add('hide');
     }
   }
 }
 
 async function shareLeaderboard() {
-  const area = document.getElementById("leaderboard-capture-area");
+  const area = document.getElementById('leaderboard-capture-area');
   if (!area) return;
-  
+
   try {
     const canvas = await html2canvas(area, {
-      backgroundColor: "#0f172a",
+      backgroundColor: '#0f172a',
       scale: 2,
       logging: false,
-      useCORS: true
+      useCORS: true,
     });
-    
+
     canvas.toBlob(async (blob) => {
       const file = new File([blob], `crit2048_leaderboard.png`, { type: 'image/png' });
-      
+
       const shareData = {
         title: 'Crit 2048 Leaderboard',
-        text: `Check out my progress in Crit 2048! Here is my Hall of Heroes.`
+        text: `Check out my progress in Crit 2048! Here is my Hall of Heroes.`,
       };
 
       if (window.Plugins && window.Plugins.isTauri) {
@@ -100,7 +103,7 @@ async function shareLeaderboard() {
         await window.Plugins.share({
           files: [new Uint8Array(await file.arrayBuffer())],
           title: shareData.title,
-          text: shareData.text
+          text: shareData.text,
         });
       } else if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
@@ -115,8 +118,8 @@ async function shareLeaderboard() {
       }
     });
   } catch (e) {
-    console.error("Screenshot failed", e);
-    alert("Failed to generate screenshot.", "Error", "❌");
+    console.error('Screenshot failed', e);
+    alert('Failed to generate screenshot.', 'Error', '❌');
   }
 }
 

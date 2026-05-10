@@ -6,7 +6,7 @@
 
 window.ViewTemplates = window.ViewTemplates || {};
 
-window.ViewTemplates["modal-leaderboard"] = `
+window.ViewTemplates['modal-leaderboard'] = `
 <div id="modal-leaderboard" class="hide fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm overflow-y-auto">
   <div id="leaderboard-capture-area" class="bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-2xl w-full shadow-2xl relative flex flex-col max-h-[90vh]">
     <!-- Decoration -->

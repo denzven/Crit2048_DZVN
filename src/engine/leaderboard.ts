@@ -1,6 +1,7 @@
 import type { RunStats } from '../types/game';
+import type { ClassDef } from '../types/pack';
 
-const LEADERBOARD_KEY = "crit2048_leaderboard";
+const LEADERBOARD_KEY = 'crit2048_leaderboard';
 
 export interface LeaderboardEntry {
   id: number;
@@ -19,9 +20,9 @@ export interface LeaderboardEntry {
 }
 
 export const LeaderboardLogic = {
-  saveRun(runStats: RunStats, playerClass: any, encounterIdx: number) {
+  saveRun(runStats: RunStats, playerClass: ClassDef | null, encounterIdx: number) {
     const leaderboard = this.getEntries();
-    
+
     const entry: LeaderboardEntry = {
       id: Date.now(),
       date: new Date().toISOString(),
@@ -35,16 +36,16 @@ export const LeaderboardLogic = {
       maxMultiplier: runStats.maxMultiplier,
       duration: runStats.endTime - runStats.startTime,
       seed: runStats.seedUsed,
-      reason: runStats.endReason
+      reason: runStats.endReason,
     };
-    
+
     leaderboard.push(entry);
     leaderboard.sort((a, b) => b.ante - a.ante || b.maxDamage - a.maxDamage);
-    
+
     if (leaderboard.length > 50) {
       leaderboard.splice(50);
     }
-    
+
     localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(leaderboard));
   },
 
@@ -53,12 +54,12 @@ export const LeaderboardLogic = {
     try {
       return data ? JSON.parse(data) : [];
     } catch (e) {
-      console.error("Failed to parse leaderboard", e);
+      console.error('Failed to parse leaderboard', e);
       return [];
     }
   },
 
   clear() {
     localStorage.removeItem(LEADERBOARD_KEY);
-  }
+  },
 };

@@ -1,5 +1,6 @@
-import React from 'react';
 import { clsx } from 'clsx';
+import React from 'react';
+
 import { ASSET_MAP } from '../engine/assets';
 
 interface EmojiProps {
@@ -10,12 +11,12 @@ interface EmojiProps {
   assetKey?: string; // e.g., 'Barbarian', 'Ancient Dragon'
 }
 
-export const Emoji: React.FC<EmojiProps> = ({ 
-  char, 
-  className, 
-  active = false, 
+export const Emoji: React.FC<EmojiProps> = ({
+  char,
+  className,
+  active = false,
   animateType = 'wiggle',
-  assetKey
+  assetKey,
 }) => {
   const [isHovered, setIsHovered] = React.useState(false);
   const [loadedSrc, setLoadedSrc] = React.useState<string | null>(null);
@@ -27,9 +28,9 @@ export const Emoji: React.FC<EmojiProps> = ({
 
   // Extract hex codepoint
   const codePoints = Array.from(targetChar)
-    .map(c => c.codePointAt(0)!.toString(16))
-    .filter(cp => cp !== 'fe0f');
-  
+    .map((c) => c.codePointAt(0)!.toString(16))
+    .filter((cp) => cp !== 'fe0f');
+
   const fullCP = codePoints.join('_');
   const simpleCP = codePoints[0];
 
@@ -54,7 +55,7 @@ export const Emoji: React.FC<EmojiProps> = ({
           await new Promise((resolve, reject) => {
             const img = new Image();
             img.src = url;
-            img.crossOrigin = "anonymous";
+            img.crossOrigin = 'anonymous';
             img.onload = resolve;
             img.onerror = reject;
           });
@@ -71,26 +72,28 @@ export const Emoji: React.FC<EmojiProps> = ({
 
   // Determine final display source
   // If active, use the successfully loaded animated src, or fall back to static
-  const displaySrc = (effectiveActive && loadedSrc) ? loadedSrc : localStatic;
-  
-  const animationClass = effectiveActive ? (
-    animateType === 'spin' ? 'animate-gear-spin' :
-    animateType === 'bounce' ? 'animate-bounce-subtle' :
-    'animate-soft-wiggle'
-  ) : '';
+  const displaySrc = effectiveActive && loadedSrc ? loadedSrc : localStatic;
+
+  const animationClass = effectiveActive
+    ? animateType === 'spin'
+      ? 'animate-gear-spin'
+      : animateType === 'bounce'
+        ? 'animate-bounce-subtle'
+        : 'animate-soft-wiggle'
+    : '';
 
   return (
-    <img 
+    <img
       src={displaySrc}
       alt={char}
       crossOrigin="anonymous"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={clsx(
-        "emoji inline-block align-middle transition-all duration-300", 
-        effectiveActive ? "scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" : "scale-100",
-        animationClass, 
-        className
+        'emoji inline-block align-middle transition-all duration-300',
+        effectiveActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'scale-100',
+        animationClass,
+        className,
       )}
       loading="lazy"
       onError={(e) => {

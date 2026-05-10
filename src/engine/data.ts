@@ -13,15 +13,21 @@ export const getENEMIES = () => Object.values(useRegistry.getState().monsters);
 export const getMASTER_ARTIFACTS = () => Object.values(useRegistry.getState().artifacts);
 
 // Compatibility Proxies (to avoid breaking existing imports)
-export const WEAPON_STATS: any = new Proxy({}, {
-  get: (_, prop) => useRegistry.getState().arsenal[prop as string]
-});
+export const WEAPON_STATS: Record<string, unknown> = new Proxy(
+  {},
+  {
+    get: (_, prop) => useRegistry.getState().arsenal[prop as string],
+  },
+);
 
-export const HAZARD_STATS: any = new Proxy({}, {
-  get: (_, prop) => useRegistry.getState().hazards[prop as string]
-});
+export const HAZARD_STATS: Record<string, unknown> = new Proxy(
+  {},
+  {
+    get: (_, prop) => useRegistry.getState().hazards[prop as string],
+  },
+);
 
-export const CLASSES: any[] = new Proxy([], {
+export const CLASSES: ClassDef[] = new Proxy([], {
   get: (_, prop) => {
     const list = Object.values(useRegistry.getState().heroes);
     if (prop === 'length') return list.length;
@@ -29,11 +35,11 @@ export const CLASSES: any[] = new Proxy([], {
     if (prop === 'filter') return list.filter.bind(list);
     if (prop === 'map') return list.map.bind(list);
     if (prop === 'forEach') return list.forEach.bind(list);
-    return (list as any)[prop];
-  }
+    return (list as Record<string | symbol, unknown>)[prop];
+  },
 });
 
-export const ENEMIES: any[] = new Proxy([], {
+export const ENEMIES: EnemyDef[] = new Proxy([], {
   get: (_, prop) => {
     const list = Object.values(useRegistry.getState().monsters);
     if (prop === 'length') return list.length;
@@ -41,11 +47,11 @@ export const ENEMIES: any[] = new Proxy([], {
     if (prop === 'filter') return list.filter.bind(list);
     if (prop === 'map') return list.map.bind(list);
     if (prop === 'forEach') return list.forEach.bind(list);
-    return (list as any)[prop];
-  }
+    return (list as Record<string | symbol, unknown>)[prop];
+  },
 });
 
-export const MASTER_ARTIFACTS: any[] = new Proxy([], {
+export const MASTER_ARTIFACTS: ArtifactDef[] = new Proxy([], {
   get: (_, prop) => {
     const list = Object.values(useRegistry.getState().artifacts);
     if (prop === 'length') return list.length;
@@ -53,8 +59,8 @@ export const MASTER_ARTIFACTS: any[] = new Proxy([], {
     if (prop === 'filter') return list.filter.bind(list);
     if (prop === 'map') return list.map.bind(list);
     if (prop === 'forEach') return list.forEach.bind(list);
-    return (list as any)[prop];
-  }
+    return (list as Record<string | symbol, unknown>)[prop];
+  },
 });
 
 export const getTileStats = (val: number) => {
@@ -63,9 +69,10 @@ export const getTileStats = (val: number) => {
     const stats = registry.arsenal[val.toString()] || registry.hazards[val.toString()];
     if (stats) return stats;
   }
-  
+
   // Fallbacks
-  if (val >= 2) return { name: "Weapon", icon: "⚔️", bg: "bg-slate-800", text: "text-white", dmg: 0 };
-  if (val < 0) return { name: "Hazard", icon: "⚠️", bg: "bg-rose-900", text: "text-white", dmg: 0 };
-  return { name: "", icon: "", bg: "bg-slate-800", text: "", dmg: 0 };
+  if (val >= 2)
+    return { name: 'Weapon', icon: '⚔️', bg: 'bg-slate-800', text: 'text-white', dmg: 0 };
+  if (val < 0) return { name: 'Hazard', icon: '⚠️', bg: 'bg-rose-900', text: 'text-white', dmg: 0 };
+  return { name: '', icon: '', bg: 'bg-slate-800', text: '', dmg: 0 };
 };

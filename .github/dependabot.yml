@@ -1,18 +1,18 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     groups:
       dependencies:
         patterns:
-          - "*" # Group all npm dependencies into one PR
-  - package-ecosystem: "github-actions"
-    directory: "/"
+          - '*' # Group all npm dependencies into one PR
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     groups:
       actions:
         patterns:
-          - "*" # Group all action updates into one PR
+          - '*' # Group all action updates into one PR
