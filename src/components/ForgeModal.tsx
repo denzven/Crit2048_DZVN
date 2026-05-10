@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import React, { useState } from 'react';
 
 import { useRegistry } from '../engine/registryHub';
@@ -31,10 +31,12 @@ const INITIAL_PACK: PackData = {
   },
 };
 
-const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void }> = ({
-  initialData,
-  onClose,
-}) => {
+interface ForgeProps {
+  initialData?: PackData | null;
+  onClose: () => void;
+}
+
+const ForgeModal: React.FC<ForgeProps> = ({ initialData, onClose }) => {
   const [step, setStep] = useState(1);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [pack, setPack] = useState<PackData>(initialData || INITIAL_PACK);
@@ -487,7 +489,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void 
                                       list[editingIndex] = {
                                         ...list[editingIndex],
                                         rarity: e.target.value,
-                                      };
+                                      } as any;
                                       updatePack({ artifacts: list });
                                     }}
                                   >
@@ -511,7 +513,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void 
                                       list[editingIndex] = {
                                         ...list[editingIndex],
                                         basePrice: parseInt(e.target.value),
-                                      };
+                                      } as any;
                                       updatePack({ artifacts: list });
                                     }}
                                   />
@@ -534,7 +536,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void 
                                       list[editingIndex] = {
                                         ...list[editingIndex],
                                         d20Mod: parseInt(e.target.value),
-                                      };
+                                      } as any;
                                       updatePack({ heroes: list });
                                     }}
                                   />
@@ -558,10 +560,10 @@ const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void 
                                           list[editingIndex] = {
                                             ...list[editingIndex],
                                             ability: {
-                                              ...list[editingIndex].ability,
+                                              ...((list[editingIndex] as any).ability || {}),
                                               name: e.target.value,
                                             },
-                                          };
+                                          } as any;
                                           updatePack({ heroes: list });
                                         }}
                                       />
@@ -581,10 +583,10 @@ const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void 
                                           list[editingIndex] = {
                                             ...list[editingIndex],
                                             ability: {
-                                              ...list[editingIndex].ability,
+                                              ...((list[editingIndex] as any).ability || {}),
                                               sides: parseInt(e.target.value),
                                             },
-                                          };
+                                          } as any;
                                           updatePack({ heroes: list });
                                         }}
                                       />
@@ -604,10 +606,10 @@ const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void 
                                           list[editingIndex] = {
                                             ...list[editingIndex],
                                             ability: {
-                                              ...list[editingIndex].ability,
+                                              ...((list[editingIndex] as any).ability || {}),
                                               maxUses: parseInt(e.target.value),
                                             },
-                                          };
+                                          } as any;
                                           updatePack({ heroes: list });
                                         }}
                                       />
@@ -627,10 +629,10 @@ const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void 
                                           list[editingIndex] = {
                                             ...list[editingIndex],
                                             ability: {
-                                              ...list[editingIndex].ability,
+                                              ...((list[editingIndex] as any).ability || {}),
                                               type: e.target.value,
                                             },
-                                          };
+                                          } as any;
                                           updatePack({ heroes: list });
                                         }}
                                       >
@@ -657,7 +659,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void 
                                     list[editingIndex] = {
                                       ...list[editingIndex],
                                       dmg: parseInt(e.target.value),
-                                    };
+                                    } as any;
                                     updatePack({ arsenal: list });
                                   }}
                                 />
@@ -678,7 +680,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void 
                                       list[editingIndex] = {
                                         ...list[editingIndex],
                                         mode: e.target.value as any,
-                                      };
+                                      } as any;
                                       updatePack({ monsters: list });
                                     }}
                                   >
@@ -708,7 +710,7 @@ const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void 
                                               effect === 'none'
                                                 ? undefined
                                                 : { effect, effectParam: 10 },
-                                          };
+                                          } as any;
                                           updatePack({ monsters: list });
                                         }}
                                       >
@@ -739,10 +741,11 @@ const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void 
                                             list[editingIndex] = {
                                               ...list[editingIndex],
                                               passiveAbility: {
-                                                ...list[editingIndex].passiveAbility,
+                                                ...((list[editingIndex] as any).passiveAbility ||
+                                                  {}),
                                                 effectParam: parseInt(e.target.value),
                                               },
-                                            };
+                                            } as any;
                                             updatePack({ monsters: list });
                                           }}
                                         />
@@ -771,7 +774,10 @@ const ForgeModal: React.FC<{ initialData?: PackData | null; onClose: () => void 
                                         try {
                                           const script = JSON.parse(e.target.value);
                                           const list = [...(pack.monsters || [])];
-                                          list[editingIndex] = { ...list[editingIndex], script };
+                                          list[editingIndex] = {
+                                            ...list[editingIndex],
+                                            script,
+                                          } as any;
                                           updatePack({ monsters: list });
                                         } catch (err) {}
                                       }}

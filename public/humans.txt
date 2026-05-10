@@ -10,7 +10,7 @@
   All the Modders forging new content
 
 /* SITE */
-  Last update: 2026-05-06
+  Last update: 2026-05-10
   Standards: HTML5, CSS3, ESNext
-  Components: React, Vite, TailwindCSS, Zustand, Three.js
+  Components: React, Vite, TailwindCSS, Zustand, Three.js, React Router
   Software: PWA, Service Workers, WebGL

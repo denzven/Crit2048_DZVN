@@ -1,6 +1,7 @@
 import { clsx } from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import BackgroundParticles from './components/BackgroundParticles';
@@ -32,6 +33,7 @@ import { useGameStore } from './engine/gameStore';
 import { Native } from './engine/native';
 import { PackEngine } from './engine/packEngine';
 import { useRegistry } from './engine/registryHub';
+import type { Tile } from './types/game';
 import type { PackData } from './types/pack';
 
 function App() {
@@ -60,16 +62,14 @@ function App() {
 
   const settingsVolume = settings.volume;
 
-  const [showSettings, setShowSettings] = React.useState(false);
-  const [showGrimoire, setShowGrimoire] = React.useState(false);
-  const [showForge, setShowForge] = React.useState(false);
   const [forgeData, setForgeData] = React.useState<PackData | null>(null);
-  const [showLeaderboard, setShowLeaderboard] = React.useState(false);
   const [showShare, setShowShare] = React.useState(false);
   const [showMobileInventory, setShowMobileInventory] = React.useState(false);
   const [showMobileLogs, setShowMobileLogs] = React.useState(false);
-  const [showHelp, setShowHelp] = React.useState(false);
-  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = React.useState<{
+    prompt: () => Promise<void>;
+    userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  } | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [lastBackPress, setLastBackPress] = React.useState(0);
   const [showExitToast, setShowExitToast] = React.useState(false);
@@ -77,7 +77,35 @@ function App() {
   const [isHUDHovered, setIsHUDHovered] = React.useState(false);
   const [isTitleHovered, setIsTitleHovered] = useState(false);
   const [showGodModeAuth, setShowGodModeAuth] = useState(false);
-  const holdTimer = useRef<any>(null);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Derived routing state (avoids cascading render warnings)
+  const showGrimoire = location.pathname.startsWith('/grimoire');
+  const showForge = location.pathname.startsWith('/forge');
+  const showLeaderboard = location.pathname.startsWith('/leaderboard');
+  const showHelp = location.pathname.startsWith('/help');
+  const showSettings = location.pathname.startsWith('/settings');
+
+  const handleStart = React.useCallback(() => {
+    Native.vibrate(50);
+    SFX.dungeonEnter();
+    setGameState('CLASS_SELECT');
+  }, [setGameState]);
+
+  const handleHoldStart = () => {
+    holdTimer.current = setTimeout(() => {
+      setShowGodModeAuth(true);
+    }, 3000);
+  };
+
+  const handleHoldEnd = () => {
+    if (holdTimer.current) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+  };
 
   // Secret Handshake: Console Activation
   useEffect(() => {
@@ -103,10 +131,10 @@ function App() {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r: ServiceWorkerRegistration | undefined) {
-      console.log('SW Registered: ', r);
+    onRegistered(_r: ServiceWorkerRegistration | undefined) {
+      // console.warn('SW Registered: ', _r);
     },
-    onRegisterError(error: any) {
+    onRegisterError(error: Error) {
       console.error('SW registration error', error);
     },
   });
@@ -120,7 +148,7 @@ function App() {
         () => setNeedRefresh(false),
       );
     }
-  }, [needRefresh]);
+  }, [needRefresh, setNeedRefresh, showConfirm, updateServiceWorker]);
 
   // Sync Audio Volume & Start on Interaction
   useEffect(() => {
@@ -155,12 +183,13 @@ function App() {
 
   const isRegistryReady = useRegistry((state) => state.isReady);
 
+  const isDevMode = useGameStore((s) => s.isDevMode);
   useEffect(() => {
-    if (useGameStore.getState().isDevMode) {
-      (window as any).G_STORE = useGameStore.getState();
-      (window as any).G_REGISTRY = useRegistry.getState();
+    if (isDevMode) {
+      (window as unknown as { G_STORE: unknown }).G_STORE = useGameStore.getState();
+      (window as unknown as { G_REGISTRY: unknown }).G_REGISTRY = useRegistry.getState();
     }
-  }, [useGameStore.getState().isDevMode]);
+  }, [isDevMode]);
 
   useEffect(() => {
     useGameStore.getState().initializeRegistry();
@@ -168,7 +197,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const handler = (e: any) => {
+    const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
@@ -199,9 +228,9 @@ function App() {
       if (gameState === 'PLAYING') {
         if (e.key.toLowerCase() === 'c') castSpell();
       }
-      if (e.key.toLowerCase() === 's') setShowSettings((prev) => !prev);
-      if (e.key.toLowerCase() === 'g') setShowGrimoire((prev) => !prev);
-      if (e.key.toLowerCase() === 'f') setShowForge((prev) => !prev);
+      if (e.key.toLowerCase() === 's') navigate('/settings');
+      if (e.key.toLowerCase() === 'g') navigate('/grimoire');
+      if (e.key.toLowerCase() === 'f') navigate('/forge');
     };
 
     window.addEventListener('keydown', handleGlobalKeyDown);
@@ -209,7 +238,7 @@ function App() {
       Native.releaseWakeLock();
       window.removeEventListener('keydown', handleGlobalKeyDown);
     };
-  }, [gameState]);
+  }, [gameState, castSpell, handleStart, navigate]);
 
   useEffect(() => {
     // Intercept back button for PWAs/TWAs
@@ -232,8 +261,10 @@ function App() {
         if (now - lastBackPress < 2000) {
           // Double press -> Exit Modal
           showConfirm('Exit App?', 'Are you sure you want to exit Crit 2048?', () => {
-            if ((window as any).AndroidNative) {
-              (window as any).AndroidNative.exitApp();
+            if ((window as unknown as { AndroidNative?: { exitApp: () => void } }).AndroidNative) {
+              (
+                window as unknown as { AndroidNative: { exitApp: () => void } }
+              ).AndroidNative.exitApp();
             } else {
               window.close();
             }
@@ -249,7 +280,7 @@ function App() {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [gameState, lastBackPress]);
+  }, [gameState, lastBackPress, forfeitRun, showConfirm]);
 
   useEffect(() => {
     if (showForge) SFX.forgeEnter();
@@ -259,23 +290,8 @@ function App() {
     if (showGrimoire) SFX.grimoireEnter();
   }, [showGrimoire]);
 
-  const handleStart = () => {
-    Native.vibrate(50);
-    SFX.dungeonEnter();
-    setGameState('CLASS_SELECT');
-  };
-
-  const handleHoldStart = () => {
-    holdTimer.current = setTimeout(() => {
-      setShowGodModeAuth(true);
-    }, 3000);
-  };
-
-  const handleHoldEnd = () => {
-    if (holdTimer.current) {
-      clearTimeout(holdTimer.current);
-      holdTimer.current = null;
-    }
+  const closeModals = () => {
+    navigate('/');
   };
 
   return (
@@ -291,6 +307,12 @@ function App() {
       <AnimatePresence>
         {showGodModeAuth && <GodModeAuthModal onClose={() => setShowGodModeAuth(false)} />}
       </AnimatePresence>
+      <div className="hidden">
+        {/* Game Logs Container */}
+        {logs.map((log: string, i: number) => (
+          <div key={i}>{log}</div>
+        ))}
+      </div>
       {useGameStore.getState().settings.particles && <BackgroundParticles />}
       <BrowserWarning />
       {/* HEADER */}
@@ -405,8 +427,8 @@ function App() {
           {/* Grimoire and Forge: Only when NOT playing/rolling/etc. */}
           {(gameState === 'START' || gameState === 'CLASS_SELECT') && (
             <>
-              <button
-                onClick={() => setShowGrimoire(true)}
+              <Link
+                to="/grimoire"
                 className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95 group"
                 title="Grimoire"
               >
@@ -417,12 +439,10 @@ function App() {
                   animateType="bounce"
                   className="w-6 h-6 md:w-8 md:h-8 group-hover:animate-bounce-subtle"
                 />
-              </button>
-              <button
-                onClick={() => {
-                  setForgeData(null);
-                  setShowForge(true);
-                }}
+              </Link>
+              <Link
+                to="/forge"
+                onClick={() => setForgeData(null)}
                 className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95 group"
                 title="Forge"
               >
@@ -433,12 +453,12 @@ function App() {
                   animateType="bounce"
                   className="w-6 h-6 md:w-8 md:h-8 group-hover:animate-bounce-subtle"
                 />
-              </button>
+              </Link>
             </>
           )}
 
-          <button
-            onClick={() => setShowHelp(true)}
+          <Link
+            to="/help"
             className="text-slate-400 hover:text-white transition-colors text-xl md:text-2xl active:scale-95 group"
             title="Help"
           >
@@ -448,10 +468,10 @@ function App() {
               animateType="bounce"
               className="w-6 h-6 md:w-8 md:h-8 group-hover:animate-bounce-subtle"
             />
-          </button>
+          </Link>
 
-          <button
-            onClick={() => setShowSettings(true)}
+          <Link
+            to="/settings"
             className="text-slate-400 hover:text-white transition-colors text-xl active:scale-95 group"
             title="Settings"
           >
@@ -461,7 +481,7 @@ function App() {
               animateType="spin"
               className="w-6 h-6 md:w-8 md:h-8 group-hover:animate-gear-spin"
             />
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -522,7 +542,7 @@ function App() {
                 transition={{ duration: 1, delay: 0.6 }}
                 onClick={() => {
                   Native.vibrate(20);
-                  setShowHelp(true);
+                  navigate('/help');
                 }}
                 className="flex-grow flex flex-col items-center justify-center relative w-full py-12 cursor-help md:hidden group"
               >
@@ -647,12 +667,12 @@ function App() {
                   </button>
                 )}
 
-                <button
-                  onClick={() => setShowLeaderboard(true)}
-                  className="w-full py-2 text-slate-500 hover:text-slate-300 transition-colors text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] mt-1"
+                <Link
+                  to="/leaderboard"
+                  className="w-full py-2 text-slate-500 hover:text-slate-300 transition-colors text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] mt-1 text-center"
                 >
                   🏆 Hall of Heroes
-                </button>
+                </Link>
               </div>
             </motion.div>
           )}
@@ -790,31 +810,38 @@ function App() {
                     {artifacts.length === 0 ? (
                       <div className="text-[10px] text-slate-600 italic">No artifacts yet...</div>
                     ) : (
-                      artifacts.map((art: any, idx: number) => (
-                        <div
-                          key={idx}
-                          className="bg-slate-900 border border-slate-800 p-2 rounded-xl flex items-center gap-3"
-                        >
-                          <span className="text-xl">{art.icon}</span>
-                          <div className="min-w-0">
-                            <p className="text-[10px] font-black text-white truncate uppercase">
-                              {art.name}
-                            </p>
-                            <p className="text-[8px] text-slate-500 font-mono">LVL {art.level}</p>
-                            <p className="text-[7px] text-slate-400 italic line-clamp-2 mt-0.5 leading-tight">
-                              {PackEngine.formatDesc(
-                                useGameStore
-                                  .getState()
-                                  .activeArtifacts.find((a: any) => a.id === art.id)?.desc || '',
-                                useGameStore
-                                  .getState()
-                                  .activeArtifacts.find((a: any) => a.id === art.id),
-                                art.level,
-                              )}
-                            </p>
+                      artifacts.map(
+                        (
+                          art: { icon: string; name: string; level: number; id: string },
+                          idx: number,
+                        ) => (
+                          <div
+                            key={idx}
+                            className="bg-slate-900 border border-slate-800 p-2 rounded-xl flex items-center gap-3"
+                          >
+                            <span className="text-xl">{art.icon}</span>
+                            <div className="min-w-0">
+                              <p className="text-[10px] font-black text-white truncate uppercase">
+                                {art.name}
+                              </p>
+                              <p className="text-[8px] text-slate-500 font-mono">LVL {art.level}</p>
+                              <p className="text-[7px] text-slate-400 italic line-clamp-2 mt-0.5 leading-tight">
+                                {PackEngine.formatDesc(
+                                  useGameStore
+                                    .getState()
+                                    .activeArtifacts.find(
+                                      (a: { id: string; desc?: string }) => a.id === art.id,
+                                    )?.desc || '',
+                                  useGameStore
+                                    .getState()
+                                    .activeArtifacts.find((a: { id: string }) => a.id === art.id),
+                                  art.level,
+                                )}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))
+                        ),
+                      )
                     )}
                   </div>
                 </div>
@@ -928,7 +955,7 @@ function App() {
                   </motion.div>
 
                   <div className="bg-slate-900 border border-slate-700 rounded-2xl p-2 text-[10px] text-slate-400 font-mono flex-1 overflow-y-auto custom-scrollbar flex flex-col-reverse">
-                    {logs.map((log, i) => (
+                    {logs.map((log: string, i: number) => (
                       <div key={i} className="py-0.5 border-b border-slate-800/50">
                         {log}
                       </div>
@@ -989,55 +1016,41 @@ function App() {
           {gameState === 'SPELL' && <SpellModal />}
         </AnimatePresence>
 
+        {/* MODALS */}
         <AnimatePresence>
-          {showSettings && <SettingsModal key="settings" onClose={() => setShowSettings(false)} />}
-
+          {showSettings && <SettingsModal onClose={closeModals} />}
           {showGrimoire && (
             <GrimoireModal
-              key="grimoire"
-              onClose={() => setShowGrimoire(false)}
-              onEditPack={(data: PackData) => {
-                setForgeData(data);
-                setShowGrimoire(false);
-                setShowForge(true);
+              onClose={closeModals}
+              onEditPack={(p) => {
+                setForgeData(p);
+                navigate('/forge');
               }}
             />
           )}
-
           {showForge && (
             <ForgeModal
-              key="forge"
               initialData={forgeData}
               onClose={() => {
-                setShowForge(false);
                 setForgeData(null);
+                closeModals();
               }}
             />
           )}
-
-          {showHelp && <HelpModal key="help" onClose={() => setShowHelp(false)} />}
-
-          {showLeaderboard && (
-            <LeaderboardModal key="leaderboard" onClose={() => setShowLeaderboard(false)} />
-          )}
-
-          {showShare && <ShareModal key="share" onClose={() => setShowShare(false)} />}
-
-          {showIOSInstall && <IOSInstallModal key="ios" onClose={() => setShowIOSInstall(false)} />}
-
+          {showLeaderboard && <LeaderboardModal onClose={closeModals} />}
+          {showHelp && <HelpModal onClose={closeModals} />}
+          {showShare && <ShareModal onClose={() => setShowShare(false)} />}
+          {showIOSInstall && <IOSInstallModal onClose={() => setShowIOSInstall(false)} />}
           {showMobileInventory && (
-            <MobileInventoryModal key="inventory" onClose={() => setShowMobileInventory(false)} />
+            <MobileInventoryModal onClose={() => setShowMobileInventory(false)} />
           )}
-
-          {showMobileLogs && (
-            <MobileLogsModal key="logs" onClose={() => setShowMobileLogs(false)} />
-          )}
+          {showMobileLogs && <MobileLogsModal onClose={() => setShowMobileLogs(false)} />}
         </AnimatePresence>
         <ConfirmationModal />
 
         {(gameState === 'GAME_OVER' || gameState === 'VICTORY') && (
           <RunStatsModal
-            onShowLeaderboard={() => setShowLeaderboard(true)}
+            onShowLeaderboard={() => navigate('/leaderboard')}
             onShowShare={() => setShowShare(true)}
           />
         )}

@@ -1,14 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html>
+  <head>
+    <meta charset="utf-8">
     <title>Lost in the Dungeon — 404</title>
+    <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // https://github.com/rafgraph/spa-github-pages
+      // This script takes the current url and converts the path and query
+      // string into just a query string, and then redirects the browser
+      // to the new url with only a query string and hash fragment,
+      // e.g. http://www.foo.tld/one/two?a=b#c becomes http://www.foo.tld/?p=/one/two&q=a=b#c
+      // Note: this script stands alone and should be placed high up in the head
+      // of 404.html
+      var pathSegmentsToKeep = 1; // Change to 1 if using a project page (e.g. denzven.github.io/Crit2048-DZVN/)
+
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?p=/' +
+        l.pathname.split('/').slice(1 + pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
     <style>
         body {
             background-color: #020617;
             color: #f43f5e;
-            font-family: 'Cinzel', serif;
+            font-family: serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -16,42 +35,19 @@
             height: 100vh;
             margin: 0;
             text-align: center;
-            overflow: hidden;
         }
         .icon { font-size: 5rem; margin-bottom: 1rem; animation: float 3s infinite ease-in-out; }
         h1 { font-size: 3rem; margin: 0; text-transform: uppercase; letter-spacing: 0.2em; }
         p { color: #94a3b8; font-family: sans-serif; margin: 1rem 0 2rem 0; }
-        .btn {
-            background: #f43f5e;
-            color: white;
-            padding: 1rem 2rem;
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            transition: all 0.3s;
-            border: 2px solid #fb7185;
-        }
-        .btn:hover { background: #e11d48; transform: scale(1.05); box-shadow: 0 0 20px rgba(244, 63, 94, 0.5); }
         @keyframes float {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-20px); }
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <script>
-        // Auto-redirect after 5 seconds
-        setTimeout(() => {
-            window.location.href = "/Crit2048-DZVN/";
-        }, 5000);
-    </script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="icon">💀</div>
     <h1>404: Lost in the Void</h1>
-    <p>You have wandered too deep into the uncharted corridors. The darkness consumes this path.</p>
-    <a href="/Crit2048-DZVN/" class="btn">Return to Camp</a>
-    <p style="font-size: 0.7rem; opacity: 0.5; margin-top: 2rem;">Teleporting back in 5 seconds...</p>
-</body>
+    <p>Teleporting back to the dungeon entrance...</p>
+  </body>
 </html>
