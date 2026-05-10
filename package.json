@@ -12,6 +12,7 @@
     "desktop:build": "electron-builder",
     "android:init": "npx @bubblewrap/cli init --manifest dist/manifest.webmanifest",
     "android:build": "npx @bubblewrap/cli build",
+    "webview:build": "vite build --base ./",
     "format": "prettier --write .",
     "test": "jest",
     "test:watch": "jest --watch",

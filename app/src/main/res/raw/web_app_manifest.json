@@ -1,0 +1,51 @@
+{
+  "name": "Crit2048 - a D&D inspired 2048 roguelike dungeon-crawler",
+  "short_name": "Crit2048",
+  "description": "D&D inspired 2048 roguelike dungeon-crawler with deep modding support",
+  "start_url": "/Crit2048-DZVN/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "lang": "en",
+  "scope": "./",
+  "orientation": "portrait",
+  "categories": ["games", "puzzle", "education", "strategy"],
+  "screenshots": [
+    {
+      "src": "screenshot_main.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Crit 2048 Main Menu"
+    },
+    {
+      "src": "screenshot_gameplay.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Crit 2048 Gameplay"
+    }
+  ],
+  "id": "./",
+  "icons": [
+    { "src": "pwa-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "pwa-512x512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "pwa-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start New Game",
+      "short_name": "New Game",
+      "description": "Begin a new run in the dungeon",
+      "url": "./?action=new_game",
+      "icons": [{ "src": "pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Open the Forge",
+      "short_name": "Forge",
+      "description": "Create and mod your own content",
+      "url": "./?action=forge",
+      "icons": [{ "src": "pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

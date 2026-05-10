@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/Crit2048-DZVN/', // Use relative paths for better compatibility (Electron + GitHub Pages)
+  base: process.env.VITE_BASE_PATH || '/Crit2048-DZVN/', // Use VITE_BASE_PATH=./ for Electron/Webview build
   plugins: [
     react(),
     tailwindcss(),

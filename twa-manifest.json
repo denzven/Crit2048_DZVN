@@ -21,7 +21,7 @@
     "alias": "crit2048"
   },
   "appVersionName": "1.0.0",
-  "appVersionCode": 2,
+  "appVersionCode": 3,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://denzven.github.io/Crit2048-DZVN/manifest.webmanifest",
