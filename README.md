@@ -10,45 +10,10 @@
 **Merge. Forge. Survive.**
 _A seeded roguelike dungeon crawler powered by 2048 mechanics and deep modding support._
 
-[**🕹️ ENTER THE DUNGEON**](https://denzven.github.io/Crit2048-DZVN/)
+[<img src="/src/assets/Crit2048 Banner.png">](https://denzven.github.io/Crit2048-DZVN/)
 
 </div>
 
----
-
-## ⚔️ The Core Loop
-
-Crit 2048 isn't just a puzzle; it's a battle of attrition.
-
-1. **Merge**: Swipe identical weapons to deal damage.
-2. **Spellcraft**: Cast d20-based spells to manipulate the grid.
-3. **Fate**: Every 5 moves, roll for initiative. High rolls grant buffs; low rolls spawn hazards.
-4. **Forge**: Use the 100% data-driven engine to build your own content.
-
----
-
-## 👹 The Encounters
-
-| Boss               | Tactics                                                                                                                                |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| **Goblin Scout**   | High health, but predictable. Use daggers to build early multiplier.                                                                   |
-| **Orc Brute**      | Spawns Hazards every 10 moves. Purify the grid before he overwhelms you.                                                               |
-| **Ancient Dragon** | **The Final Test.** Prioritize merging quickly. The Inferno burns your highest tile every 10 slides — never let a Holy Sword sit idle. |
-
----
-
-## 🛠️ Tech Stack
-
-| Technology         | Role                                     |
-| ------------------ | ---------------------------------------- |
-| **React 19**       | Modern, performant UI and state handling |
-| **Vite 8**         | Ultra-fast build and HMR                 |
-| **Tailwind CSS 4** | Next-gen utility-first styling           |
-| **Three.js**       | 3D d20 dice physics and rendering        |
-| **Zustand**        | Minimalist, robust game state management |
-| **Web Audio API**  | Procedural orchestral soundscapes        |
-
----
 
 ## 📱 Mobile & PWA
 
