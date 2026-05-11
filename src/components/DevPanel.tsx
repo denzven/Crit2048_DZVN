@@ -1,8 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useState } from 'react';
 
+import { SFX } from '../engine/audio';
 import { useGameStore } from '../engine/gameStore';
 import { useRegistry } from '../engine/registryHub';
+import { Recorder } from '../engine/screenRecorder';
 
 const FX_PRESETS = [
   'stomp',
@@ -48,6 +50,9 @@ const DevPanel: React.FC = () => {
   const [artSearch, setArtSearch] = useState('');
   const [debugScript, setDebugScript] = useState('');
   const [selectedFX, setSelectedFX] = useState('stomp');
+  const [customDmg, setCustomDmg] = useState(1000);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isVideoRecording, setIsVideoRecording] = useState(false);
   const allArtifacts = useRegistry((s) => s.artifacts);
 
   if (!isDevMode) return null;
@@ -163,6 +168,114 @@ const DevPanel: React.FC = () => {
                 color="bg-slate-800 border-slate-700"
               />
             </div>
+
+            {/* RECORDING CONTROLS */}
+            <section className="bg-slate-950 p-2 rounded-xl border border-slate-800">
+              <h4 className="text-[10px] font-bold text-emerald-400 uppercase mb-2 px-1 flex justify-between">
+                OST Recorder{' '}
+                {isRecording && <span className="animate-pulse text-rose-500">● REC</span>}
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    SFX.startRecording();
+                    setIsRecording(true);
+                  }}
+                  disabled={isRecording}
+                  className={`py-1.5 text-[10px] font-bold rounded-lg transition-all uppercase ${
+                    isRecording
+                      ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                  }`}
+                >
+                  Start Record
+                </button>
+                <button
+                  onClick={() => {
+                    SFX.stopRecording();
+                    setIsRecording(false);
+                  }}
+                  disabled={!isRecording}
+                  className={`py-1.5 text-[10px] font-bold rounded-lg transition-all uppercase ${
+                    !isRecording
+                      ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      : 'bg-rose-600 hover:bg-rose-500 text-white'
+                  }`}
+                >
+                  Stop & DL
+                </button>
+              </div>
+            </section>
+
+            {/* CLIP MAKER CONTROLS */}
+            <section className="bg-slate-950 p-2 rounded-xl border border-slate-800">
+              <h4 className="text-[10px] font-bold text-indigo-400 uppercase mb-2 px-1 flex justify-between">
+                Clip Maker{' '}
+                {isVideoRecording && <span className="animate-pulse text-rose-500">● LIVE</span>}
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={async () => {
+                    const success = await Recorder.start();
+                    if (success) setIsVideoRecording(true);
+                  }}
+                  disabled={isVideoRecording}
+                  className={`py-1.5 text-[10px] font-bold rounded-lg transition-all uppercase ${
+                    isVideoRecording
+                      ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                  }`}
+                >
+                  Start Clip
+                </button>
+                <button
+                  onClick={() => {
+                    Recorder.stop();
+                    setIsVideoRecording(false);
+                  }}
+                  disabled={!isVideoRecording}
+                  className={`py-1.5 text-[10px] font-bold rounded-lg transition-all uppercase ${
+                    !isVideoRecording
+                      ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      : 'bg-rose-600 hover:bg-rose-500 text-white'
+                  }`}
+                >
+                  Save Clip
+                </button>
+              </div>
+            </section>
+
+            {/* CUSTOM DAMAGE SLIDER */}
+            <section className="bg-slate-950 p-2 rounded-xl border border-slate-800">
+              <h4 className="text-[10px] font-bold text-rose-400 uppercase mb-2 px-1">
+                Custom Damage
+              </h4>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min="0"
+                    max="10000"
+                    step="100"
+                    value={customDmg}
+                    onChange={(e) => setCustomDmg(parseInt(e.target.value))}
+                    className="flex-1 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                  />
+                  <span className="text-[10px] font-bold text-rose-400 w-12 text-right">
+                    {customDmg}
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    setMonsterHp(Math.max(0, monsterHp - customDmg));
+                    triggerFX('smite', { x: 50, y: 50 });
+                  }}
+                  className="w-full py-1.5 bg-rose-600/80 hover:bg-rose-500 text-white text-[10px] font-bold rounded-lg transition-all uppercase tracking-widest"
+                >
+                  Apply {customDmg} Damage
+                </button>
+              </div>
+            </section>
 
             {/* D20 & MULTIPLIER */}
             <section className="bg-slate-950 p-2 rounded-xl border border-slate-800">

@@ -58,9 +58,10 @@ function App() {
     hasSave,
     loadGame,
     toggleDevMode,
+    activeEncounters,
   } = useGameStore();
 
-  const settingsVolume = settings.volume;
+  const settingsVolume = settings.musicVolume;
 
   const [forgeData, setForgeData] = React.useState<PackData | null>(null);
   const [showShare, setShowShare] = React.useState(false);
@@ -160,15 +161,31 @@ function App() {
     window.addEventListener('click', startAudio, { once: true });
     window.addEventListener('keydown', startAudio, { once: true });
 
-    SFX.setVolume(settingsVolume);
-    SFX.setMusicMode(gameState, encounterIdx);
+    SFX.setMusicVolume(settings.musicVolume);
+    SFX.setSfxVolume(settings.sfxVolume);
+    SFX.setMusicMode(
+      gameState,
+      encounterIdx,
+      activeEncounters?.length || 1,
+      monsterHp,
+      monsterMaxHp,
+    );
     SFX.updateTension(multiplier);
 
     return () => {
       window.removeEventListener('click', startAudio);
       window.removeEventListener('keydown', startAudio);
     };
-  }, [settingsVolume, gameState, encounterIdx, multiplier]);
+  }, [
+    settings.musicVolume,
+    settings.sfxVolume,
+    gameState,
+    encounterIdx,
+    activeEncounters?.length,
+    monsterHp,
+    monsterMaxHp,
+    multiplier,
+  ]);
 
   useEffect(() => {
     const handleButtonClick = (e: MouseEvent) => {

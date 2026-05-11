@@ -214,6 +214,10 @@ const ThreeDice: React.FC<ThreeDiceProps> = ({ sides, results, onComplete }) => 
     let frames = 0;
     let ending = false;
     let endFrame = 0;
+    const _v1 = new THREE.Vector3();
+    const _v2 = new THREE.Vector3();
+    const _normal = new THREE.Vector3();
+
     const animate = () => {
       if (!active) return;
       requestAnimationFrame(animate);
@@ -226,19 +230,17 @@ const ThreeDice: React.FC<ThreeDiceProps> = ({ sides, results, onComplete }) => 
             const d2 = diceObjects[j];
             const dist = d1.position.distanceTo(d2.position);
             if (dist < 2.0) {
-              const normal = new THREE.Vector3().subVectors(d1.position, d2.position).normalize();
+              _normal.subVectors(d1.position, d2.position).normalize();
               const overlap = 2.0 - dist;
-              const correction = normal.clone().multiplyScalar(overlap / 2);
-              d1.position.add(correction);
-              d2.position.sub(correction);
-              const relativeVelocity = new THREE.Vector3().subVectors(
-                d1.userData.vel,
-                d2.userData.vel,
-              );
-              const velocityAlongNormal = relativeVelocity.dot(normal);
+              _v1.copy(_normal).multiplyScalar(overlap / 2);
+              d1.position.add(_v1);
+              d2.position.sub(_v1);
+
+              _v2.subVectors(d1.userData.vel, d2.userData.vel);
+              const velocityAlongNormal = _v2.dot(_normal);
               if (velocityAlongNormal < 0) {
                 const jVal = -1.2 * velocityAlongNormal;
-                const impulse = normal.multiplyScalar(jVal / 2);
+                const impulse = _normal.multiplyScalar(jVal / 2);
                 d1.userData.vel.add(impulse);
                 d2.userData.vel.sub(impulse);
                 d1.userData.avel.addScalar((Math.random() - 0.5) * 0.5);

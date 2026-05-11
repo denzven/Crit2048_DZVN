@@ -74,7 +74,8 @@ export interface Settings {
   screenshake: boolean;
   shakeIntensity: number;
   particles: boolean;
-  volume: number;
+  sfxVolume: number;
+  musicVolume: number;
   uiScale: number;
   fontScale: number;
   movesPerRoll: number;

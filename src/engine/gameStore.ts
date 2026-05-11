@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 
-import type { GameState, GameStoreState, RunStats, Tile } from '../types/game';
+import type {
+  ExtendedGameStoreState,
+  GameState,
+  GameStoreState,
+  RunStats,
+  Tile,
+} from '../types/game';
 import { SFX } from './audio';
 import { CombatLogic } from './combat';
 import { LeaderboardLogic } from './leaderboard';
@@ -62,7 +68,8 @@ const INITIAL_STATE: GameStoreState = {
     screenshake: true,
     shakeIntensity: 1.0,
     particles: true,
-    volume: 1.0,
+    sfxVolume: 1.0,
+    musicVolume: 0.8,
     uiScale: 1.0,
     fontScale: 1.0,
     movesPerRoll: 5,
@@ -129,7 +136,7 @@ export interface GameActions {
   executeDebugScript: (code: string) => void;
 }
 
-export const useGameStore = create<any & GameActions>((set, get) => ({
+export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, get) => ({
   ...INITIAL_STATE,
   shopItems: [],
   slidesSinceRoll: 0,
@@ -855,7 +862,7 @@ export const useGameStore = create<any & GameActions>((set, get) => ({
     set({ d20Override: null });
 
     // Call PackEngine to get modifiers
-    const { val: finalRollVal, trace } = PackEngine.onD20(get(), rawRoll);
+    const { val: finalRollVal, trace } = PackEngine.onD20(get(), rawRoll as number);
 
     let mod = playerClass?.d20Mod || 0;
     if (typeof mod !== 'number' || isNaN(mod)) mod = 0;

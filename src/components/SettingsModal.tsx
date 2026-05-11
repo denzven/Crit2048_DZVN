@@ -12,9 +12,14 @@ interface SettingsModalProps {
 const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   const { settings, updateSettings, addLog, showConfirm } = useGameStore();
 
-  const handleVolumeChange = (val: number) => {
-    updateSettings({ volume: val });
-    SFX.setVolume(val);
+  const handleSfxVolumeChange = (val: number) => {
+    updateSettings({ sfxVolume: val });
+    SFX.setSfxVolume(val);
+  };
+
+  const handleMusicVolumeChange = (val: number) => {
+    updateSettings({ musicVolume: val });
+    SFX.setMusicVolume(val);
   };
 
   const resetToFactory = () => {
@@ -28,7 +33,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           screenshake: true,
           shakeIntensity: 1.0,
           particles: true,
-          volume: 1.0,
+          sfxVolume: 1.0,
+          musicVolume: 0.8,
           uiScale: 1.0,
           fontScale: 1.0,
           movesPerRoll: 5,
@@ -36,7 +42,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           diceTheme: 'default' as const,
         };
         updateSettings(defaults);
-        SFX.setVolume(1.0);
+        SFX.setSfxVolume(1.0);
+        SFX.setMusicVolume(0.8);
         addLog('Settings: Factory defaults restored.');
         onClose();
       },
@@ -214,16 +221,31 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
             <div className="space-y-4">
               <div>
                 <label className="flex justify-between text-slate-400 text-[10px] mb-2 font-bold uppercase tracking-wider">
-                  SFX Volume{' '}
-                  <span className="text-white">{Math.round(settings.volume * 100)}%</span>
+                  Theme Music{' '}
+                  <span className="text-white">{Math.round(settings.musicVolume * 100)}%</span>
                 </label>
                 <input
                   type="range"
                   min="0"
                   max="1"
                   step="0.05"
-                  value={settings.volume}
-                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                  value={settings.musicVolume}
+                  onChange={(e) => handleMusicVolumeChange(parseFloat(e.target.value))}
+                  className="w-full accent-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="flex justify-between text-slate-400 text-[10px] mb-2 font-bold uppercase tracking-wider">
+                  SFX Volume{' '}
+                  <span className="text-white">{Math.round(settings.sfxVolume * 100)}%</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={settings.sfxVolume}
+                  onChange={(e) => handleSfxVolumeChange(parseFloat(e.target.value))}
                   className="w-full accent-rose-500"
                 />
               </div>

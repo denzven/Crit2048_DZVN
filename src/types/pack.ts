@@ -47,6 +47,14 @@ export interface EnemyDef {
   lore?: string;
 }
 
+export interface AbilityDef {
+  name: string;
+  type: 'damage' | 'heal' | 'utility';
+  count: number;
+  sides: number;
+  maxUses: number;
+}
+
 export interface ClassDef {
   id: string;
   parent?: string | string[];
@@ -58,7 +66,7 @@ export interface ClassDef {
   passiveEffect?: string;
   passiveParam?: unknown;
   scripts?: Record<string, string>;
-  ability?: unknown;
+  ability?: AbilityDef;
   passiveTriggers?: Record<string, any>;
   mode?: 'simple' | 'advanced' | 'builtin';
 }
