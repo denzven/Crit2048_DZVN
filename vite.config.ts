@@ -31,18 +31,11 @@ export default defineConfig({
         categories: ['games', 'puzzle', 'education', 'strategy'],
         screenshots: [
           {
-            src: 'screenshot_main.png',
-            sizes: '1080x1920',
+            src: 'banner.png',
+            sizes: '1920x1080',
             type: 'image/png',
-            form_factor: 'narrow',
-            label: 'Crit 2048 Main Menu',
-          },
-          {
-            src: 'screenshot_gameplay.png',
-            sizes: '1080x1920',
-            type: 'image/png',
-            form_factor: 'narrow',
-            label: 'Crit 2048 Gameplay',
+            form_factor: 'wide',
+            label: 'Crit 2048 Banner',
           },
         ],
         start_url: './',
