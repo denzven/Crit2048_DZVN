@@ -80,7 +80,7 @@ export interface Settings {
   fontScale: number;
   movesPerRoll: number;
   startingGold: number;
-  diceTheme: 'default' | 'blood' | 'bone' | 'neon';
+  diceTheme: 'default' | 'blood' | 'bone' | 'neon' | 'wood' | 'stone';
   customSeed?: string;
 }
 

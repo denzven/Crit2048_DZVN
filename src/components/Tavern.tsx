@@ -395,7 +395,7 @@ const Tavern: React.FC = () => {
                         {item.name}
                       </h3>
                       <p className="text-[11px] text-slate-400/80 leading-relaxed mb-6 flex-grow font-medium">
-                        {PackEngine.formatDesc(item.desc, item, owned ? level + 1 : 1)}
+                        {PackEngine.formatDesc(item.desc, item as any, owned ? level + 1 : 1)}
                       </p>
 
                       <div className="flex flex-col gap-4 mt-auto">

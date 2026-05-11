@@ -849,9 +849,11 @@ function App() {
                                     .activeArtifacts.find(
                                       (a: { id: string; desc?: string }) => a.id === art.id,
                                     )?.desc || '',
-                                  useGameStore
+                                  (useGameStore
                                     .getState()
-                                    .activeArtifacts.find((a: { id: string }) => a.id === art.id),
+                                    .activeArtifacts.find(
+                                      (a: { id: string }) => a.id === art.id,
+                                    ) as any) || {},
                                   art.level,
                                 )}
                               </p>

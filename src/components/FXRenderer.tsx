@@ -387,7 +387,7 @@ export const GridFXLayer: React.FC<{ activeFX: FXEntry[] }> = ({ activeFX }) => 
 // ─── Global FX Renderer (replaces ArtifactTriggerOverlay) ────────────────────
 
 const FXRenderer: React.FC = () => {
-  const activeFX = useGameStore((s) => s.activeFX);
+  const activeFX = useGameStore((s) => s.activeFX) as FXEntry[];
   const artifacts = useRegistry((s) => s.artifacts);
 
   // Only global/targeted FX (no x/y grid-local ones)
