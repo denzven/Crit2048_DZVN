@@ -22,7 +22,33 @@
   },
   "appVersionName": "1.0.0",
   "appVersionCode": 3,
-  "shortcuts": [],
+  "appCategory": "game",
+  "shortcuts": [
+    {
+      "name": "Resume Last Run",
+      "short_name": "Resume",
+      "url": "/Crit2048-DZVN/?action=resume",
+      "icon": "https://denzven.github.io/Crit2048-DZVN/pwa-192x192.png"
+    },
+    {
+      "name": "Start New Game",
+      "short_name": "New Game",
+      "url": "/Crit2048-DZVN/?action=new_game",
+      "icon": "https://denzven.github.io/Crit2048-DZVN/pwa-192x192.png"
+    },
+    {
+      "name": "Open the Forge",
+      "short_name": "Forge",
+      "url": "/Crit2048-DZVN/?action=forge",
+      "icon": "https://denzven.github.io/Crit2048-DZVN/pwa-192x192.png"
+    },
+    {
+      "name": "The Grimoire",
+      "short_name": "Grimoire",
+      "url": "/Crit2048-DZVN/?action=grimoire",
+      "icon": "https://denzven.github.io/Crit2048-DZVN/pwa-192x192.png"
+    }
+  ],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://denzven.github.io/Crit2048-DZVN/manifest.webmanifest",
   "fallbackType": "customtabs",

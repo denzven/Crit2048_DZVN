@@ -32,36 +32,6 @@
       }(window.location))
     </script>
 
-    <!-- Social Preview Logic for Challenges -->
-    <script type="text/javascript">
-      (function() {
-        var urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('c')) {
-          var banner = 'https://denzven.github.io/Crit2048-DZVN/challenge-banner.png';
-          var title = 'Crit2048 - You have been CHALLENGED!';
-          var desc = 'A rival has challenged you to a duel in the dungeon! Can you beat their score?';
-          
-          var metas = document.getElementsByTagName('meta');
-          for (var i = 0; i < metas.length; i++) {
-            var p = metas[i].getAttribute('property');
-            var n = metas[i].getAttribute('name');
-            
-            // Update Images
-            if (p === 'og:image' || p === 'twitter:image' || n === 'twitter:image') {
-              metas[i].setAttribute('content', banner);
-            }
-            // Update Titles
-            if (p === 'og:title' || p === 'twitter:title' || n === 'twitter:title') {
-              metas[i].setAttribute('content', title);
-            }
-            // Update Descriptions
-            if (p === 'og:description' || p === 'twitter:description' || n === 'twitter:description') {
-              metas[i].setAttribute('content', desc);
-            }
-          }
-        }
-      })();
-    </script>
 
     <!-- Language & Locale -->
     <meta http-equiv="content-language" content="en" />
@@ -118,6 +88,10 @@
     />
     <meta property="og:site_name" content="Crit2048" />
     <meta property="og:locale" content="en_US" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="Crit2048: The D&D Inspired Roguelike 2048" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
@@ -134,6 +108,12 @@
       property="twitter:image"
       content="https://denzven.github.io/Crit2048-DZVN/banner.png"
     />
+    <meta name="twitter:site" content="@denzven" />
+    <meta name="twitter:creator" content="@denzven" />
+    <meta name="twitter:label1" content="Category" />
+    <meta name="twitter:data1" content="Roguelike RPG" />
+    <meta name="twitter:label2" content="Engine" />
+    <meta name="twitter:data2" content="Crit2048 Core" />
 
     <!-- Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -238,6 +218,42 @@
       }
       gtag('js', new Date());
       gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    <!-- Social Preview Logic for Challenges (Moved to end of head for DOM availability) -->
+    <script type="text/javascript">
+      (function() {
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('c')) {
+          var banner = 'https://denzven.github.io/Crit2048-DZVN/challenge-banner.png';
+          var title = 'Crit2048 - You have been CHALLENGED!';
+          var desc = 'A rival has challenged you to a duel in the dungeon! Can you beat their score?';
+          var alt = 'Crit2048 Challenge: Can you beat this score?';
+          
+          document.title = title;
+
+          var updateMeta = function(attr, value, content) {
+            var el = document.querySelector('meta[' + attr + '="' + value + '"]');
+            if (el) {
+              el.setAttribute('content', content);
+            }
+          };
+
+          updateMeta('property', 'og:image', banner);
+          updateMeta('property', 'og:title', title);
+          updateMeta('property', 'og:description', desc);
+          updateMeta('property', 'og:url', window.location.href);
+          updateMeta('property', 'og:image:alt', alt);
+          updateMeta('property', 'twitter:image', banner);
+          updateMeta('property', 'twitter:title', title);
+          updateMeta('property', 'twitter:description', desc);
+          updateMeta('property', 'twitter:image:alt', alt);
+          updateMeta('name', 'twitter:image', banner);
+          updateMeta('name', 'twitter:title', title);
+          updateMeta('name', 'twitter:description', desc);
+          updateMeta('name', 'twitter:image:alt', alt);
+          updateMeta('name', 'description', desc);
+        }
+      })();
     </script>
   </head>
   <body class="bg-slate-950 text-slate-50 selection:bg-rose-500">

@@ -211,7 +211,25 @@ function App() {
   useEffect(() => {
     useGameStore.getState().initializeRegistry();
     useGameStore.getState().checkSave();
-  }, []);
+
+    // Handle PWA/TWA Shortcuts
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    if (action) {
+      setTimeout(() => {
+        const store = useGameStore.getState();
+        if (action === 'resume' && store.hasSave) {
+          store.resumeGame();
+        } else if (action === 'new_game') {
+          store.resetGame();
+        } else if (action === 'forge') {
+          navigate('/forge');
+        } else if (action === 'grimoire') {
+          navigate('/grimoire');
+        }
+      }, 800); // Wait for registry and preloader
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const handler = (e: Event) => {
