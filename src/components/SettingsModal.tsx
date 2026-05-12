@@ -51,7 +51,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="absolute inset-0 z-[160] flex items-center justify-center p-4">
+    <div className="absolute inset-0 z-[160] flex items-center justify-center p-2 md:p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -65,7 +65,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="bg-slate-900 border border-slate-700 rounded-3xl max-w-md md:max-w-xl w-full shadow-2xl flex flex-col max-h-[90vh] relative z-10 overflow-hidden"
+        className="bg-slate-900/95 border border-slate-700 rounded-2xl max-w-md md:max-w-xl w-full shadow-2xl flex flex-col h-full max-h-[95vh] relative z-10 overflow-hidden backdrop-blur-3xl"
       >
         <div className="p-6 border-b border-slate-800 shrink-0">
           <h2 className="text-2xl font-black tracking-widest text-white text-center uppercase font-serif">
