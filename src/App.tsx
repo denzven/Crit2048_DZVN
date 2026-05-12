@@ -219,7 +219,7 @@ function App() {
       setTimeout(() => {
         const store = useGameStore.getState();
         if (action === 'resume' && store.hasSave) {
-          store.resumeGame();
+          store.loadGame();
         } else if (action === 'new_game') {
           store.resetGame();
         } else if (action === 'forge') {
