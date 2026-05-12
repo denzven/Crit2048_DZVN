@@ -51,8 +51,8 @@ const RunStatsModal: React.FC<{ onShowLeaderboard: () => void; onShowShare: () =
     if (navigator.share) {
       navigator
         .share({
-          title: 'Crit 2048 Challenge!',
-          text: `I scored ${score} with the ${playerClass?.name}! Can you beat my run?`,
+          title: '⚔️ Crit 2048 CHALLENGE!',
+          text: `I just cleared Ante ${encounterIdx + 1} with a score of ${score} using the ${playerClass?.name}! Can you survive longer?`,
           url: url,
         })
         .catch(console.error);
@@ -89,7 +89,7 @@ const RunStatsModal: React.FC<{ onShowLeaderboard: () => void; onShowShare: () =
           : `🎮 I just finished an Ante ${encounterIdx + 1} run with ${score} points! Check it out: ${url}`;
 
     if (navigator.share) {
-      navigator.share({ title: 'Crit 2048 Result', text }).catch(console.error);
+      navigator.share({ title: 'Crit 2048 Result', text, url }).catch(console.error);
     } else {
       navigator.clipboard.writeText(text);
       showAlert(

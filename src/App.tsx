@@ -311,6 +311,22 @@ function App() {
     navigate('/');
   };
 
+  const isChallengeMode = useGameStore((s) => s.isChallengeMode);
+  const rivalData = useGameStore((s) => s.rivalData);
+  const triggerFX = useGameStore((s) => s.triggerFX);
+
+  // Trigger Challenge Accepted FX after Preloader
+  useEffect(() => {
+    if (!isLoading && isChallengeMode && rivalData) {
+      setTimeout(() => {
+        triggerFX('challenge_accepted', {
+          rivalName: rivalData.name,
+          rivalIcon: rivalData.icon,
+        });
+      }, 500); // Small delay for visual polish
+    }
+  }, [isLoading, isChallengeMode, rivalData, triggerFX]);
+
   return (
     <div className="bg-[var(--pack-bg)] text-slate-100 font-sans selection:bg-[var(--pack-primary)] flex flex-col h-dvh w-dvw overflow-hidden select-none safe-top safe-bottom">
       <AnimatePresence>

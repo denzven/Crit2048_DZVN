@@ -18,7 +18,7 @@ const ChallengeBanner: React.FC = () => {
       dragMomentum={false}
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="fixed top-14 left-1/2 -translate-x-1/2 z-[40] flex flex-col items-center pointer-events-none"
+      className="fixed top-14 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center pointer-events-none"
     >
       {/* THE BANNER (Draggable Handle) */}
       <div

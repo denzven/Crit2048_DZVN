@@ -308,6 +308,56 @@ const PoisonFX: React.FC<{ x: number; y: number }> = ({ x, y }) => (
   </div>
 );
 
+/** Challenge Accepted - Center screen splash */
+const ChallengeAcceptedFX: React.FC<{ rivalName?: string; rivalIcon?: string }> = ({
+  rivalName,
+  rivalIcon,
+}) => (
+  <motion.div
+    className="fixed inset-0 pointer-events-none z-[3000] flex flex-col items-center justify-center bg-slate-950/40 backdrop-blur-[2px]"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+  >
+    <motion.div
+      initial={{ scale: 0.5, opacity: 0, rotate: -10 }}
+      animate={{ scale: 1, opacity: 1, rotate: 0 }}
+      transition={{ type: 'spring', damping: 12, stiffness: 200 }}
+      className="bg-gradient-to-br from-amber-500 to-amber-700 p-1 rounded-[3rem] shadow-[0_0_50px_rgba(245,158,11,0.4)]"
+    >
+      <div className="bg-slate-900 px-10 py-8 rounded-[2.8rem] flex flex-col items-center border border-amber-400/30">
+        <div className="flex items-center gap-4 mb-4">
+          <span className="text-6xl animate-bounce">{rivalIcon || '👤'}</span>
+          <div className="h-12 w-px bg-amber-500/20" />
+          <span className="text-6xl">⚔️</span>
+        </div>
+        <h2 className="text-amber-500 font-black text-4xl uppercase tracking-tighter mb-1">
+          Challenge Accepted
+        </h2>
+        <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">
+          vs {rivalName || 'Unknown Rival'}
+        </p>
+      </div>
+    </motion.div>
+
+    {/* Explosive particles */}
+    {[...Array(12)].map((_, i) => (
+      <motion.div
+        key={i}
+        className="absolute w-2 h-2 bg-amber-400 rounded-full"
+        initial={{ x: 0, y: 0, opacity: 1 }}
+        animate={{
+          x: (Math.random() - 0.5) * 600,
+          y: (Math.random() - 0.5) * 600,
+          opacity: 0,
+          scale: 0,
+        }}
+        transition={{ duration: 1, ease: 'easeOut' }}
+      />
+    ))}
+  </motion.div>
+);
+
 // ─── Position Resolver ────────────────────────────────────────────────────────
 
 function resolveTargetPosition(params: any): { left: string; top: string; found: boolean } {
@@ -362,6 +412,14 @@ export const GridFXLayer: React.FC<{ activeFX: FXEntry[] }> = ({ activeFX }) => 
             return <HealFX key={fx.id} x={x} y={y} />;
           case 'poison':
             return <PoisonFX key={fx.id} x={x} y={y} />;
+          case 'challenge_accepted':
+            return (
+              <ChallengeAcceptedFX
+                key={fx.id}
+                rivalName={fx.params?.rivalName}
+                rivalIcon={fx.params?.rivalIcon}
+              />
+            );
           case 'stomp':
           default:
             // Legacy icon drop on grid
@@ -418,6 +476,17 @@ const FXRenderer: React.FC = () => {
           const { left, top } = resolveTargetPosition(fx.params);
           if (fx.name === 'float') return <FloatFX key={fx.id} left={left} top={top} icon={icon} />;
           if (fx.name === 'pop') return <PopFX key={fx.id} left={left} top={top} icon={icon} />;
+        }
+
+        // Challenge Specific
+        if (fx.name === 'challenge_accepted') {
+          return (
+            <ChallengeAcceptedFX
+              key={fx.id}
+              rivalName={fx.params?.rivalName}
+              rivalIcon={fx.params?.rivalIcon}
+            />
+          );
         }
 
         // Generic center screen — announce style
