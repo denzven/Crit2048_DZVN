@@ -14,6 +14,7 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: [
         'app_icon.png',
+        'challenge-banner.png',
         'pwa-192x192.png',
         'pwa-512x512.png',
         'sitemap.xml',
@@ -36,6 +37,13 @@ export default defineConfig({
             type: 'image/png',
             form_factor: 'wide',
             label: 'Crit 2048 Banner',
+          },
+          {
+            src: 'challenge-banner.png',
+            sizes: '1920x1080',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Crit 2048 Challenge Banner',
           },
         ],
         start_url: './',
