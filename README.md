@@ -27,32 +27,31 @@ Inspired by the **deck-building chaos of Balatro** and the **tactical depth of D
 
 ## 🗺️ Core Concept
 
-The 2048 grid is your **battlefield**. Tiles represent weapons — sliding two matching weapons together **merges** them into a more powerful weapon and deals **damage** to the boss. When the boss hits zero HP, you advance. If your slides run out first, the dungeon claims your soul.
+The 2048 grid is your **battlefield**. Tiles represent weapons - sliding two matching weapons together **merges** them into a more powerful weapon and deals **damage** to the boss. When the boss hits zero HP, you advance. If your slides run out first, the dungeon claims your soul.
 
 ```
-Dagger (2) + Dagger (2)   = Longsword  (4)    →  8 dmg
-Longsword  + Longsword    = Crossbow   (8)    →  20 dmg
-Crossbow   + Crossbow     = Battleaxe  (16)   →  50 dmg
-Battleaxe  + Battleaxe    = Magic Staff(32)   →  120 dmg
-Magic Staff + Magic Staff = Holy Sword (64)   →  300 dmg
-Holy Sword + Holy Sword   = Relic      (128+) →  val × 10 dmg
+Dagger (2) + Dagger (2)   = Longsword  (4)    ->  8 dmg
+Longsword  + Longsword    = Crossbow   (8)    ->  20 dmg
+Crossbow   + Crossbow     = Battleaxe  (16)   ->  50 dmg
+Battleaxe  + Battleaxe    = Magic Staff(32)   ->  120 dmg
+Magic Staff + Magic Staff = Holy Sword (64)   ->  300 dmg
+Holy Sword + Holy Sword   = Relic      (128+) ->  val x 10 dmg
 ```
 
-Every merge deals `weapon_base_dmg × your_multiplier` damage. The multiplier is the engine that makes everything scale — build it up, and a single merge can delete an Ancient Dragon.
+Every merge deals `weapon_base_dmg x your_multiplier` damage. The multiplier is the engine that makes everything scale - build it up, and a single merge can delete an Ancient Dragon.
 
 ---
 
 ## 🧪 Game Loop
 
 ```
-START → CLASS SELECT → ENCOUNTER (Ante 1–12) → TAVERN → → → FINAL BOSS (Ante 12) → VICTORY
-                                    ↑                     ↓
-                                [D20 Roll]           [Buy Artifacts]
-                                     ↑                     ↓
-                                [Spell Cast]          [Upgrade Spells]
+START -> CLASS SELECT -> ENCOUNTER (Ante 1-12) -> TAVERN -> -> -> FINAL BOSS (Ante 12) -> VICTORY
+                                 [D20 Roll]           [Buy Artifacts]
+                                      ^                     v
+                                 [Spell Cast]          [Upgrade Spells]
 ```
 
-![Gameplay Modals](/public/assets/screenshots/gameplay_modals.png)
+![Gameplay Modals](/src/assets/Dice Modals.png)
 
 1. **Choose your Class** - each class changes your modifiers, gold generation, and grants a unique spell.
 2. **Fight the Boss** - slide tiles on the grid to merge weapons and deal damage. You have a limited number of slides per boss (the "Ante").
@@ -65,7 +64,7 @@ START → CLASS SELECT → ENCOUNTER (Ante 1–12) → TAVERN → → → FINAL 
 
 ## ⚔️ Classes
 
-![Class Selection](/public/assets/screenshots/class_selection.png)
+![Class Selection](/src/assets/hero classes page.png)
 
 Each class is built around one D&D 5e archetype and plays distinctly differently:
 
@@ -73,20 +72,22 @@ Each class is built around one D&D 5e archetype and plays distinctly differently
 | ---- | ------------- | ------- | ---------------------------------------------------- | ------------------------------------------------------------------------------- |
 | 😡   | **Barbarian** | -1      | +10 damage to Dagger & Longsword merges (T1 & T2)    | **Rage** - Roll 1d12. Massive stomp damage.                                     |
 | 🥷   | **Rogue**     | +2      | +1 Gold per every merge                              | **Sneak Attack** - Roll 2d6. Precise lethal strike.                             |
-| 🧙‍♂️   | **Wizard**    | +1      | -                                                    | **Fireball** - Roll 1d6 × Mult. Burns a 2×2 tile zone.                          |
-| 👁️   | **Warlock**   | +1      | -                                                    | **Eldritch Blast** - Roll 1d10 × Mult. Clears an entire row of hazard tiles.    |
+| 🧙‍♂️   | **Wizard**    | +1      | -                                                    | **Fireball** - Roll 1d6 \* Mult. Burns a 2x2 tile zone.                         |
+| 👁️   | **Warlock**   | +1      | -                                                    | **Eldritch Blast** - Roll 1d10 \* Mult. Clears an entire row of hazard tiles.   |
 | ✨   | **Cleric**    | 0       | -                                                    | **Divine Aid** - Roll 1d8. Restores that many slides. Purifies one hazard tile. |
-| 🛡️   | **Paladin**   | 0       | -                                                    | **Divine Smite** - Roll 1d8 × your highest weapon tile. Enormous spike damage.  |
-| 🎵   | **Bard**      | +1      | +5 Gold generated on every D20 roll                  | **Vicious Mockery** - Roll 1d6 × Mult.                                          |
+| 🛡️   | **Paladin**   | 0       | -                                                    | **Divine Smite** - Roll 1d8 \* your highest weapon tile. Enormous spike damage. |
+| 🎵   | **Bard**      | +1      | +5 Gold generated on every D20 roll                  | **Vicious Mockery** - Roll 1d6 \* Mult.                                         |
 | 🌿   | **Druid**     | 0       | 20% chance to purify a hazard automatically on slide | **Entangle** - Roll 1d6. Destroys lowest active tile.                           |
 | ⚔️   | **Fighter**   | 0       | +15 damage to merges of Tier 3+ (Crossbow and above) | **Action Surge** - Grants massive base damage bonus.                            |
 | 👊   | **Monk**      | +1      | Alternating directions on slides builds Mult bonus   | **Flurry of Blows** - Roll 3d4. Fast and lethal.                                |
 | 🏹   | **Ranger**    | -1      | Deal +25% damage to bosses that spawn hazards        | **Hunter's Mark** - Next merge deals 2x damage.                                 |
-| 🔮   | **Sorcerer**  | +1      | D20 rolls of 19 act as Critical Hits                 | **Chaos Bolt** - Roll 1d12 × Mult.                                              |
+| 🔮   | **Sorcerer**  | +1      | D20 rolls of 19 act as Critical Hits                 | **Chaos Bolt** - Roll 1d12 \* Mult.                                             |
 
 ---
 
 ## 🐉 The Twelve Bosses (Antes)
+
+![Challenge Banner](/src/assets/Crit2048 Challenge Banner.png)
 
 | Ante | Boss                  | HP     | Slides | Special Power                                                          |
 | ---- | --------------------- | ------ | ------ | ---------------------------------------------------------------------- |
@@ -109,16 +110,12 @@ Each class is built around one D&D 5e archetype and plays distinctly differently
 
 The D20 is the heartbeat of **Crit 2048**'s roguelike identity. Every **5 slides**, the game pauses for a mandatory D20 roll - rendered as a fully animated **3D physics-based die** using Three.js.
 
-```
-┌───────────────────────────────────────────────────────────────┐
-│  Roll Result       │   Outcome                                  │
-├────────────────────┼────────────────────────────────────────────┤
-│  20+ (Nat 20)      │  CRITICAL HIT - Mult +1 & upgrade a tile   │
-│  10-19 (Success)   │  SUCCESS - A Crossbow tile spawns           │
-│  2-9 (Miss)        │  MISS - A Slime tiles spawns               │
-│  1 (Nat 1)         │  CRITICAL FAILURE - Your best weapon breaks │
-└────────────────────┴────────────────────────────────────────────┘
-```
+| Roll Result     | Outcome                                    |
+| --------------- | ------------------------------------------ |
+| 20+ (Nat 20)    | CRITICAL HIT - Mult +1 & upgrade a tile    |
+| 10-19 (Success) | SUCCESS - A Crossbow tile spawns           |
+| 2-9 (Miss)      | MISS - A Slime tiles spawns                |
+| 1 (Nat 1)       | CRITICAL FAILURE - Your best weapon breaks |
 
 Your **class modifier** applies to every roll:
 
@@ -160,7 +157,7 @@ A unique feature powered by **Google's Gemini AI**. Spend 50 gold in the Tavern 
 
 ## ⚒️ The Forge & Grimoire
 
-![Deep Systems](/public/assets/screenshots/deep_systems.png)
+![Deep Systems](/src/assets/Grimoire and Forge.png)
 
 Crit 2048 is 100% data-driven. The **Grimoire** tracks your discovered artifacts, while **The Forge** allows you to create and export your own content packs.
 
