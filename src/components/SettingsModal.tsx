@@ -12,6 +12,28 @@ interface SettingsModalProps {
 const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   const { settings, updateSettings, addLog, showConfirm } = useGameStore();
 
+  const [permissionStatus, setPermissionStatus] = React.useState<NotificationPermission>(
+    'Notification' in window ? Notification.permission : 'denied',
+  );
+
+  React.useEffect(() => {
+    if (!('Notification' in window)) return;
+    const interval = setInterval(() => {
+      if (Notification.permission !== permissionStatus) {
+        setPermissionStatus(Notification.permission);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [permissionStatus]);
+
+  const handleNotificationToggle = async (enabled: boolean) => {
+    updateSettings({ notifications: enabled });
+    if (enabled && 'Notification' in window && Notification.permission === 'default') {
+      const result = await Notification.requestPermission();
+      setPermissionStatus(result);
+    }
+  };
+
   const handleSfxVolumeChange = (val: number) => {
     updateSettings({ sfxVolume: val });
     SFX.setSfxVolume(val);
@@ -40,6 +62,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           movesPerRoll: 5,
           startingGold: 0,
           diceTheme: 'default' as const,
+          notifications: true,
         };
         updateSettings(defaults);
         SFX.setSfxVolume(1.0);
@@ -307,6 +330,67 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                   </div>
                 </>
               )}
+            </div>
+          </section>
+
+          {/* Notifications Section */}
+          <section className="pt-6 border-t border-slate-800">
+            <h3 className="text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+              Communication
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                    Push Notifications
+                  </label>
+                  <p className="text-[8px] text-slate-600 italic">
+                    Retention reminders & welcome back alerts.
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.notifications}
+                  onChange={(e) => handleNotificationToggle(e.target.checked)}
+                  className="w-5 h-5 accent-amber-500 bg-slate-950 border-slate-800 rounded cursor-pointer"
+                />
+              </div>
+
+              <button
+                disabled={!settings.notifications || permissionStatus !== 'granted'}
+                onClick={async () => {
+                  if (!settings.notifications) return;
+
+                  if (Notification.permission === 'denied') {
+                    showConfirm(
+                      'Notifications Blocked',
+                      "It looks like notifications are disabled in your browser's site settings. Please enable them to receive alerts.",
+                      () => {
+                        /* User acknowledged */
+                      },
+                    );
+                    return;
+                  }
+
+                  addLog('Settings: Sending test notification...');
+                  await Native.notify(
+                    'Crit 2048: Test',
+                    'Victory! The notification system is online and ready for your command.',
+                  );
+                }}
+                className={`w-full py-3 text-[10px] font-black uppercase rounded-xl border transition-all flex items-center justify-center gap-2 ${
+                  !settings.notifications || permissionStatus !== 'granted'
+                    ? 'bg-slate-900/50 text-slate-600 border-slate-800 cursor-not-allowed opacity-50'
+                    : 'bg-slate-800 text-amber-500 border-amber-500/30 hover:bg-slate-700'
+                }`}
+              >
+                <span>
+                  {permissionStatus === 'granted' && settings.notifications ? '✅' : '🔔'}
+                </span>
+                {permissionStatus === 'granted' && settings.notifications
+                  ? 'Notifications Active'
+                  : 'Test Notification System'}
+              </button>
             </div>
           </section>
 

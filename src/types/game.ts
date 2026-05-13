@@ -82,6 +82,7 @@ export interface Settings {
   startingGold: number;
   diceTheme: 'default' | 'blood' | 'bone' | 'neon' | 'wood' | 'stone';
   customSeed?: string;
+  notifications: boolean;
 }
 
 export interface GameStoreState {

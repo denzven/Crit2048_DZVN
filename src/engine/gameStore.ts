@@ -76,6 +76,7 @@ const INITIAL_STATE: GameStoreState = {
     startingGold: 0,
     diceTheme: 'default',
     customSeed: '',
+    notifications: true,
   },
   floatingTexts: [],
   confirmation: null,
@@ -131,7 +132,7 @@ export interface GameActions {
   prevEncounter: () => void;
   checkHazards: (newGrid: (Tile | null)[], damage: number) => (Tile | null)[];
   triggerFX: (name: string, params?: unknown) => void;
-  setState: (partial: any) => void;
+  setState: (partial: Partial<ExtendedGameStoreState>) => void;
   toggleDevMode: () => void;
   executeDebugScript: (code: string) => void;
 }
@@ -151,26 +152,26 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
   isDevMode: false,
   d20Override: null,
 
-  addFloatingText: (text: string, type: any, x = 50, y = 50) => {
+  addFloatingText: (text: string, type: 'damage' | 'gold' | 'mult', x = 50, y = 50) => {
     const id = Date.now() + SeededRNG.random();
-    set((state: any) => ({
+    set((state: ExtendedGameStoreState) => ({
       floatingTexts: [...state.floatingTexts, { id, text, type, x, y }],
     }));
     setTimeout(() => {
-      set((state: any) => ({
-        floatingTexts: state.floatingTexts.filter((t: any) => t.id !== id),
+      set((state: ExtendedGameStoreState) => ({
+        floatingTexts: state.floatingTexts.filter((t) => t.id !== id),
       }));
     }, 850);
   },
 
-  triggerFX: (name: string, params: any) => {
+  triggerFX: (name: string, params: unknown) => {
     const id = Math.random().toString(36).substring(7);
-    set((state: any) => ({
+    set((state: ExtendedGameStoreState) => ({
       activeFX: [...state.activeFX, { id, name, params }],
     }));
     setTimeout(() => {
-      set((state: any) => ({
-        activeFX: state.activeFX.filter((f: any) => f.id !== id),
+      set((state: ExtendedGameStoreState) => ({
+        activeFX: state.activeFX.filter((f) => f.id !== id),
       }));
     }, 2000);
   },
@@ -212,7 +213,7 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
       activeClasses: classes,
       activeArtifacts: artifacts,
     });
-    console.log('[GameStore] Registry initialized with', {
+    console.warn('[GameStore] Registry initialized with', {
       encounters: encounters.length,
       classes: classes.length,
       artifacts: artifacts.length,
@@ -221,7 +222,9 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     // Retention Notification
     const lastPlayed = localStorage.getItem('crit2048_last_played');
     const now = Date.now();
-    if (lastPlayed) {
+    const settings = get().settings;
+
+    if (lastPlayed && settings.notifications) {
       const diff = now - parseInt(lastPlayed);
       if (diff > 1000 * 60 * 60 * 20) {
         // More than 20 hours
@@ -232,7 +235,18 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
         );
       }
     }
+
+    // Always update last played to keep track of activity
     localStorage.setItem('crit2048_last_played', now.toString());
+
+    // Schedule background notification for the future (24h from now)
+    if (settings.notifications) {
+      Native.scheduleNotification(
+        'Dungeon Call',
+        'The monsters are regrowing... It is time for another run!',
+        24 * 60 * 60 * 1000, // 24 hours
+      );
+    }
     await get().checkSave();
   },
 
