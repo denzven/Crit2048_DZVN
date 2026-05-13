@@ -357,7 +357,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
               </div>
 
               <button
-                disabled={!settings.notifications || permissionStatus !== 'granted'}
+                disabled={!settings.notifications}
                 onClick={async () => {
                   if (!settings.notifications) return;
 
@@ -379,9 +379,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                   );
                 }}
                 className={`w-full py-3 text-[10px] font-black uppercase rounded-xl border transition-all flex items-center justify-center gap-2 ${
-                  !settings.notifications || permissionStatus !== 'granted'
+                  !settings.notifications
                     ? 'bg-slate-900/50 text-slate-600 border-slate-800 cursor-not-allowed opacity-50'
-                    : 'bg-slate-800 text-amber-500 border-amber-500/30 hover:bg-slate-700'
+                    : permissionStatus === 'granted'
+                      ? 'bg-slate-800 text-amber-500 border-amber-500/30 hover:bg-slate-700'
+                      : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
                 }`}
               >
                 <span>

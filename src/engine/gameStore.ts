@@ -120,7 +120,7 @@ export interface GameActions {
     onConfirm: () => void,
     onCancel?: () => void,
   ) => void;
-  showAlert: (title: string, message: string) => void;
+  showAlert: (title: string, message: string, onConfirm?: () => void) => void;
   triggerScreenShake: (intensity?: number) => void;
   closeConfirmation: () => void;
   initializeRegistry: () => Promise<void>;
@@ -339,9 +339,17 @@ export const useGameStore = create<ExtendedGameStoreState & GameActions>((set, g
     set({ confirmation: { title, message, onConfirm, onCancel, type: 'confirm' } });
   },
 
-  showAlert: (title: string, message: string) => {
+  showAlert: (title: string, message: string, onConfirm?: () => void) => {
     set({
-      confirmation: { title, message, onConfirm: () => get().closeConfirmation(), type: 'alert' },
+      confirmation: {
+        title,
+        message,
+        onConfirm: () => {
+          if (onConfirm) onConfirm();
+          get().closeConfirmation();
+        },
+        type: 'alert',
+      },
     });
   },
 

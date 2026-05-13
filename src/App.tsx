@@ -54,6 +54,7 @@ function App() {
     castSpell,
     forfeitRun,
     showConfirm,
+    showAlert,
     settings,
     hasSave,
     loadGame,
@@ -246,6 +247,14 @@ function App() {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       setDeferredPrompt(null);
+      // Give the browser a moment to complete installation before showing the thanks
+      setTimeout(() => {
+        showAlert(
+          'Installation Complete!',
+          'Thank you for installing Crit2048! Share it with your friends and family to spread the word.',
+          () => setShowShare(true),
+        );
+      }, 500);
     }
   };
 

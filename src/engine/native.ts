@@ -75,13 +75,32 @@ export const Native = {
   /**
    * Web Notifications (Rich support)
    */
-  async notify(title: string, body: string, icon = 'pwa-192x192.png', image = 'banner.png') {
+  async notify(title: string, body: string, icon = 'app_icon.png', image = 'banner.png') {
     if (!('Notification' in window)) {
       console.warn('Notifications not supported');
       return;
     }
 
     const getAbsUrl = (path: string) => {
+      // Handle Emoji icons by rendering to canvas
+      if (path.length <= 4 && /\p{Emoji}/u.test(path)) {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 128;
+          canvas.height = 128;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.font = '96px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(path, 64, 70);
+            return canvas.toDataURL();
+          }
+        } catch (e) {
+          console.warn('Emoji render failed', e);
+        }
+      }
+
       try {
         const url = new URL(path, window.location.href);
         return url.href;
@@ -96,7 +115,7 @@ export const Native = {
           body,
           icon: getAbsUrl(icon),
           image: getAbsUrl(image),
-          badge: getAbsUrl('favicon.svg'),
+          badge: getAbsUrl(icon),
           vibrate: [200, 100, 200],
           tag: 'crit2048-alert',
           renotify: true,
@@ -104,8 +123,13 @@ export const Native = {
 
         if ('serviceWorker' in navigator) {
           try {
-            const registration = await navigator.serviceWorker.getRegistration();
-            if (registration && registration.active) {
+            // Use ready to ensure we have an active registration
+            const registration = await Promise.race([
+              navigator.serviceWorker.ready,
+              new Promise<null>((resolve) => setTimeout(() => resolve(null), 1000)),
+            ]);
+
+            if (registration && registration.showNotification) {
               const richOptions = {
                 ...options,
                 actions: [
@@ -121,7 +145,7 @@ export const Native = {
           }
         }
 
-        // Use cast to bypass standard NotificationOptions limitations
+        // Fallback to standard Notification API
         new Notification(title, options as unknown as NotificationOptions);
       } catch (e) {
         console.error('❌ Failed to show notification:', e);
@@ -141,7 +165,7 @@ export const Native = {
   /**
    * Schedule a future notification (Background Retention)
    */
-  async scheduleNotification(title: string, body: string, delayMs: number, icon = '/app_icon.png') {
+  async scheduleNotification(title: string, body: string, delayMs: number, icon = 'app_icon.png') {
     if (!('serviceWorker' in navigator)) return;
 
     try {
