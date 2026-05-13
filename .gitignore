@@ -35,3 +35,6 @@ coverage
 # Reports
 eslint_out.json
 eslint_report.txt
+
+# PWA Dev
+dev-dist

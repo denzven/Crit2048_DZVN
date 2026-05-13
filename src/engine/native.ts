@@ -59,7 +59,7 @@ export const Native = {
           wakeLock: { request: (type: string) => Promise<{ release: () => void }> };
         }
       ).wakeLock.request('screen');
-      console.log('💡 Wake Lock active');
+      console.warn('💡 Wake Lock active');
     } catch {
       console.warn('Wake Lock failed');
     }
@@ -73,18 +73,97 @@ export const Native = {
   },
 
   /**
-   * Web Notifications
+   * Web Notifications (Rich support)
    */
-  async notify(title: string, body: string, icon = '/app_icon.png') {
-    if (!('Notification' in window)) return;
+  async notify(title: string, body: string, icon = 'pwa-192x192.png', image = 'banner.png') {
+    if (!('Notification' in window)) {
+      console.warn('Notifications not supported');
+      return;
+    }
+
+    const getAbsUrl = (path: string) => {
+      try {
+        const url = new URL(path, window.location.href);
+        return url.href;
+      } catch {
+        return path;
+      }
+    };
+
+    const show = async () => {
+      try {
+        const options = {
+          body,
+          icon: getAbsUrl(icon),
+          image: getAbsUrl(image),
+          badge: getAbsUrl('favicon.svg'),
+          vibrate: [200, 100, 200],
+          tag: 'crit2048-alert',
+          renotify: true,
+        };
+
+        if ('serviceWorker' in navigator) {
+          try {
+            const registration = await navigator.serviceWorker.getRegistration();
+            if (registration && registration.active) {
+              const richOptions = {
+                ...options,
+                actions: [
+                  { action: 'play', title: '⚔️ Play Now' },
+                  { action: 'settings', title: '⚙️ Settings' },
+                ],
+              };
+              await registration.showNotification(title, richOptions as NotificationOptions);
+              return;
+            }
+          } catch (swErr) {
+            console.warn('⚠️ SW Notification failed:', swErr);
+          }
+        }
+
+        // Use cast to bypass standard NotificationOptions limitations
+        new Notification(title, options as unknown as NotificationOptions);
+      } catch (e) {
+        console.error('❌ Failed to show notification:', e);
+      }
+    };
 
     if (Notification.permission === 'granted') {
-      new Notification(title, { body, icon });
+      await show();
     } else if (Notification.permission !== 'denied') {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
-        new Notification(title, { body, icon });
+        await show();
       }
+    }
+  },
+
+  /**
+   * Schedule a future notification (Background Retention)
+   */
+  async scheduleNotification(title: string, body: string, delayMs: number, icon = '/app_icon.png') {
+    if (!('serviceWorker' in navigator)) return;
+
+    try {
+      const registration = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]);
+
+      if (!registration) return;
+
+      if ('showTrigger' in Notification.prototype && 'TimestampTrigger' in window) {
+        const options = {
+          body,
+          icon,
+          showTrigger: new (
+            window as unknown as Record<string, new (t: number) => unknown>
+          ).TimestampTrigger(Date.now() + delayMs),
+        };
+        registration.showNotification(title, options as NotificationOptions);
+      }
+    } catch (e) {
+      console.warn('Notification scheduling failed', e);
     }
   },
 
