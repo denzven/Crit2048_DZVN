@@ -85,7 +85,7 @@ Each class is built around one D&D 5e archetype and plays distinctly differently
 
 ## 🐉 The Twelve Bosses (Antes)
 
-![Bosses and Antes Summary](src/assets/bosses_antes_placeholder.png)
+![Bosses and Antes Summary](src/assets/enemies.png)
 
 | Ante | Boss                  | HP     | Slides | Special Power                                                          |
 | ---- | --------------------- | ------ | ------ | ---------------------------------------------------------------------- |
