@@ -51,8 +51,6 @@ START -> CLASS SELECT -> ENCOUNTER (Ante 1-12) -> TAVERN -> -> -> FINAL BOSS (An
                                  [Spell Cast]          [Upgrade Spells]
 ```
 
-![Gameplay Modals](src/assets/Dice%20Modals.png)
-
 1. **Choose your Class** - each class changes your modifiers, gold generation, and grants a unique spell.
 2. **Fight the Boss** - slide tiles on the grid to merge weapons and deal damage. You have a limited number of slides per boss (the "Ante").
 3. **Roll the D20** - every 5 slides, you are interrupted by a mandatory D20 roll. The outcome can be devastating or divine.
@@ -87,7 +85,7 @@ Each class is built around one D&D 5e archetype and plays distinctly differently
 
 ## 🐉 The Twelve Bosses (Antes)
 
-![Challenge Banner](src/assets/Crit2048%20Challenge%20Banner.png)
+![Bosses and Antes Summary](src/assets/bosses_antes_placeholder.png)
 
 | Ante | Boss                  | HP     | Slides | Special Power                                                          |
 | ---- | --------------------- | ------ | ------ | ---------------------------------------------------------------------- |
@@ -106,9 +104,19 @@ Each class is built around one D&D 5e archetype and plays distinctly differently
 
 ---
 
+## 🤝 Challenge Your Friends
+
+![Challenge Banner](src/assets/Challenge%20Banner.png)
+
+Crit 2048 features deep **social integration**. After any encounter, you can generate a **Challenge Link** to send to friends. This captures your exact grid state, multiplier, and artifacts, allowing others to try and beat your high score or survive a specific boss encounter.
+
+---
+
 ## 🎲 The D20 System
 
 The D20 is the heartbeat of **Crit 2048**'s roguelike identity. Every **5 slides**, the game pauses for a mandatory D20 roll - rendered as a fully animated **3D physics-based die** using Three.js.
+
+![Dice Modals](src/assets/Dice%20Modals.png)
 
 | Roll Result     | Outcome                                    |
 | --------------- | ------------------------------------------ |
