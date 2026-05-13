@@ -1,3 +1,6 @@
+<div align="center">
+<img src="/public/app_icon.png" width="64">
+
 # 🐉 CRIT 2048 🐉
 
 ### _The Roguelike Dungeon Crawler wrapped inside a sliding tile puzzle_
@@ -9,13 +12,15 @@
 
 > _"Every slide is a swing. Every merge is a kill. Roll the d20 — and pray."_
 
+</div>
+
 ---
 
 [<img src="/src/assets/Crit2048 Banner.png">](https://denzven.github.io/Crit2048-DZVN/)
 
 ## 🎲 What is Crit 2048?
 
-**Crit 2048** is a **roguelike dungeon crawler** built on the foundation of the classic 2048 sliding puzzle. Instead of chasing a number, you are a **D&D adventurer** fighting your way through a six-boss dungeon with nothing but your wits, a 4×4 grid of weapons, and a twenty-sided die.
+**Crit 2048** is a **roguelike dungeon crawler** built on the foundation of the classic 2048 sliding puzzle. Instead of chasing a number, you are a **D&D adventurer** fighting your way through a **twelve-boss dungeon** with nothing but your wits, a 4×4 grid of weapons, and a twenty-sided die.
 
 Inspired by the **deck-building chaos of Balatro** and the **tactical depth of D&D 5e (2024 edition)**, every run is shaped by class selection, artifact acquisitions, critical hit luck, and boss abilities. The game is now **100% data-driven**, allowing for infinite expansion through custom content packs via **The Forge**.
 
@@ -48,7 +53,7 @@ START → CLASS SELECT → ENCOUNTER (Ante 1–12) → TAVERN → → → FINAL 
                                 [Spell Cast]          [Upgrade Spells]
 ```
 
-![Run Over Modal](/public/assets/screenshots/run_over.png)
+![Gameplay Modals](/public/assets/screenshots/gameplay_modals.png)
 
 1. **Choose your Class** — each class changes your modifiers, gold generation, and grants a unique spell.
 2. **Fight the Boss** — slide tiles on the grid to merge weapons and deal damage. You have a limited number of slides per boss (the "Ante").
@@ -84,8 +89,6 @@ Each class is built around one D&D 5e archetype and plays distinctly differently
 
 ## 🐉 The Twelve Bosses (Antes)
 
-![Challenge Intel Modal](/public/assets/screenshots/challenge_intel.png)
-
 | Ante | Boss                  | HP     | Slides | Special Power                                                          |
 | ---- | --------------------- | ------ | ------ | ---------------------------------------------------------------------- |
 | 1    | 👺 **Goblin Scout**   | 150    | 25     | **Ambush** — Spawns a Goblin tile every 12 slides.                     |
@@ -104,8 +107,6 @@ Each class is built around one D&D 5e archetype and plays distinctly differently
 ---
 
 ## 🎲 The D20 System
-
-![Dice Modal](/public/assets/screenshots/dice_modal.png)
 
 The D20 is the heartbeat of **Crit 2048**'s roguelike identity. Every **5 slides**, the game pauses for a mandatory D20 roll — rendered as a fully animated **3D physics-based die** using Three.js.
 
@@ -160,8 +161,7 @@ A unique feature powered by **Google's Gemini AI**. Spend 50 gold in the Tavern 
 
 ## ⚒️ The Forge & Grimoire
 
-![Grimoire](/public/assets/screenshots/grimoire.png)
-![Forge](/public/assets/screenshots/forge.png)
+![Deep Systems](/public/assets/screenshots/deep_systems.png)
 
 Crit 2048 is 100% data-driven. The **Grimoire** tracks your discovered artifacts, while **The Forge** allows you to create and export your own content packs.
 
