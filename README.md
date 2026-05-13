@@ -1,16 +1,15 @@
 <div align="center">
-<img src="/public/app_icon.png" width="64">
 
-# 🐉 CRIT 2048 🐉
+# <img src="/public/app_icon.png" width="48" style="vertical-align: middle;"> 🐉 CRIT 2048 🐉
 
-### _The Roguelike Dungeon Crawler wrapped inside a sliding tile puzzle_
+### _A D&D Inspired 2048 Roguelike Dungeoncrawler_
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-rose?style=for-the-badge)](LICENSE)
 [![Stack: React 19](https://img.shields.io/badge/Stack-React%2019-blue?style=for-the-badge&logo=react)](https://react.dev/)
 [![3D Dice: Three.js](https://img.shields.io/badge/3D%20Dice-Three.js-black?style=for-the-badge&logo=threedotjs)](https://threejs.org/)
 [![Inspired by: Balatro × D&D 5e](https://img.shields.io/badge/Inspired%20by-Balatro%20%C3%97%20D%26D%205e-8b5cf6?style=for-the-badge)](https://www.dndbeyond.com/)
 
-> _"Every slide is a swing. Every merge is a kill. Roll the d20 — and pray."_
+> _"Every slide is a swing. Every merge is a kill. Roll the d20 - and pray."_
 
 </div>
 
@@ -55,12 +54,12 @@ START → CLASS SELECT → ENCOUNTER (Ante 1–12) → TAVERN → → → FINAL 
 
 ![Gameplay Modals](/public/assets/screenshots/gameplay_modals.png)
 
-1. **Choose your Class** — each class changes your modifiers, gold generation, and grants a unique spell.
-2. **Fight the Boss** — slide tiles on the grid to merge weapons and deal damage. You have a limited number of slides per boss (the "Ante").
-3. **Roll the D20** — every 5 slides, you are interrupted by a mandatory D20 roll. The outcome can be devastating or divine.
-4. **Use your Spell** — if your class has one, activate it anytime during combat.
-5. **Visit the Tavern** — after each boss kill, spend gold on artifacts that permanently alter your run.
-6. **Descend** — repeat until you conquer all 12 bosses, or the grid locks.
+1. **Choose your Class** - each class changes your modifiers, gold generation, and grants a unique spell.
+2. **Fight the Boss** - slide tiles on the grid to merge weapons and deal damage. You have a limited number of slides per boss (the "Ante").
+3. **Roll the D20** - every 5 slides, you are interrupted by a mandatory D20 roll. The outcome can be devastating or divine.
+4. **Use your Spell** - if your class has one, activate it anytime during combat.
+5. **Visit the Tavern** - after each boss kill, spend gold on artifacts that permanently alter your run.
+6. **Descend** - repeat until you conquer all 12 bosses, or the grid locks.
 
 ---
 
@@ -72,18 +71,18 @@ Each class is built around one D&D 5e archetype and plays distinctly differently
 
 | Icon | Class         | D20 Mod | Passive Ability                                      | Class Spell                                                                     |
 | ---- | ------------- | ------- | ---------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 😡   | **Barbarian** | -1      | +10 damage to Dagger & Longsword merges (T1 & T2)    | **Rage** — Roll 1d12. Massive stomp damage.                                     |
-| 🥷   | **Rogue**     | +2      | +1 Gold per every merge                              | **Sneak Attack** — Roll 2d6. Precise lethal strike.                             |
-| 🧙‍♂️   | **Wizard**    | +1      | —                                                    | **Fireball** — Roll 1d6 × Mult. Burns a 2×2 tile zone.                          |
-| 👁️   | **Warlock**   | +1      | —                                                    | **Eldritch Blast** — Roll 1d10 × Mult. Clears an entire row of hazard tiles.    |
-| ✨   | **Cleric**    | 0       | —                                                    | **Divine Aid** — Roll 1d8. Restores that many slides. Purifies one hazard tile. |
-| 🛡️   | **Paladin**   | 0       | —                                                    | **Divine Smite** — Roll 1d8 × your highest weapon tile. Enormous spike damage.  |
-| 🎵   | **Bard**      | +1      | +5 Gold generated on every D20 roll                  | **Vicious Mockery** — Roll 1d6 × Mult.                                          |
-| 🌿   | **Druid**     | 0       | 20% chance to purify a hazard automatically on slide | **Entangle** — Roll 1d6. Destroys lowest active tile.                           |
-| ⚔️   | **Fighter**   | 0       | +15 damage to merges of Tier 3+ (Crossbow and above) | **Action Surge** — Grants massive base damage bonus.                            |
-| 👊   | **Monk**      | +1      | Alternating directions on slides builds Mult bonus   | **Flurry of Blows** — Roll 3d4. Fast and lethal.                                |
-| 🏹   | **Ranger**    | -1      | Deal +25% damage to bosses that spawn hazards        | **Hunter's Mark** — Next merge deals 2x damage.                                 |
-| 🔮   | **Sorcerer**  | +1      | D20 rolls of 19 act as Critical Hits                 | **Chaos Bolt** — Roll 1d12 × Mult.                                              |
+| 😡   | **Barbarian** | -1      | +10 damage to Dagger & Longsword merges (T1 & T2)    | **Rage** - Roll 1d12. Massive stomp damage.                                     |
+| 🥷   | **Rogue**     | +2      | +1 Gold per every merge                              | **Sneak Attack** - Roll 2d6. Precise lethal strike.                             |
+| 🧙‍♂️   | **Wizard**    | +1      | -                                                    | **Fireball** - Roll 1d6 × Mult. Burns a 2×2 tile zone.                          |
+| 👁️   | **Warlock**   | +1      | -                                                    | **Eldritch Blast** - Roll 1d10 × Mult. Clears an entire row of hazard tiles.    |
+| ✨   | **Cleric**    | 0       | -                                                    | **Divine Aid** - Roll 1d8. Restores that many slides. Purifies one hazard tile. |
+| 🛡️   | **Paladin**   | 0       | -                                                    | **Divine Smite** - Roll 1d8 × your highest weapon tile. Enormous spike damage.  |
+| 🎵   | **Bard**      | +1      | +5 Gold generated on every D20 roll                  | **Vicious Mockery** - Roll 1d6 × Mult.                                          |
+| 🌿   | **Druid**     | 0       | 20% chance to purify a hazard automatically on slide | **Entangle** - Roll 1d6. Destroys lowest active tile.                           |
+| ⚔️   | **Fighter**   | 0       | +15 damage to merges of Tier 3+ (Crossbow and above) | **Action Surge** - Grants massive base damage bonus.                            |
+| 👊   | **Monk**      | +1      | Alternating directions on slides builds Mult bonus   | **Flurry of Blows** - Roll 3d4. Fast and lethal.                                |
+| 🏹   | **Ranger**    | -1      | Deal +25% damage to bosses that spawn hazards        | **Hunter's Mark** - Next merge deals 2x damage.                                 |
+| 🔮   | **Sorcerer**  | +1      | D20 rolls of 19 act as Critical Hits                 | **Chaos Bolt** - Roll 1d12 × Mult.                                              |
 
 ---
 
@@ -91,33 +90,33 @@ Each class is built around one D&D 5e archetype and plays distinctly differently
 
 | Ante | Boss                  | HP     | Slides | Special Power                                                          |
 | ---- | --------------------- | ------ | ------ | ---------------------------------------------------------------------- |
-| 1    | 👺 **Goblin Scout**   | 150    | 25     | **Ambush** — Spawns a Goblin tile every 12 slides.                     |
-| 2    | 👹 **Orc Brute**      | 500    | 30     | **Tough** — All damage you deal is reduced by 10%.                     |
-| 3    | 📦 **Mimic Colony**   | 800    | 30     | **Shapechanger** — Spawns Mimic tiles that block merges.               |
-| 4    | 🟢 **Slime King**     | 1,200  | 35     | **Ooze** — Spawns a Slime tile every 8 slides.                         |
-| 5    | 🦉 **Owlbear Alpha**  | 2,000  | 35     | **Frenzy** — High HP, forces careful slide economy.                    |
-| 6    | 🧌 **Troll King**     | 3,500  | 40     | **Regen** — Heals 30 HP after every single slide you make.             |
-| 7    | 🧠 **Mind Flayer**    | 5,000  | 35     | **Mind Blast** — Periodically shuffles your tiles.                     |
-| 8    | 💀 **The Lich**       | 8,000  | 30\*   | **Necromancy** — Spawns Skeletons. Starts with 10 fewer slides.        |
-| 9    | 👁️‍🗨️ **Beholder**       | 12,000 | 40     | **Eye Ray** — Shoots Web tiles that block and require damage to clear. |
-| 10   | 🐉 **Ancient Dragon** | 20,000 | 45     | **Inferno** — Burns your highest-value weapon tile every 10 slides.    |
-| 11   | 🧛 **Vampire Lord**   | 16,000 | 40     | **Charm** — Degrades your best weapons and heals itself rapidly.       |
-| 12   | 🐲 **Tiamat**         | 50,000 | 50     | **Chromatic Wrath** — Unleashes ALL other boss powers simultaneously.  |
+| 1    | 👺 **Goblin Scout**   | 150    | 25     | **Ambush** - Spawns a Goblin tile every 12 slides.                     |
+| 2    | 👹 **Orc Brute**      | 500    | 30     | **Tough** - All damage you deal is reduced by 10%.                     |
+| 3    | 📦 **Mimic Colony**   | 800    | 30     | **Shapechanger** - Spawns Mimic tiles that block merges.               |
+| 4    | 🟢 **Slime King**     | 1,200  | 35     | **Ooze** - Spawns a Slime tile every 8 slides.                         |
+| 5    | 🦉 **Owlbear Alpha**  | 2,000  | 35     | **Frenzy** - High HP, forces careful slide economy.                    |
+| 6    | 🧌 **Troll King**     | 3,500  | 40     | **Regen** - Heals 30 HP after every single slide you make.             |
+| 7    | 🧠 **Mind Flayer**    | 5,000  | 35     | **Mind Blast** - Periodically shuffles your tiles.                     |
+| 8    | 💀 **The Lich**       | 8,000  | 30\*   | **Necromancy** - Spawns Skeletons. Starts with 10 fewer slides.        |
+| 9    | 👁️‍🗨️ **Beholder**       | 12,000 | 40     | **Eye Ray** - Shoots Web tiles that block and require damage to clear. |
+| 10   | 🐉 **Ancient Dragon** | 20,000 | 45     | **Inferno** - Burns your highest-value weapon tile every 10 slides.    |
+| 11   | 🧛 **Vampire Lord**   | 16,000 | 40     | **Charm** - Degrades your best weapons and heals itself rapidly.       |
+| 12   | 🐲 **Tiamat**         | 50,000 | 50     | **Chromatic Wrath** - Unleashes ALL other boss powers simultaneously.  |
 
 ---
 
 ## 🎲 The D20 System
 
-The D20 is the heartbeat of **Crit 2048**'s roguelike identity. Every **5 slides**, the game pauses for a mandatory D20 roll — rendered as a fully animated **3D physics-based die** using Three.js.
+The D20 is the heartbeat of **Crit 2048**'s roguelike identity. Every **5 slides**, the game pauses for a mandatory D20 roll - rendered as a fully animated **3D physics-based die** using Three.js.
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
 │  Roll Result       │   Outcome                                  │
 ├────────────────────┼────────────────────────────────────────────┤
-│  20+ (Nat 20)      │  CRITICAL HIT — Mult +1 & upgrade a tile   │
-│  10–19 (Success)   │  SUCCESS — A Crossbow tile spawns           │
-│  2–9 (Miss)        │  MISS — A Slime tiles spawns               │
-│  1 (Nat 1)         │  CRITICAL FAILURE — Your best weapon breaks │
+│  20+ (Nat 20)      │  CRITICAL HIT - Mult +1 & upgrade a tile   │
+│  10-19 (Success)   │  SUCCESS - A Crossbow tile spawns           │
+│  2-9 (Miss)        │  MISS - A Slime tiles spawns               │
+│  1 (Nat 1)         │  CRITICAL FAILURE - Your best weapon breaks │
 └────────────────────┴────────────────────────────────────────────┘
 ```
 
@@ -148,7 +147,7 @@ After defeating each boss (except the last), you are transported to the **Tavern
 
 ## 🤖 The Gemini Oracle
 
-A unique feature powered by **Google's Gemini AI**. Spend 50 gold in the Tavern to consult the Oracle — it generates a **one-of-a-kind, flavor-rich legendary artifact** with a custom name and description, tailored to your current class and progress.
+A unique feature powered by **Google's Gemini AI**. Spend 50 gold in the Tavern to consult the Oracle - it generates a **one-of-a-kind, flavor-rich legendary artifact** with a custom name and description, tailored to your current class and progress.
 
 ```json
 {
