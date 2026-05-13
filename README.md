@@ -15,7 +15,7 @@
 
 ---
 
-[<img src="/src/assets/Crit2048 Banner.png">](https://denzven.github.io/Crit2048-DZVN/)
+[<img src="src/assets/Crit2048%20Banner.png">](https://denzven.github.io/Crit2048-DZVN/)
 
 ## 🎲 What is Crit 2048?
 
@@ -51,7 +51,7 @@ START -> CLASS SELECT -> ENCOUNTER (Ante 1-12) -> TAVERN -> -> -> FINAL BOSS (An
                                  [Spell Cast]          [Upgrade Spells]
 ```
 
-![Gameplay Modals](/src/assets/Dice Modals.png)
+![Gameplay Modals](src/assets/Dice%20Modals.png)
 
 1. **Choose your Class** - each class changes your modifiers, gold generation, and grants a unique spell.
 2. **Fight the Boss** - slide tiles on the grid to merge weapons and deal damage. You have a limited number of slides per boss (the "Ante").
@@ -64,7 +64,7 @@ START -> CLASS SELECT -> ENCOUNTER (Ante 1-12) -> TAVERN -> -> -> FINAL BOSS (An
 
 ## ⚔️ Classes
 
-![Class Selection](/src/assets/hero classes page.png)
+![Class Selection](src/assets/hero%20classes%20page.png)
 
 Each class is built around one D&D 5e archetype and plays distinctly differently:
 
@@ -87,7 +87,7 @@ Each class is built around one D&D 5e archetype and plays distinctly differently
 
 ## 🐉 The Twelve Bosses (Antes)
 
-![Challenge Banner](/src/assets/Crit2048 Challenge Banner.png)
+![Challenge Banner](src/assets/Crit2048%20Challenge%20Banner.png)
 
 | Ante | Boss                  | HP     | Slides | Special Power                                                          |
 | ---- | --------------------- | ------ | ------ | ---------------------------------------------------------------------- |
@@ -157,7 +157,7 @@ A unique feature powered by **Google's Gemini AI**. Spend 50 gold in the Tavern 
 
 ## ⚒️ The Forge & Grimoire
 
-![Deep Systems](/src/assets/Grimoire and Forge.png)
+![Deep Systems](src/assets/Grimoire%20and%20Forge.png)
 
 Crit 2048 is 100% data-driven. The **Grimoire** tracks your discovered artifacts, while **The Forge** allows you to create and export your own content packs.
 
